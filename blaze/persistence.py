@@ -15,7 +15,8 @@ from __future__ import absolute_import
 # - dropping the contents of a given URI.
 
 from ._api_helpers import _normalize_dshape
-from .datashape import to_numpy, to_dtype
+import blaze.datashape as datashape
+from .datashape import to_numpy, to_dtype, string
 from .py3help import urlparse
 from . import blz
 from .datadescriptor import (BLZDataDescriptor,
@@ -29,8 +30,13 @@ from .array import Array
 # XXX A big hack for some quirks in current datashape. The next deals
 # with the cases where the shape is not present like in 'float32'
 def _to_numpy(ds):
-    res = to_numpy(ds)
-    res = res if type(res) is tuple else ((), to_dtype(ds))
+    if isinstance(ds[-1], datashape.String):
+        # Big hack to temporary implement variable length strings in BLZ
+        shape = tuple(ds[:-1])
+        res = (shape, 'object')
+    else:
+        res = to_numpy(ds)
+        res = res if type(res) is tuple else ((), to_dtype(ds))
     return res
 
 
@@ -91,16 +97,19 @@ def open(uri):
     return Array(dd)
 
 
-def drop(uri):
-    """removing an URI"""
-    try:
-        path = _path_from_uri(uri)
-        blz.open(rootdir=path)
-        from shutil import rmtree
+def drop(uri, check_is_blz=True):
+    """Remove an URI."""
+    from shutil import rmtree
+    path = _path_from_uri(uri)
+    if check_is_blz:
+        try:
+            blz.open(rootdir=path)
+            rmtree(path)
+        # maybe blz should throw other exceptions for this!
+        except RuntimeError:
+            raise Exception("No blaze array at uri '%s'" % uri)
+    else:
         rmtree(path)
-
-    except RuntimeError: #maybe blz should throw other exceptions for this!
-        raise Exception("No blaze array at uri '%s'" % uri)
 
 
 # Persistent constructors:

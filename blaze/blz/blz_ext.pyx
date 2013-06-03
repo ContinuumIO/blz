@@ -948,7 +948,7 @@ cdef class barray:
     returns the adapted type with the shape modified accordingly.
     """
     if dtype.hasobject:
-      if  dtype != np.object_:
+      if dtype != np.object_:
         raise TypeError, repr(dtype) + ' is not a supported dtype'
     else:
       dtype = np.dtype((dtype, shape[1:]))
@@ -999,8 +999,8 @@ cdef class barray:
     # from `self.shape`.  `self.dtype` will always be scalar (NumPy
     # convention).
     #
-    # Note that objects are a special case. Barray does not support object
-    # arrays of more than one dimensions.
+    # Note that objects are a special case. barray does not support
+    # object arrays of more than one dimensions.
     self._dtype = dtype = self._adapt_dtype(dtype, array_.shape)
 
     # Check that atom size is less than 2 GB
@@ -1011,12 +1011,16 @@ cdef class barray:
     self.itemsize = itemsize = dtype.base.itemsize
 
     # Check defaults for dflt
-    _dflt = np.zeros((), dtype=dtype)
-    if dflt is not None:
-      if dtype.shape == ():
-        _dflt[()] = dflt
-      else:
-        _dflt[:] = dflt
+    if dtype.hasobject:
+      # This is a temporary hack for var length strings
+      _dflt = np.zeros((), dtype='S1')
+    else:
+      _dflt = np.zeros((), dtype=dtype)
+      if dflt is not None:
+        if dtype.shape == ():
+          _dflt[()] = dflt
+        else:
+          _dflt[:] = dflt
     self._dflt = _dflt
 
     # Compute the chunklen/chunksize
