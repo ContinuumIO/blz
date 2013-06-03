@@ -15,11 +15,20 @@ import inspect
 from .array import Array
 from .datadescriptor import (IDataDescriptor,
                 NumPyDataDescriptor, BLZDataDescriptor)
-from .datashape import to_numpy, to_dtype
+from .datashape import to_numpy, to_dtype, String
 
 import numpy as np
 from . import blz
 from ._api_helpers import _normalize_dshape
+
+
+def _to_dtype(ds):
+    if isinstance(ds[-1], String):
+        # Big hack to temporary implement variable length strings in BLZ
+        res = np.dtype('object')
+    else:
+        res = to_dtype(ds)
+    return res
 
 # note that this is rather naive. In fact, a proper way to implement
 # the array from a numpy is creating a ByteProvider based on "obj"
@@ -76,7 +85,7 @@ def array(obj, dshape=None, caps={'efficient-write': True}):
         # NumPy provides efficient writes
         dd = NumPyDataDescriptor(np.array(obj, dtype=dt))
     elif 'compress' in caps and caps['compress'] is True:
-        dt = None if dshape is None else to_dtype(dshape)
+        dt = None if dshape is None else _to_dtype(dshape)
         # BLZ provides compression
         dd = BLZDataDescriptor(blz.barray(obj, dtype=dt))
     elif isinstance(obj, np.ndarray):
@@ -102,7 +111,7 @@ def _fromiter(gen, dshape, caps):
         dt = None if dshape is None else to_dtype(dshape)
         dd = NumPyDataDescriptor(np.fromiter(gen, dtype=dt))
     elif 'compress' in caps and caps['compress'] is True:
-        dt = None if dshape is None else to_dtype(dshape)
+        dt = None if dshape is None else _to_dtype(dshape)
         dd = BLZDataDescriptor(blz.fromiter(gen, dtype=dt, count=-1))
     else:
         # Fall-back is NumPy
