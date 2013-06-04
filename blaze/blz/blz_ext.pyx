@@ -1234,8 +1234,12 @@ cdef class barray:
     cdef chunk chunk_
     import pickle
 
-    pick_obj = pickle.dumps(arrobj, pickle.HIGHEST_PROTOCOL)
-    chunk_ = chunk(pick_obj, np.dtype('O'), self._bparams,
+    # Using 'O' for encoding vlstrings
+    # pick_obj = pickle.dumps(arrobj, pickle.HIGHEST_PROTOCOL)
+    # chunk_ = chunk(pick_obj, np.dtype('O'), self._bparams,
+    #                _memory = self._rootdir is None)
+    encoded_str = arrobj.encode("utf-8")
+    chunk_ = chunk(encoded_str, np.dtype('O'), self._bparams,
                    _memory = self._rootdir is None)
 
     self.chunks.append(chunk_)
@@ -1704,7 +1708,9 @@ cdef class barray:
       # Integer
       cchunk = self.chunks[start]
       chunk = cchunk.getudata()
-      return pickle.loads(chunk)
+      # Using 'O' for encoding vlstrings
+      #return pickle.loads(chunk)
+      return chunk.decode("utf-8")
 
     # Range
     objs = [self.getitem_object(i) for i in xrange(start, stop, step)]
