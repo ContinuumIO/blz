@@ -54,42 +54,7 @@ IntType = np.dtype(np.int_)
 #-----------------------------------------------------------------
 
 # numpy functions & objects
-from definitions cimport import_array, ndarray, dtype, \
-     malloc, realloc, free, memcpy, memset, strdup, strcmp, \
-     PyString_AsString, PyString_GET_SIZE, \
-     PyString_FromStringAndSize, \
-     Py_BEGIN_ALLOW_THREADS, Py_END_ALLOW_THREADS, \
-     PyArray_GETITEM, PyArray_SETITEM, \
-     npy_intp, PyBuffer_FromMemory, Py_uintptr_t
-
-#-----------------------------------------------------------------
-
-
-# Blosc routines
-cdef extern from "blosc.h":
-
-  cdef enum:
-    BLOSC_MAX_OVERHEAD,
-    BLOSC_VERSION_STRING,
-    BLOSC_VERSION_DATE,
-    BLOSC_MAX_TYPESIZE
-
-  void blosc_init()
-  void blosc_destroy()
-  void blosc_get_versions(char *version_str, char *version_date)
-  int blosc_set_nthreads(int nthreads)
-  int blosc_compress(int clevel, int doshuffle, size_t typesize,
-                     size_t nbytes, void *src, void *dest,
-                     size_t destsize) nogil
-  int blosc_decompress(void *src, void *dest, size_t destsize) nogil
-  int blosc_getitem(void *src, int start, int nitems, void *dest) nogil
-  void blosc_free_resources()
-  void blosc_cbuffer_sizes(void *cbuffer, size_t *nbytes,
-                           size_t *cbytes, size_t *blocksize)
-  void blosc_cbuffer_metainfo(void *cbuffer, size_t *typesize, int *flags)
-  void blosc_cbuffer_versions(void *cbuffer, int *version, int *versionlz)
-  void blosc_set_blocksize(size_t blocksize)
-
+cimport definitions as defs
 
 #----------------------------------------------------------------------------
 
@@ -97,7 +62,7 @@ cdef extern from "blosc.h":
 
 # The numpy API requires this function to be called before
 # using any numpy facilities in an extension module.
-import_array()
+defs.import_array()
 
 #-------------------------------------------------------------
 
@@ -119,7 +84,7 @@ def _blosc_set_nthreads(nthreads):
       The previous setting for the number of threads.
 
   """
-  return blosc_set_nthreads(nthreads)
+  return defs.blosc_set_nthreads(nthreads)
 
 def _blosc_init():
   """
@@ -128,7 +93,7 @@ def _blosc_init():
   Initialize the Blosc library.
 
   """
-  blosc_init()
+  defs.blosc_init()
 
 def _blosc_destroy():
   """
@@ -137,7 +102,7 @@ def _blosc_destroy():
   Finalize the Blosc library.
 
   """
-  blosc_destroy()
+  defs.blosc_destroy()
 
 def blosc_version():
   """
@@ -146,7 +111,8 @@ def blosc_version():
   Return the version of the Blosc library.
 
   """
-  return (<char *>BLOSC_VERSION_STRING, <char *>BLOSC_VERSION_DATE)
+  return (<char *>defs.BLOSC_VERSION_STRING,
+          <char *>defs.BLOSC_VERSION_DATE)
 
 def list_bytes_to_str(lst):
     """The Python 3 JSON encoder doesn't accept 'bytes' objects,
@@ -160,9 +126,9 @@ def list_bytes_to_str(lst):
         return lst
 
 # This is the same than in utils.py, but works faster in extensions
-cdef get_len_of_range(npy_intp start, npy_intp stop, npy_intp step):
+cdef get_len_of_range(defs.npy_intp start, defs.npy_intp stop, defs.npy_intp step):
   """Get the length of a (start, stop, step) range."""
-  cdef npy_intp n
+  cdef defs.npy_intp n
 
   n = 0
   if start < stop:
@@ -170,10 +136,13 @@ cdef get_len_of_range(npy_intp start, npy_intp stop, npy_intp step):
     n = ((stop - start - 1) // step + 1)
   return n
 
-cdef clip_chunk(npy_intp nchunk, npy_intp chunklen,
-                npy_intp start, npy_intp stop, npy_intp step):
+cdef clip_chunk(defs.npy_intp nchunk,
+                defs.npy_intp chunklen,
+                defs.npy_intp start, 
+                defs.npy_intp stop, 
+                defs.npy_intp step):
   """Get the limits of a certain chunk based on its length."""
-  cdef npy_intp startb, stopb, blen, distance
+  cdef defs.npy_intp startb, stopb, blen, distance
 
   startb = start - nchunk * chunklen
   stopb = stop - nchunk * chunklen
@@ -254,7 +223,7 @@ cdef class chunk:
   cdef void _getitem(self, int start, int stop, char *dest)
   cdef compress_data(self, char *data, size_t itemsize, size_t nbytes,
                      object bparams)
-  cdef compress_arrdata(self, ndarray array, int itemsize,
+  cdef compress_arrdata(self, defs.ndarray array, int itemsize,
                         object bparams, object _memory)
 
   property dtype:
@@ -266,7 +235,7 @@ cdef class chunk:
                 object _memory=True, object _compr=False):
     cdef int itemsize, footprint
     cdef size_t nbytes, cbytes, blocksize
-    cdef dtype dtype_
+    cdef defs.dtype dtype_
     cdef char *data
 
     self.atom = atom
@@ -282,25 +251,28 @@ cdef class chunk:
       itemsize = 4
     else:
       itemsize = dtype_.elsize
-    if itemsize > BLOSC_MAX_TYPESIZE:
+    if itemsize > defs.BLOSC_MAX_TYPESIZE:
       raise TypeError(
         "typesize is %d and BLZ does not currently support data types larger "
-        "than %d bytes" % (itemsize, BLOSC_MAX_TYPESIZE))
+        "than %d bytes" % (itemsize, defs.BLOSC_MAX_TYPESIZE))
     self.itemsize = itemsize
     self.dobject = None
     footprint = 0
 
     if _compr:
       # Data comes in an already compressed state inside a Python String
-      self.data = PyString_AsString(dobject)
+      self.data = defs.PyString_AsString(dobject)
       # Increment the reference so that data don't go away
       self.dobject = dobject
       # Set size info for the instance
-      blosc_cbuffer_sizes(self.data, &nbytes, &cbytes, &blocksize)
+      defs.blosc_cbuffer_sizes(self.data,
+                               &nbytes,
+                               &cbytes,
+                               &blocksize)
     elif dtype_ == 'O':
       # The objects should arrive here already pickled
-      data = PyString_AsString(dobject)
-      nbytes = PyString_GET_SIZE(dobject)
+      data = defs.PyString_AsString(dobject)
+      nbytes = defs.PyString_GET_SIZE(dobject)
       cbytes, blocksize = self.compress_data(data, 1, nbytes, bparams)
     else:
       # Compress the data object (a NumPy object)
@@ -314,7 +286,7 @@ cdef class chunk:
     self.cdbytes = cbytes
     self.blocksize = blocksize
 
-  cdef compress_arrdata(self, ndarray array, int itemsize, 
+  cdef compress_arrdata(self, defs.ndarray array, int itemsize, 
                         object bparams, object _memory):
     """Compress data in `array` and put it in ``self.data``"""
     cdef size_t nbytes, cbytes, blocksize, footprint
@@ -372,16 +344,16 @@ cdef class chunk:
 
     clevel = bparams.clevel
     shuffle = bparams.shuffle
-    dest = <char *>malloc(nbytes+BLOSC_MAX_OVERHEAD)
+    dest = <char *>defs.malloc(nbytes + defs.BLOSC_MAX_OVERHEAD)
     with nogil:
-      cbytes = blosc_compress(clevel, shuffle, itemsize, nbytes,
-                              data, dest, nbytes+BLOSC_MAX_OVERHEAD)
+      cbytes = defs.blosc_compress(clevel, shuffle, itemsize, nbytes, data,
+                                   dest, nbytes + defs.BLOSC_MAX_OVERHEAD)
     if cbytes <= 0:
       raise RuntimeError, "fatal error during Blosc compression: %d" % cbytes
     # Free the unused data
-    self.data = <char *>realloc(dest, cbytes)
+    self.data = <char *>defs.realloc(dest, cbytes)
     # Set size info for the instance
-    blosc_cbuffer_sizes(self.data, &nbytes_, &cbytes, &blocksize)
+    defs.blosc_cbuffer_sizes(self.data, &nbytes_, &cbytes, &blocksize)
     assert nbytes_ == nbytes
 
     return (cbytes, blocksize)
@@ -392,7 +364,7 @@ cdef class chunk:
 
     assert (not self.isconstant,
             "This function can only be used for persistency")
-    string = PyString_FromStringAndSize(self.data, <Py_ssize_t>self.cdbytes)
+    string = defs.PyString_FromStringAndSize(self.data, <Py_ssize_t>self.cdbytes)
     return string
 
   def getudata(self):
@@ -400,19 +372,19 @@ cdef class chunk:
     cdef int ret
     cdef char *dest
 
-    dest = <char *>malloc(self.nbytes)
+    dest = <char *>defs.malloc(self.nbytes)
     # Fill dest with uncompressed data
     with nogil:
-      ret = blosc_decompress(self.data, dest, self.nbytes)
+      ret = defs.blosc_decompress(self.data, dest, self.nbytes)
     if ret < 0:
       raise RuntimeError, "fatal error during Blosc decompression: %d" % ret
-    string = PyString_FromStringAndSize(dest, <Py_ssize_t>self.nbytes)
+    string = defs.PyString_FromStringAndSize(dest, <Py_ssize_t>self.nbytes)
     return string
 
   cdef void _getitem(self, int start, int stop, char *dest):
     """Read data from `start` to `stop` and return it as a numpy array."""
     cdef int ret, bsize, blen, nitems, nstart
-    cdef ndarray constants
+    cdef defs.ndarray constants
 
     blen = stop - start
     bsize = blen * self.atomsize
@@ -423,28 +395,28 @@ cdef class chunk:
       # The chunk is made of constants
       constants = np.ndarray(shape=(blen,), dtype=self.dtype,
                              buffer=self.constant, strides=(0,)).copy()
-      memcpy(dest, constants.data, bsize)
+      defs.memcpy(dest, constants.data, bsize)
       return
 
     # Fill dest with uncompressed data
     with nogil:
       if bsize == self.nbytes:
-        ret = blosc_decompress(self.data, dest, bsize)
+        ret = defs.blosc_decompress(self.data, dest, bsize)
       else:
-        ret = blosc_getitem(self.data, nstart, nitems, dest)
+        ret = defs.blosc_getitem(self.data, nstart, nitems, dest)
     if ret < 0:
       raise RuntimeError, "fatal error during Blosc decompression: %d" % ret
 
   def __getitem__(self, object key):
     """__getitem__(self, key) -> values."""
-    cdef ndarray array
+    cdef defs.ndarray array
     cdef object start, stop, step, clen, idx
 
     if isinstance(key, _inttypes):
       # Quickly return a single element
       array = np.empty(shape=(1,), dtype=self.dtype)
       self._getitem(key, key+1, array.data)
-      return PyArray_GETITEM(array, array.data)
+      return defs.PyArray_GETITEM(array, array.data)
     elif isinstance(key, slice):
       (start, stop, step) = key.start, key.stop, key.step
     elif isinstance(key, tuple) and self.dtype.shape != ():
@@ -477,11 +449,12 @@ cdef class chunk:
 
   @property
   def pointer(self):
-      return <Py_uintptr_t> self.data+BLOSCPACK_HEADER_LENGTH
+      return <defs.Py_uintptr_t> self.data+BLOSCPACK_HEADER_LENGTH
 
   @property
   def viewof(self):
-      return PyBuffer_FromMemory(<void*>self.data, <Py_ssize_t>self.cdbytes)
+      return defs.PyBuffer_FromMemory(<void*>self.data,
+                                      <Py_ssize_t>self.cdbytes)
 
 
   def __setitem__(self, object key, object value):
@@ -504,7 +477,7 @@ cdef class chunk:
     if self.dobject:
       self.dobject = None  # DECREF pointer to data object
     else:
-      free(self.data)   # explictly free the data area
+      defs.free(self.data)   # explictly free the data area
 
 
 cdef create_bloscpack_header(nchunks=None, format_version=FORMAT_VERSION):
@@ -609,7 +582,7 @@ cdef class chunks(object):
   cdef object _rootdir, _mode
   cdef object dtype, bparams, lastchunkarr
   cdef object chunk_cached
-  cdef npy_intp nchunks, nchunk_cached, len
+  cdef defs.npy_intp nchunks, nchunk_cached, len
 
   property mode:
     "The mode used to create/open the `mode`."
@@ -631,7 +604,7 @@ cdef class chunks(object):
       return os.path.join(self.rootdir, DATA_DIR)
 
   def __cinit__(self, rootdir, metainfo=None, _new=False):
-    cdef ndarray lastchunkarr
+    cdef defs.ndarray lastchunkarr
     cdef void *decompressed, *compressed
     cdef int leftover
     cdef char *lastchunk
@@ -661,9 +634,9 @@ cdef class chunks(object):
       if leftover:
         # Fill lastchunk with data on disk
         scomp = self.read_chunk(self.nchunks)
-        compressed = PyString_AsString(scomp)
+        compressed = defs.PyString_AsString(scomp)
         with nogil:
-          ret = blosc_decompress(compressed, lastchunk, chunksize)
+          ret = defs.blosc_decompress(compressed, lastchunk, chunksize)
         if ret < 0:
           raise RuntimeError(
             "error decompressing the last chunk (error code: %d)" % ret)
@@ -811,12 +784,12 @@ cdef class barray:
   cdef int _chunksize, _chunklen, leftover
   cdef int nrowsinbuf, _row
   cdef int sss_mode, wheretrue_mode, where_mode
-  cdef npy_intp startb, stopb
-  cdef npy_intp start, stop, step, nextelement
-  cdef npy_intp _nrow, nrowsread
-  cdef npy_intp _nbytes, _cbytes
-  cdef npy_intp nhits, limit, skip
-  cdef npy_intp expectedlen
+  cdef defs.npy_intp startb, stopb
+  cdef defs.npy_intp start, stop, step, nextelement
+  cdef defs.npy_intp _nrow, nrowsread
+  cdef defs.npy_intp _nbytes, _cbytes
+  cdef defs.npy_intp nhits, limit, skip
+  cdef defs.npy_intp expectedlen
   cdef char *lastchunk
   cdef object lastchunkarr, where_arr, arr1
   cdef object _bparams, _dflt
@@ -824,10 +797,10 @@ cdef class barray:
   cdef public object chunks
   cdef object _rootdir, datadir, metadir, _mode
   cdef object _attrs
-  cdef ndarray iobuf, where_buf
+  cdef defs.ndarray iobuf, where_buf
   # For block cache
   cdef int idxcache
-  cdef ndarray blockcache
+  cdef defs.ndarray blockcache
   cdef char *datacache
 
   property leftovers:
@@ -838,13 +811,13 @@ cdef class barray:
   property nchunks:
     def __get__(self):
       # TODO: do we need to handle the last chunk specially?
-      return <npy_intp>cython.cdiv(self._nbytes, self._chunksize)
+      return <defs.npy_intp>cython.cdiv(self._nbytes, self._chunksize)
 
   property partitions:
     def __get__(self):
       # Return a sequence of tuples indicating the bounds
       # of each of the chunks.
-      nchunks = <npy_intp>cython.cdiv(self._nbytes, self._chunksize)
+      nchunks = <defs.npy_intp>cython.cdiv(self._nbytes, self._chunksize)
       chunklen = cython.cdiv(self._chunksize, self.atomsize)
       return [(i*chunklen,(i+1)*chunklen) for i in xrange(nchunks)]
 
@@ -889,7 +862,7 @@ cdef class barray:
         return len(self.chunks)
       else:
         # Important to do the cast in order to get a npy_intp result
-        return <npy_intp>cython.cdiv(self._nbytes, self.atomsize)
+        return <defs.npy_intp>cython.cdiv(self._nbytes, self.atomsize)
 
   property mode:
     "The mode used to create/open the `mode`."
@@ -985,7 +958,7 @@ cdef class barray:
 
     """
     cdef int itemsize, atomsize, chunksize
-    cdef ndarray lastchunkarr
+    cdef defs.ndarray lastchunkarr
     cdef object array_, _dflt
 
     # Check defaults for bparams
@@ -1098,9 +1071,9 @@ cdef class barray:
   def open_barray(self, shape, bparams, dtype, dflt,
                   expectedlen, cbytes, chunklen):
     """Open an existing array."""
-    cdef ndarray lastchunkarr
+    cdef defs.ndarray lastchunkarr
     cdef object array_, _dflt
-    cdef npy_intp calen
+    cdef defs.npy_intp calen
 
     if len(shape) == 1:
         self._dtype = dtype
@@ -1153,10 +1126,10 @@ cdef class barray:
   def fill_chunks(self, object array_):
     """Fill chunks, either in-memory or on-disk."""
     cdef int leftover, chunklen
-    cdef npy_intp i, nchunks
-    cdef npy_intp nbytes, cbytes
+    cdef defs.npy_intp i, nchunks
+    cdef defs.npy_intp nbytes, cbytes
     cdef chunk chunk_
-    cdef ndarray remainder
+    cdef defs.ndarray remainder
 
     # The number of bytes in incoming array
     nbytes = self.itemsize * array_.size
@@ -1165,7 +1138,7 @@ cdef class barray:
     # Compress data in chunks
     cbytes = 0
     chunklen = self._chunklen
-    nchunks = <npy_intp>cython.cdiv(nbytes, self._chunksize)
+    nchunks = <defs.npy_intp>cython.cdiv(nbytes, self._chunksize)
     for i from 0 <= i < nchunks:
       assert i*chunklen < array_.size, "i, nchunks: %d, %d" % (i, nchunks)
       chunk_ = chunk(array_[i*chunklen:(i+1)*chunklen],
@@ -1176,7 +1149,7 @@ cdef class barray:
     self.leftover = leftover = nbytes % self._chunksize
     if leftover:
       remainder = array_[nchunks*chunklen:]
-      memcpy(self.lastchunk, remainder.data, leftover)
+      defs.memcpy(self.lastchunk, remainder.data, leftover)
     cbytes += self._chunksize  # count the space in last chunk
     self._cbytes = cbytes
 
@@ -1279,8 +1252,8 @@ cdef class barray:
     """
     cdef int atomsize, itemsize, chunksize, leftover
     cdef int nbytesfirst, chunklen, start, stop
-    cdef npy_intp nbytes, cbytes, bsize, i, nchunks
-    cdef ndarray remainder, arrcpy, dflts
+    cdef defs.npy_intp nbytes, cbytes, bsize, i, nchunks
+    cdef defs.ndarray remainder, arrcpy, dflts
     cdef chunk chunk_
 
     if self.mode == "r":
@@ -1314,7 +1287,7 @@ cdef class barray:
     if (bsize + leftover) < chunksize:
       # Data fits in lastchunk buffer.  Just copy it
       if arrcpy.strides[0] > 0:
-        memcpy(self.lastchunk+leftover, arrcpy.data, bsize)
+        defs.memcpy(self.lastchunk+leftover, arrcpy.data, bsize)
       else:
         start = cython.cdiv(leftover, atomsize)
         stop = cython.cdiv((leftover+bsize), atomsize)
@@ -1327,7 +1300,7 @@ cdef class barray:
       if leftover:
         nbytesfirst = chunksize - leftover
         if arrcpy.strides[0] > 0:
-          memcpy(self.lastchunk+leftover, arrcpy.data, nbytesfirst)
+          defs.memcpy(self.lastchunk+leftover, arrcpy.data, nbytesfirst)
         else:
           start = cython.cdiv(leftover, atomsize)
           stop = cython.cdiv((leftover+nbytesfirst), atomsize)
@@ -1342,7 +1315,7 @@ cdef class barray:
 
       # Then fill other possible chunks
       nbytes = bsize - nbytesfirst
-      nchunks = <npy_intp>cython.cdiv(nbytes, chunksize)
+      nchunks = <defs.npy_intp>cython.cdiv(nbytes, chunksize)
       chunklen = self._chunklen
       # Get a new view skipping the elements that have been already copied
       remainder = arrcpy[cython.cdiv(nbytesfirst, atomsize):]
@@ -1358,7 +1331,7 @@ cdef class barray:
       if leftover:
         remainder = remainder[nchunks*chunklen:]
         if arrcpy.strides[0] > 0:
-          memcpy(self.lastchunk, remainder.data, leftover)
+          defs.memcpy(self.lastchunk, remainder.data, leftover)
         else:
           self.lastchunkarr[:len(remainder)] = remainder
 
@@ -1382,7 +1355,7 @@ cdef class barray:
 
     """
     cdef int atomsize, leftover, leftover2
-    cdef npy_intp cbytes, bsize, nchunk2
+    cdef defs.npy_intp cbytes, bsize, nchunk2
     cdef chunk chunk_
 
     if not isinstance(nitems, _inttypes +(float,)):
@@ -1413,7 +1386,8 @@ cdef class barray:
       leftover = leftover2 * atomsize
 
       # Remove complete chunks
-      nchunk2 = lnchunk = <npy_intp>cython.cdiv(self._nbytes, self._chunksize)
+      nchunk2 = lnchunk = <defs.npy_intp>cython.cdiv(self._nbytes,
+                                                     self._chunksize)
       while nchunk2 > nchunk:
         chunk_ = chunks.pop()
         cbytes += chunk_.cbytes
@@ -1488,7 +1462,7 @@ cdef class barray:
         A copy of the original barray.
 
     """
-    cdef npy_intp newlen, ilen, isize, osize, newsize, rsize, i
+    cdef defs.npy_intp newlen, ilen, isize, osize, newsize, rsize, i
     cdef object ishape, oshape, pos, newdtype, out
 
     # Enforce newshape as tuple
@@ -1613,7 +1587,7 @@ cdef class barray:
 
     """
     cdef chunk chunk_
-    cdef npy_intp nchunk, nchunks
+    cdef defs.npy_intp nchunk, nchunks
     cdef object result
 
     if dtype is None:
@@ -1630,7 +1604,7 @@ cdef class barray:
     # Get a container for the result
     result = np.zeros(1, dtype=dtype)[0]
 
-    nchunks = <npy_intp>cython.cdiv(self._nbytes, self._chunksize)
+    nchunks = <defs.npy_intp>cython.cdiv(self._nbytes, self._chunksize)
     for nchunk from 0 <= nchunk < nchunks:
       chunk_ = self.chunks[nchunk]
       if chunk_.isconstant:
@@ -1651,7 +1625,7 @@ cdef class barray:
   def __sizeof__(self):
     return self._cbytes
 
-  cdef int getitem_cache(self, npy_intp pos, char *dest):
+  cdef int getitem_cache(self, defs.npy_intp pos, char *dest):
     """Get a single item and put it in `dest`.  It caches a complete block.
 
     It returns 1 if asked `pos` can be copied to `dest`.  Else, this returns
@@ -1666,24 +1640,24 @@ cdef class barray:
     """
     cdef int ret, atomsize, blocksize, offset
     cdef int idxcache, posinbytes, blocklen
-    cdef npy_intp nchunk, nchunks, chunklen
+    cdef defs.npy_intp nchunk, nchunks, chunklen
     cdef chunk chunk_
 
     atomsize = self.atomsize
-    nchunks = <npy_intp>cython.cdiv(self._nbytes, self._chunksize)
+    nchunks = <defs.npy_intp>cython.cdiv(self._nbytes, self._chunksize)
     chunklen = self._chunklen
-    nchunk = <npy_intp>cython.cdiv(pos, chunklen)
+    nchunk = <defs.npy_intp>cython.cdiv(pos, chunklen)
 
     # Check whether pos is in the last chunk
     if nchunk == nchunks and self.leftover:
       posinbytes = (pos % chunklen) * atomsize
-      memcpy(dest, self.lastchunk + posinbytes, atomsize)
+      defs.memcpy(dest, self.lastchunk + posinbytes, atomsize)
       return 1
 
     # Locate the *block* inside the chunk
     chunk_ = self.chunks[nchunk]
     blocksize = chunk_.blocksize
-    blocklen = <npy_intp>cython.cdiv(blocksize, atomsize)
+    blocklen = <defs.npy_intp>cython.cdiv(blocksize, atomsize)
 
     if ((atomsize > blocksize) or ((pos + blocklen) > chunklen)):
       # This request cannot be resolved here
@@ -1699,11 +1673,11 @@ cdef class barray:
       #   self._cbytes += chunksize
 
     # Check if block is cached
-    idxcache = <npy_intp>cython.cdiv(pos, blocklen) * blocklen
+    idxcache = <defs.npy_intp>cython.cdiv(pos, blocklen) * blocklen
     if idxcache == self.idxcache:
       # Hit!
       posinbytes = (pos % blocklen) * atomsize
-      memcpy(dest, self.datacache + posinbytes, atomsize)
+      defs.memcpy(dest, self.datacache + posinbytes, atomsize)
       return 1
 
     # No luck. Read a complete block.
@@ -1711,7 +1685,7 @@ cdef class barray:
     chunk_._getitem(offset, offset+blocklen, self.datacache)
     # Copy the interesting bits to dest
     posinbytes = (pos % blocklen) * atomsize
-    memcpy(dest, self.datacache + posinbytes, atomsize)
+    defs.memcpy(dest, self.datacache + posinbytes, atomsize)
     # Update the cache index
     self.idxcache = idxcache
     return 1
@@ -1758,10 +1732,10 @@ cdef class barray:
     """
 
     cdef int chunklen
-    cdef npy_intp startb, stopb
-    cdef npy_intp nchunk, keychunk, nchunks
-    cdef npy_intp nwrow, blen
-    cdef ndarray arr1
+    cdef defs.npy_intp startb, stopb
+    cdef defs.npy_intp nchunk, keychunk, nchunks
+    cdef defs.npy_intp nwrow, blen
+    cdef defs.ndarray arr1
     cdef object start, stop, step
     cdef object arr
 
@@ -1779,7 +1753,7 @@ cdef class barray:
         return self.getitem_object(key)
       if self.getitem_cache(key, arr1.data):
         if self.itemsize == self.atomsize:
-          return PyArray_GETITEM(arr1, arr1.data)
+          return defs.PyArray_GETITEM(arr1, arr1.data)
         else:
           return arr1[0]
       # Fallback action: use the slice code
@@ -1853,7 +1827,7 @@ cdef class barray:
 
     # Fill it from data in chunks
     nwrow = 0
-    nchunks = <npy_intp>cython.cdiv(self._nbytes, self._chunksize)
+    nchunks = <defs.npy_intp>cython.cdiv(self._nbytes, self._chunksize)
     if self.leftover > 0:
       nchunks += 1
     for nchunk from 0 <= nchunk < nchunks:
@@ -1890,9 +1864,9 @@ cdef class barray:
 
     """
     cdef int chunklen
-    cdef npy_intp startb, stopb
-    cdef npy_intp nchunk, keychunk, nchunks
-    cdef npy_intp nwrow, blen, vlen
+    cdef defs.npy_intp startb, stopb
+    cdef defs.npy_intp nchunk, keychunk, nchunks
+    cdef defs.npy_intp nwrow, blen, vlen
     cdef chunk chunk_
     cdef object start, stop, step
     cdef object cdata, arr
@@ -1982,7 +1956,7 @@ cdef class barray:
     # Fill it from data in chunks
     nwrow = 0
     chunklen = self._chunklen
-    nchunks = <npy_intp>cython.cdiv(self._nbytes, self._chunksize)
+    nchunks = <defs.npy_intp>cython.cdiv(self._nbytes, self._chunksize)
     if self.leftover > 0:
       nchunks += 1
     for nchunk from 0 <= nchunk < nchunks:
@@ -2013,25 +1987,28 @@ cdef class barray:
     assert (nwrow == vlen)
 
   # This is a private function that is specific for `eval`
-  def _getrange(self, npy_intp start, npy_intp blen, ndarray out):
+  def _getrange(self, 
+                defs.npy_intp start, 
+                defs.npy_intp blen,
+                defs.ndarray out):
     cdef int chunklen
-    cdef npy_intp startb, stopb
-    cdef npy_intp nwrow, stop, cblen
-    cdef npy_intp schunk, echunk, nchunk, nchunks
+    cdef defs.npy_intp startb, stopb
+    cdef defs.npy_intp nwrow, stop, cblen
+    cdef defs.npy_intp schunk, echunk, nchunk, nchunks
     cdef chunk chunk_
 
     # Check that we are inside limits
-    nrows = <npy_intp>cython.cdiv(self._nbytes, self.atomsize)
+    nrows = <defs.npy_intp>cython.cdiv(self._nbytes, self.atomsize)
     if (start + blen) > nrows:
       blen = nrows - start
 
     # Fill `out` from data in chunks
     nwrow = 0
     stop = start + blen
-    nchunks = <npy_intp>cython.cdiv(self._nbytes, self._chunksize)
+    nchunks = <defs.npy_intp>cython.cdiv(self._nbytes, self._chunksize)
     chunklen = cython.cdiv(self._chunksize, self.atomsize)
-    schunk = <npy_intp>cython.cdiv(start, chunklen)
-    echunk = <npy_intp>cython.cdiv((start+blen), chunklen)
+    schunk = <defs.npy_intp>cython.cdiv(start, chunklen)
+    echunk = <defs.npy_intp>cython.cdiv((start+blen), chunklen)
     for nchunk from schunk <= nchunk <= echunk:
       # Compute start & stop for each block
       startb = start % chunklen
@@ -2058,9 +2035,9 @@ cdef class barray:
   cdef void bool_update(self, boolarr, value):
     """Update self in positions where `boolarr` is true with `value` array."""
     cdef int chunklen
-    cdef npy_intp startb, stopb
-    cdef npy_intp nchunk, nchunks, nrows
-    cdef npy_intp nwrow, blen, vlen, n
+    cdef defs.npy_intp startb, stopb
+    cdef defs.npy_intp nchunk, nchunks, nrows
+    cdef defs.npy_intp nwrow, blen, vlen, n
     cdef chunk chunk_
     cdef object cdata, boolb
 
@@ -2070,10 +2047,10 @@ cdef class barray:
     # Fill it from data in chunks
     nwrow = 0
     chunklen = self._chunklen
-    nchunks = <npy_intp>cython.cdiv(self._nbytes, self._chunksize)
+    nchunks = <defs.npy_intp>cython.cdiv(self._nbytes, self._chunksize)
     if self.leftover > 0:
       nchunks += 1
-    nrows = <npy_intp>cython.cdiv(self._nbytes, self.atomsize)
+    nrows = <defs.npy_intp>cython.cdiv(self._nbytes, self.atomsize)
     for nchunk from 0 <= nchunk < nchunks:
       # Compute start & stop for each block
       startb, stopb, _ = clip_chunk(nchunk, chunklen, 0, nrows, 1)
@@ -2109,7 +2086,7 @@ cdef class barray:
 
     if not self.sss_mode:
       self.start = 0
-      self.stop = <npy_intp>cython.cdiv(self._nbytes, self.atomsize)
+      self.stop = <defs.npy_intp>cython.cdiv(self._nbytes, self.atomsize)
       self.step = 1
     if not (self.sss_mode or self.where_mode or self.wheretrue_mode):
       self.nhits = 0
@@ -2323,8 +2300,8 @@ cdef class barray:
         continue
       # Return the current value in I/O buffer
       if self.itemsize == self.atomsize:
-        return PyArray_GETITEM(
-          self.iobuf, self.iobuf.data + self._row * self.atomsize)
+        return defs.PyArray_GETITEM( self.iobuf, self.iobuf.data + self._row *
+                                     self.atomsize)
       else:
         return self.iobuf[self._row]
 
@@ -2348,15 +2325,15 @@ cdef class barray:
   cdef int check_zeros(self, object barr):
     """Check for zeros.  Return 1 if all zeros, else return 0."""
     cdef int bsize
-    cdef npy_intp nchunk
+    cdef defs.npy_intp nchunk
     cdef barray carr
-    cdef ndarray ndarr
+    cdef defs.ndarray ndarr
     cdef chunk chunk_
 
     if isinstance(barr, barray):
       # Check for zero'ed chunks in barrays
       carr = barr
-      nchunk = <npy_intp>cython.cdiv(self.nrowsread, self.nrowsinbuf)
+      nchunk = <defs.npy_intp>cython.cdiv(self.nrowsread, self.nrowsinbuf)
       if nchunk < len(carr.chunks):
         chunk_ = carr.chunks[nchunk]
         if chunk_.isconstant and chunk_.constant in (0, ''):
@@ -2392,7 +2369,7 @@ cdef class barray:
 
     """
     cdef chunk chunk_
-    cdef npy_intp nchunks
+    cdef defs.npy_intp nchunks
     cdef int leftover_atoms
 
     if self._rootdir is None:
