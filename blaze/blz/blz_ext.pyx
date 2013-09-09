@@ -54,7 +54,7 @@ IntType = np.dtype(np.int_)
 #-----------------------------------------------------------------
 
 # numpy functions & objects
-cimport definitions as defs
+cimport blosc
 cimport numpy_definitions as npdefs
 cimport cpython
 
@@ -92,7 +92,7 @@ def _blosc_set_nthreads(nthreads):
       The previous setting for the number of threads.
 
   """
-  return defs.blosc_set_nthreads(nthreads)
+  return blosc.set_nthreads(nthreads)
 
 def _blosc_init():
   """
@@ -101,7 +101,7 @@ def _blosc_init():
   Initialize the Blosc library.
 
   """
-  defs.blosc_init()
+  blosc.init()
 
 def _blosc_destroy():
   """
@@ -110,7 +110,7 @@ def _blosc_destroy():
   Finalize the Blosc library.
 
   """
-  defs.blosc_destroy()
+  blosc.destroy()
 
 def blosc_version():
   """
@@ -119,8 +119,8 @@ def blosc_version():
   Return the version of the Blosc library.
 
   """
-  return (<char *>defs.BLOSC_VERSION_STRING,
-          <char *>defs.BLOSC_VERSION_DATE)
+  return (<char *>blosc.BLOSC_VERSION_STRING,
+          <char *>blosc.BLOSC_VERSION_DATE)
 
 def list_bytes_to_str(lst):
     """The Python 3 JSON encoder doesn't accept 'bytes' objects,
@@ -259,10 +259,10 @@ cdef class chunk:
       itemsize = 4
     else:
       itemsize = dtype_.elsize
-    if itemsize > defs.BLOSC_MAX_TYPESIZE:
+    if itemsize > blosc.BLOSC_MAX_TYPESIZE:
       raise TypeError(
         "typesize is %d and BLZ does not currently support data types larger "
-        "than %d bytes" % (itemsize, defs.BLOSC_MAX_TYPESIZE))
+        "than %d bytes" % (itemsize, blosc.BLOSC_MAX_TYPESIZE))
     self.itemsize = itemsize
     self.dobject = None
     footprint = 0
@@ -273,10 +273,7 @@ cdef class chunk:
       # Increment the reference so that data don't go away
       self.dobject = dobject
       # Set size info for the instance
-      defs.blosc_cbuffer_sizes(self.data,
-                               &nbytes,
-                               &cbytes,
-                               &blocksize)
+      blosc.cbuffer_sizes(self.data, &nbytes, &cbytes, &blocksize)
     elif dtype_ == 'O':
       # The objects should arrive here already pickled
       data = cpython.PyString_AsString(dobject)
@@ -352,16 +349,16 @@ cdef class chunk:
 
     clevel = bparams.clevel
     shuffle = bparams.shuffle
-    dest = <char *>malloc(nbytes + defs.BLOSC_MAX_OVERHEAD)
+    dest = <char *>malloc(nbytes + blosc.BLOSC_MAX_OVERHEAD)
     with nogil:
-      cbytes = defs.blosc_compress(clevel, shuffle, itemsize, nbytes, data,
-                                   dest, nbytes + defs.BLOSC_MAX_OVERHEAD)
+      cbytes = blosc.compress(clevel, shuffle, itemsize, nbytes, data,
+                              dest, nbytes + blosc.BLOSC_MAX_OVERHEAD)
     if cbytes <= 0:
       raise RuntimeError, "fatal error during Blosc compression: %d" % cbytes
     # Free the unused data
     self.data = <char *>realloc(dest, cbytes)
     # Set size info for the instance
-    defs.blosc_cbuffer_sizes(self.data, &nbytes_, &cbytes, &blocksize)
+    blosc.cbuffer_sizes(self.data, &nbytes_, &cbytes, &blocksize)
     assert nbytes_ == nbytes
 
     return (cbytes, blocksize)
@@ -384,7 +381,7 @@ cdef class chunk:
     dest = <char *>malloc(self.nbytes)
     # Fill dest with uncompressed data
     with nogil:
-      ret = defs.blosc_decompress(self.data, dest, self.nbytes)
+      ret = blosc.decompress(self.data, dest, self.nbytes)
     if ret < 0:
       raise RuntimeError, "fatal error during Blosc decompression: %d" % ret
     string = cpython.PyString_FromStringAndSize(dest,
@@ -411,9 +408,9 @@ cdef class chunk:
     # Fill dest with uncompressed data
     with nogil:
       if bsize == self.nbytes:
-        ret = defs.blosc_decompress(self.data, dest, bsize)
+        ret = blosc.decompress(self.data, dest, bsize)
       else:
-        ret = defs.blosc_getitem(self.data, nstart, nitems, dest)
+        ret = blosc.getitem(self.data, nstart, nitems, dest)
     if ret < 0:
       raise RuntimeError, "fatal error during Blosc decompression: %d" % ret
 
@@ -646,7 +643,7 @@ cdef class chunks(object):
         scomp = self.read_chunk(self.nchunks)
         compressed = cpython.PyString_AsString(scomp)
         with nogil:
-          ret = defs.blosc_decompress(compressed, lastchunk, chunksize)
+          ret = blosc.decompress(compressed, lastchunk, chunksize)
         if ret < 0:
           raise RuntimeError(
             "error decompressing the last chunk (error code: %d)" % ret)
