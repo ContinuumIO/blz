@@ -57,7 +57,11 @@ IntType = np.dtype(np.int_)
 cimport definitions as defs
 cimport numpy_definitions as npdefs
 
-from libc.stdint cimport intptr_t as blz_int_t
+from libc.stdint cimport intptr_t
+from libc.stdlib cimport malloc, realloc, free
+from libc.string cimport memcpy, memset
+
+ctypedef intptr_t blz_int_t
 
 # ----------------------------------------------------------------------
 
@@ -347,14 +351,14 @@ cdef class chunk:
 
     clevel = bparams.clevel
     shuffle = bparams.shuffle
-    dest = <char *>defs.malloc(nbytes + defs.BLOSC_MAX_OVERHEAD)
+    dest = <char *>malloc(nbytes + defs.BLOSC_MAX_OVERHEAD)
     with nogil:
       cbytes = defs.blosc_compress(clevel, shuffle, itemsize, nbytes, data,
                                    dest, nbytes + defs.BLOSC_MAX_OVERHEAD)
     if cbytes <= 0:
       raise RuntimeError, "fatal error during Blosc compression: %d" % cbytes
     # Free the unused data
-    self.data = <char *>defs.realloc(dest, cbytes)
+    self.data = <char *>realloc(dest, cbytes)
     # Set size info for the instance
     defs.blosc_cbuffer_sizes(self.data, &nbytes_, &cbytes, &blocksize)
     assert nbytes_ == nbytes
@@ -376,7 +380,7 @@ cdef class chunk:
     cdef int ret
     cdef char *dest
 
-    dest = <char *>defs.malloc(self.nbytes)
+    dest = <char *>malloc(self.nbytes)
     # Fill dest with uncompressed data
     with nogil:
       ret = defs.blosc_decompress(self.data, dest, self.nbytes)
@@ -399,7 +403,7 @@ cdef class chunk:
       # The chunk is made of constants
       constants = np.ndarray(shape=(blen,), dtype=self.dtype,
                              buffer=self.constant, strides=(0,)).copy()
-      defs.memcpy(dest, constants.data, bsize)
+      memcpy(dest, constants.data, bsize)
       return
 
     # Fill dest with uncompressed data
@@ -481,7 +485,7 @@ cdef class chunk:
     if self.dobject:
       self.dobject = None  # DECREF pointer to data object
     else:
-      defs.free(self.data)   # explictly free the data area
+      free(self.data)   # explictly free the data area
 
 
 cdef create_bloscpack_header(nchunks=None, format_version=FORMAT_VERSION):
@@ -1154,7 +1158,7 @@ cdef class barray:
     self.leftover = leftover = nbytes % self._chunksize
     if leftover:
       remainder = array_[nchunks*chunklen:]
-      defs.memcpy(self.lastchunk, remainder.data, leftover)
+      memcpy(self.lastchunk, remainder.data, leftover)
     cbytes += self._chunksize  # count the space in last chunk
     self._cbytes = cbytes
 
@@ -1292,7 +1296,7 @@ cdef class barray:
     if (bsize + leftover) < chunksize:
       # Data fits in lastchunk buffer.  Just copy it
       if arrcpy.strides[0] > 0:
-        defs.memcpy(self.lastchunk+leftover, arrcpy.data, bsize)
+        memcpy(self.lastchunk+leftover, arrcpy.data, bsize)
       else:
         start = cython.cdiv(leftover, atomsize)
         stop = cython.cdiv((leftover+bsize), atomsize)
@@ -1305,7 +1309,7 @@ cdef class barray:
       if leftover:
         nbytesfirst = chunksize - leftover
         if arrcpy.strides[0] > 0:
-          defs.memcpy(self.lastchunk+leftover, arrcpy.data, nbytesfirst)
+          memcpy(self.lastchunk+leftover, arrcpy.data, nbytesfirst)
         else:
           start = cython.cdiv(leftover, atomsize)
           stop = cython.cdiv((leftover+nbytesfirst), atomsize)
@@ -1336,7 +1340,7 @@ cdef class barray:
       if leftover:
         remainder = remainder[nchunks*chunklen:]
         if arrcpy.strides[0] > 0:
-          defs.memcpy(self.lastchunk, remainder.data, leftover)
+          memcpy(self.lastchunk, remainder.data, leftover)
         else:
           self.lastchunkarr[:len(remainder)] = remainder
 
@@ -1656,7 +1660,7 @@ cdef class barray:
     # Check whether pos is in the last chunk
     if nchunk == nchunks and self.leftover:
       posinbytes = (pos % chunklen) * atomsize
-      defs.memcpy(dest, self.lastchunk + posinbytes, atomsize)
+      memcpy(dest, self.lastchunk + posinbytes, atomsize)
       return 1
 
     # Locate the *block* inside the chunk
@@ -1682,7 +1686,7 @@ cdef class barray:
     if idxcache == self.idxcache:
       # Hit!
       posinbytes = (pos % blocklen) * atomsize
-      defs.memcpy(dest, self.datacache + posinbytes, atomsize)
+      memcpy(dest, self.datacache + posinbytes, atomsize)
       return 1
 
     # No luck. Read a complete block.
@@ -1690,7 +1694,7 @@ cdef class barray:
     chunk_._getitem(offset, offset+blocklen, self.datacache)
     # Copy the interesting bits to dest
     posinbytes = (pos % blocklen) * atomsize
-    defs.memcpy(dest, self.datacache + posinbytes, atomsize)
+    memcpy(dest, self.datacache + posinbytes, atomsize)
     # Update the cache index
     self.idxcache = idxcache
     return 1
