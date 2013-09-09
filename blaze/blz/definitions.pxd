@@ -12,8 +12,6 @@
 
 import sys
 
-from numpy_definitions cimport *
-
 # Standard C functions.
 cdef extern from "stdlib.h":
   ctypedef long size_t
