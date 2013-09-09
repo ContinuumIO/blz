@@ -56,8 +56,9 @@ IntType = np.dtype(np.int_)
 # numpy functions & objects
 cimport definitions as defs
 cimport numpy_definitions as npdefs
+cimport cpython
 
-from libc.stdint cimport intptr_t
+from libc.stdint cimport intptr_t, uintptr_t
 from libc.stdlib cimport malloc, realloc, free
 from libc.string cimport memcpy, memset
 
@@ -268,7 +269,7 @@ cdef class chunk:
 
     if _compr:
       # Data comes in an already compressed state inside a Python String
-      self.data = defs.PyString_AsString(dobject)
+      self.data = cpython.PyString_AsString(dobject)
       # Increment the reference so that data don't go away
       self.dobject = dobject
       # Set size info for the instance
@@ -278,8 +279,8 @@ cdef class chunk:
                                &blocksize)
     elif dtype_ == 'O':
       # The objects should arrive here already pickled
-      data = defs.PyString_AsString(dobject)
-      nbytes = defs.PyString_GET_SIZE(dobject)
+      data = cpython.PyString_AsString(dobject)
+      nbytes = cpython.PyString_GET_SIZE(dobject)
       cbytes, blocksize = self.compress_data(data, 1, nbytes, bparams)
     else:
       # Compress the data object (a NumPy object)
@@ -371,8 +372,8 @@ cdef class chunk:
 
     assert (not self.isconstant,
             "This function can only be used for persistency")
-    string = defs.PyString_FromStringAndSize(self.data,
-                                             <Py_ssize_t>self.cdbytes)
+    string = cpython.PyString_FromStringAndSize(self.data,
+                                                <Py_ssize_t>self.cdbytes)
     return string
 
   def getudata(self):
@@ -386,7 +387,8 @@ cdef class chunk:
       ret = defs.blosc_decompress(self.data, dest, self.nbytes)
     if ret < 0:
       raise RuntimeError, "fatal error during Blosc decompression: %d" % ret
-    string = defs.PyString_FromStringAndSize(dest, <Py_ssize_t>self.nbytes)
+    string = cpython.PyString_FromStringAndSize(dest,
+                                                <Py_ssize_t>self.nbytes)
     return string
 
   cdef void _getitem(self, int start, int stop, char *dest):
@@ -457,12 +459,12 @@ cdef class chunk:
 
   @property
   def pointer(self):
-      return <defs.Py_uintptr_t> self.data+BLOSCPACK_HEADER_LENGTH
+      return <uintptr_t> self.data+BLOSCPACK_HEADER_LENGTH
 
   @property
   def viewof(self):
-      return defs.PyBuffer_FromMemory(<void*>self.data,
-                                      <Py_ssize_t>self.cdbytes)
+      return cpython.PyBuffer_FromMemory(<void*>self.data,
+                                         <Py_ssize_t>self.cdbytes)
 
 
   def __setitem__(self, object key, object value):
@@ -642,7 +644,7 @@ cdef class chunks(object):
       if leftover:
         # Fill lastchunk with data on disk
         scomp = self.read_chunk(self.nchunks)
-        compressed = defs.PyString_AsString(scomp)
+        compressed = cpython.PyString_AsString(scomp)
         with nogil:
           ret = defs.blosc_decompress(compressed, lastchunk, chunksize)
         if ret < 0:
