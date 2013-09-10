@@ -8,7 +8,6 @@
 
 
 import sys
-import numpy as np
 import blaze.blz as blz
 from blaze.blz import utils, attrs, array2string
 import os, os.path
@@ -18,13 +17,6 @@ import tempfile
 import json
 import datetime
 import cython
-
-if sys.version_info >= (3, 0):
-    _MAXINT = 2**31 - 1
-    _inttypes = (int, np.integer)
-else:
-    _MAXINT = sys.maxint
-    _inttypes = (int, long, np.integer)
 
 _KB = 1024
 _MB = 1024*_KB
@@ -44,18 +36,10 @@ FORMAT_VERSION = 1
 MAX_FORMAT_VERSION = 255
 MAX_CHUNKS = (2**63)-1
 
-# The type used for size values: indexes, coordinates, dimension
-# lengths, row numbers, shapes, chunk shapes, byte counts...
-SizeType = np.int64
-
-# The native int type for this platform
-IntType = np.dtype(np.int_)
-
 #-----------------------------------------------------------------
 
 # numpy functions & objects
 cimport blosc
-cimport numpy_definitions as npdefs
 cimport cpython
 
 from libc.stdint cimport intptr_t, uintptr_t
@@ -66,7 +50,23 @@ ctypedef intptr_t blz_int_t
 
 # ----------------------------------------------------------------------
 
-# Initialization code
+# NumPy related imports and initialization
+import numpy as np
+cimport numpy_definitions as npdefs
+
+if sys.version_info >= (3, 0):
+    _MAXINT = 2**31 - 1
+    _inttypes = (int, np.integer)
+else:
+    _MAXINT = sys.maxint
+    _inttypes = (int, long, np.integer)
+
+# The type used for size values: indexes, coordinates, dimension
+# lengths, row numbers, shapes, chunk shapes, byte counts...
+SizeType = np.int64
+
+# The native int type for this platform
+IntType = np.dtype(np.int_)
 
 # The numpy API requires this function to be called before
 # using any numpy facilities in an extension module.
