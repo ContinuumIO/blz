@@ -38,7 +38,6 @@ MAX_CHUNKS = (2**63)-1
 
 #-----------------------------------------------------------------
 
-# numpy functions & objects
 cimport blosc
 cimport cpython
 
@@ -268,16 +267,16 @@ cdef class chunk:
     footprint = 0
 
     if _compr:
-      # Data comes in an already compressed state inside a Python String
-      self.data = cpython.PyString_AsString(dobject)
+      # Data comes in an already compressed state inside a Python bytes
+      self.data = dobject
       # Increment the reference so that data don't go away
       self.dobject = dobject
       # Set size info for the instance
       blosc.cbuffer_sizes(self.data, &nbytes, &cbytes, &blocksize)
     elif dtype_ == 'O':
       # The objects should arrive here already pickled
-      data = cpython.PyString_AsString(dobject)
-      nbytes = cpython.PyString_GET_SIZE(dobject)
+      data = dobject
+      nbytes = len(dobject)
       cbytes, blocksize = self.compress_data(data, 1, nbytes, bparams)
     else:
       # Compress the data object (a NumPy object)
@@ -369,8 +368,7 @@ cdef class chunk:
 
     assert (not self.isconstant,
             "This function can only be used for persistency")
-    string = cpython.PyString_FromStringAndSize(self.data,
-                                                <Py_ssize_t>self.cdbytes)
+    string = self.data[:self.cdbytes]
     return string
 
   def getudata(self):
@@ -384,8 +382,7 @@ cdef class chunk:
       ret = blosc.decompress(self.data, dest, self.nbytes)
     if ret < 0:
       raise RuntimeError, "fatal error during Blosc decompression: %d" % ret
-    string = cpython.PyString_FromStringAndSize(dest,
-                                                <Py_ssize_t>self.nbytes)
+    string = dest[:self.nbytes]
     return string
 
   cdef void _getitem(self, int start, int stop, char *dest):
@@ -460,9 +457,7 @@ cdef class chunk:
 
   @property
   def viewof(self):
-      return cpython.PyBuffer_FromMemory(<void*>self.data,
-                                         <Py_ssize_t>self.cdbytes)
-
+      return self.data[:self.cdbytes]
 
   def __setitem__(self, object key, object value):
     """__setitem__(self, key, value) -> None."""
@@ -612,7 +607,7 @@ cdef class chunks(object):
 
   def __cinit__(self, rootdir, metainfo=None, _new=False):
     cdef npdefs.ndarray lastchunkarr
-    cdef void *decompressed, *compressed
+    cdef char *decompressed, *compressed
     cdef int leftover
     cdef char *lastchunk
     cdef size_t chunksize
@@ -641,7 +636,7 @@ cdef class chunks(object):
       if leftover:
         # Fill lastchunk with data on disk
         scomp = self.read_chunk(self.nchunks)
-        compressed = cpython.PyString_AsString(scomp)
+        compressed = scomp
         with nogil:
           ret = blosc.decompress(compressed, lastchunk, chunksize)
         if ret < 0:

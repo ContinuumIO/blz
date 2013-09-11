@@ -199,7 +199,7 @@ def make_stream(seq, _temp=make_temper()):
         for x in seq:
             yield _temp(x)
 
-gensym = make_stream(string.uppercase).next
+gensym = next(make_stream(string.ascii_uppercase))
 
 # ______________________________________________________________________
 
