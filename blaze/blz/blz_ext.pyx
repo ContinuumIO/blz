@@ -17,6 +17,8 @@ import tempfile
 import json
 import datetime
 import cython
+import dynd
+from dynd import nd, ndt, _lowlevel
 
 _KB = 1024
 _MB = 1024*_KB
@@ -46,6 +48,10 @@ from libc.stdlib cimport malloc, realloc, free
 from libc.string cimport memcpy, memset
 
 ctypedef intptr_t blz_int_t
+
+
+cdef extern from *:
+  ctypedef unsigned long Py_uintptr_t
 
 # ----------------------------------------------------------------------
 
@@ -230,7 +236,7 @@ cdef class chunk:
   cdef void _getitem(self, int start, int stop, char *dest)
   cdef compress_data(self, char *data, size_t itemsize, size_t nbytes,
                      object bparams)
-  cdef compress_arrdata(self, npdefs.ndarray array, int itemsize,
+  cdef compress_arrdata(self, object array, int itemsize,
                         object bparams, object _memory)
 
   property dtype:
@@ -244,6 +250,10 @@ cdef class chunk:
     cdef size_t nbytes, cbytes, blocksize
     cdef npdefs.dtype dtype_
     cdef char *data
+
+    # Convert into a dynd array
+    if type(dobject) == np.ndarray:
+        dobject = nd.array(dobject)
 
     self.atom = atom
     self.atomsize = atom.itemsize
@@ -267,7 +277,8 @@ cdef class chunk:
     footprint = 0
 
     if _compr:
-      # Data comes in an already compressed state inside a Python bytes
+      print("compr dobject:", dobject)
+      # Data comes in an already compressed state inside a Python bytes object
       self.data = dobject
       # Increment the reference so that data don't go away
       self.dobject = dobject
@@ -280,6 +291,7 @@ cdef class chunk:
       cbytes, blocksize = self.compress_data(data, 1, nbytes, bparams)
     else:
       # Compress the data object (a NumPy object)
+      print("dobject: %s", dobject)
       nbytes, cbytes, blocksize, footprint = self.compress_arrdata(
         dobject, itemsize, bparams, _memory)
     footprint += 128  # add the (aprox) footprint of this instance in bytes
@@ -290,13 +302,15 @@ cdef class chunk:
     self.cdbytes = cbytes
     self.blocksize = blocksize
 
-  cdef compress_arrdata(self, npdefs.ndarray array, int itemsize,
-                        object bparams, object _memory):
+  cdef compress_arrdata(self, object array, int itemsize,
+                       object bparams, object _memory):
     """Compress data in `array` and put it in ``self.data``"""
-    cdef size_t nbytes, cbytes, blocksize, footprint
+    cdef size_t nbytes, cbytes, blocksize, footprint #, itemsize
+    cdef char* data
 
     # Compute the total number of bytes in this array
-    nbytes = array.itemsize * array.size
+    nbytes = nd.dtype_of(array).data_size
+    data = <char *><Py_uintptr_t>_lowlevel.data_address_of(array)
     cbytes = 0
     footprint = 0
 
@@ -305,17 +319,12 @@ cdef class chunk:
     self.isconstant = 0
     self.constant = None
     if _memory and (array.strides[0] == 0
-                    or check_zeros(array.data, nbytes)):
+                    or check_zeros(data, nbytes)):
 
       self.isconstant = 1
-      # Get the NumPy constant.  Avoid this NumPy quirk:
-      # np.array(['1'], dtype='S3').dtype != s[0].dtype
-      if array.dtype.kind != 'S':
-        self.constant = array[0]
-      else:
-        self.constant = np.array(array[0], dtype=array.dtype)
+      self.constant = array[0]
       # Add overhead (64 bytes for the overhead of the numpy container)
-      footprint += 64 + self.constant.size * self.constant.itemsize
+      footprint += 64 + nd.dtype_of(self.constant).data_size
 
     if self.isconstant:
       blocksize = 4*1024  # use 4 KB as a cache for blocks
@@ -327,14 +336,14 @@ cdef class chunk:
         blocksize = itemsize
     else:
       if self.typekind == 'b':
-        self.true_count = true_count(array.data, nbytes)
+        self.true_count = true_count(data, nbytes)
 
       if array.strides[0] == 0:
         # The chunk is made of constants.  Regenerate the actual data.
         array = array.copy()
 
       # Compress data
-      cbytes, blocksize = self.compress_data(array.data, itemsize, nbytes,
+      cbytes, blocksize = self.compress_data(data, itemsize, nbytes,
                                              bparams)
 
     return (nbytes, cbytes, blocksize, footprint)
@@ -414,13 +423,16 @@ cdef class chunk:
   def __getitem__(self, object key):
     """__getitem__(self, key) -> values."""
     cdef npdefs.ndarray array
+    cdef object ndarray
+    cdef char* data
     cdef object start, stop, step, clen, idx
 
     if isinstance(key, _inttypes):
       # Quickly return a single element
-      array = np.empty(shape=(1,), dtype=self.dtype)
-      self._getitem(key, key+1, array.data)
-      return npdefs.PyArray_GETITEM(array, array.data)
+      ndarray = nd.empty('1, %s' % self.dtype)
+      data = <char *><Py_uintptr_t>_lowlevel.data_address_of(ndarray)
+      self._getitem(key, key+1, data)
+      return ndarray[0]
     elif isinstance(key, slice):
       (start, stop, step) = key.start, key.stop, key.step
     elif isinstance(key, tuple) and self.dtype.shape != ():
@@ -442,14 +454,15 @@ cdef class chunk:
     (start, stop, step) = slice(start, stop, step).indices(clen)
 
     # Build a numpy container
-    array = np.empty(shape=(stop-start,), dtype=self.dtype)
+    ndarray = nd.empty('%d, %s' % (stop-start, self.dtype))
+    data = <char *><Py_uintptr_t>_lowlevel.data_address_of(ndarray)
     # Read actual data
-    self._getitem(start, stop, array.data)
+    self._getitem(start, stop, data)
 
     # Return the value depending on the step
     if step > 1:
-      return array[::step]
-    return array
+      return ndarray[::step]
+    return ndarray
 
   @property
   def pointer(self):
@@ -1977,6 +1990,10 @@ cdef class barray:
         # Get all the values there
         cdata = chunk_[:]
         # Overwrite it with data from value
+        print("cdata:", cdata)
+        print("value:", value)
+        print("sss:", startb, stopb, step)
+        print("nwrow:", nwrow, blen)
         cdata[startb:stopb:step] = value[nwrow:nwrow+blen]
         # Replace the chunk
         chunk_ = chunk(cdata, self._dtype, self._bparams,
