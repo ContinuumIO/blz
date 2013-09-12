@@ -14,6 +14,7 @@ from __future__ import absolute_import
 import sys, os, os.path, subprocess, math
 from time import time, clock
 import numpy as np
+from dynd import nd, ndt
 
 
 def show_stats(explain, tref):
@@ -172,6 +173,11 @@ def to_ndarray(array, dtype, arrlen=None):
         array = array2
 
     return array
+
+def nd_empty_easy(shape, dtype):
+    unfold_shape = ','.join(['%d'%i for i in shape])
+    dshape = "%s, %s" % (unfold_shape, dtype)
+    return nd.empty(dshape)
 
 def human_readable_size(size):
     """Return a string for better assessing large number of bytes."""

@@ -240,7 +240,7 @@ cdef class chunk:
                         object bparams, object _memory)
 
   property dtype:
-    "The NumPy dtype for this chunk."
+    "The atom for this chunk."
     def __get__(self):
       return self.atom
 
@@ -297,6 +297,7 @@ cdef class chunk:
     footprint += 128  # add the (aprox) footprint of this instance in bytes
 
     # Fill instance data
+    print("nbytes:", nbytes)
     self.nbytes = nbytes
     self.cbytes = cbytes + footprint
     self.cdbytes = cbytes
@@ -309,7 +310,7 @@ cdef class chunk:
     cdef char* data
 
     # Compute the total number of bytes in this array
-    nbytes = nd.dtype_of(array).data_size
+    nbytes = np.prod(array.shape) * itemsize
     data = <char *><Py_uintptr_t>_lowlevel.data_address_of(array)
     cbytes = 0
     footprint = 0
@@ -322,6 +323,7 @@ cdef class chunk:
                     or check_zeros(data, nbytes)):
 
       self.isconstant = 1
+      print("Fixant constant a:", array[0])
       self.constant = array[0]
       # Add overhead (64 bytes for the overhead of the numpy container)
       footprint += 64 + nd.dtype_of(self.constant).data_size
@@ -397,21 +399,27 @@ cdef class chunk:
   cdef void _getitem(self, int start, int stop, char *dest):
     """Read data from `start` to `stop` and return it as a numpy array."""
     cdef int ret, bsize, blen, nitems, nstart
-    cdef npdefs.ndarray constants
+    cdef object constants
 
     blen = stop - start
     bsize = blen * self.atomsize
     nitems = cython.cdiv(bsize, self.itemsize)
     nstart = cython.cdiv(start * self.atomsize, self.itemsize)
 
+    print("Abans de isconstant", self.isconstant, blen, bsize, self.constant)
     if self.isconstant:
       # The chunk is made of constants
-      constants = np.ndarray(shape=(blen,), dtype=self.dtype,
-                             buffer=self.constant, strides=(0,)).copy()
-      memcpy(dest, constants.data, bsize)
+      # constants = np.ndarray(shape=(blen,), dtype=self.dtype,
+      #                        buffer=self.constant, strides=(0,)).copy()
+      constants = utils.nd_empty_easy((blen,), self.dtype)
+      constants[:] = self.constant
+      print("constants:", constants)
+      data = <char *><Py_uintptr_t>_lowlevel.data_address_of(constants)
+      memcpy(dest, data, bsize)
       return
 
     # Fill dest with uncompressed data
+    print("self.data: %s" % self.data)
     with nogil:
       if bsize == self.nbytes:
         ret = blosc.decompress(self.data, dest, bsize)
@@ -427,6 +435,7 @@ cdef class chunk:
     cdef char* data
     cdef object start, stop, step, clen, idx
 
+    print("key:", key)
     if isinstance(key, _inttypes):
       # Quickly return a single element
       ndarray = nd.empty('1, %s' % self.dtype)
@@ -454,7 +463,9 @@ cdef class chunk:
     (start, stop, step) = slice(start, stop, step).indices(clen)
 
     # Build a numpy container
+    print("start, stop:", start, stop, clen, self.nbytes)
     ndarray = nd.empty('%d, %s' % (stop-start, self.dtype))
+    print("ndarray:", ndarray)
     data = <char *><Py_uintptr_t>_lowlevel.data_address_of(ndarray)
     # Read actual data
     self._getitem(start, stop, data)
@@ -483,8 +494,8 @@ cdef class chunk:
   def __repr__(self):
     """Represent the chunk as an string, with additional info."""
     cratio = self.nbytes / float(self.cbytes)
-    fullrepr = "chunk(%s, %s)  nbytes: %d; cbytes: %d; ratio: %.2f\n%r" % \
-        (self.shape, self.dtype, self.nbytes, self.cbytes, cratio, str(self))
+    fullrepr = "chunk(%s)  nbytes: %d; cbytes: %d; ratio: %.2f\n%r" % \
+        (self.dtype, self.nbytes, self.cbytes, cratio, str(self))
     return fullrepr
 
   def __dealloc__(self):
@@ -1986,6 +1997,7 @@ cdef class barray:
       else:
         # Get the data chunk
         chunk_ = self.chunks[nchunk]
+        print("nchunks:", len(self.chunks), nchunk, type(chunk_))
         self._cbytes -= chunk_.cbytes
         # Get all the values there
         cdata = chunk_[:]
