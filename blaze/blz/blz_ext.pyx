@@ -290,7 +290,6 @@ cdef class chunk:
       blosc.cbuffer_sizes(self.data, &nbytes, &cbytes, &blocksize)
     else:
       # Compress the data object (a NumPy object)
-      print("dobject: %s", dobject)
       nbytes, cbytes, blocksize, footprint = self.compress_arrdata(
         dobject, itemsize, bparams, _memory)
     footprint += 128  # add the (aprox) footprint of this instance in bytes
@@ -402,7 +401,6 @@ cdef class chunk:
       return
 
     # Fill dest with uncompressed data
-    print("self.data: %s" % self.data)
     with nogil:
       if bsize == self.nbytes:
         ret = blosc.decompress(self.data, dest, bsize)
@@ -434,10 +432,10 @@ cdef class chunk:
     clen = cython.cdiv(self.nbytes, self.atomsize)
     (start, stop, step) = slice(start, stop, step).indices(clen)
 
-    # Build a numpy container
+    # Build a dynd container
     print("start, stop:", start, stop, clen, self.nbytes)
     ndarray = nd.empty('%d, %s' % (stop-start, self.dtype))
-    print("ndarray:", ndarray)
+    #print("ndarray:", ndarray)
     data = <char *><Py_uintptr_t>_lowlevel.data_address_of(ndarray)
     # Read actual data
     self._getitem(start, stop, data)
@@ -947,6 +945,7 @@ cdef class barray:
     """
     cdef int itemsize, atomsize, chunksize
     cdef object lastchunkarr, array_, _dflt
+    print("entrant a create_barray")
 
     # Check defaults for bparams
     if bparams is None:
@@ -1758,6 +1757,8 @@ cdef class barray:
     if self.mode == "r":
       raise RuntimeError(
         "cannot modify data because mode is '%s'" % self.mode)
+
+    print("key:", key, type(key))
 
     # Check for integer
     if isinstance(key, _inttypes):

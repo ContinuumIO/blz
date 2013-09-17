@@ -10,6 +10,8 @@ from unittest import TestCase
 import numpy as np
 from numpy.testing import assert_array_equal, assert_array_almost_equal
 
+from dynd import nd, ndt
+
 import blaze.blz as blz
 from blaze.blz.blz_ext import chunk
 from .common import MayBeDiskTest
@@ -26,28 +28,37 @@ class chunkTest(TestCase):
     def test01(self):
         """Testing `__getitem()__` method with scalars"""
         a = np.arange(1e3)
-        b = chunk(a, atom=a.dtype, bparams=blz.bparams())
-        #print "b[1]->", `b[1]`
-        self.assert_(a[1] == b[1], "Values in key 1 are not equal")
+        a = nd.array(a)
+        dt = nd.type_of(a).element_type
+        b = chunk(a, atom=dt, bparams=blz.bparams())
+        # print "b[1]->", `b[1]`, type(b[1])
+        a1, b1 = np.array(a[1]), np.array(b[1])
+        self.assert_(a1 == b1, "Values in key 1 are not equal")
 
     def test02(self):
         """Testing `__getitem()__` method with ranges"""
         a = np.arange(1e3)
-        b = chunk(a, atom=a.dtype, bparams=blz.bparams())
+        a = nd.array(a)
+        dt = nd.type_of(a).element_type
+        b = chunk(a, atom=dt, bparams=blz.bparams())
         #print "b[1:3]->", `b[1:3]`
         assert_array_equal(a[1:3], b[1:3], "Arrays are not equal")
 
     def test03(self):
         """Testing `__getitem()__` method with ranges and steps"""
         a = np.arange(1e3)
-        b = chunk(a, atom=a.dtype, bparams=blz.bparams())
+        a = nd.array(a)
+        dt = nd.type_of(a).element_type
+        b = chunk(a, atom=dt, bparams=blz.bparams())
         #print "b[1:8:3]->", `b[1:8:3]`
         assert_array_equal(a[1:8:3], b[1:8:3], "Arrays are not equal")
 
     def test04(self):
         """Testing `__getitem()__` method with long ranges"""
         a = np.arange(1e4)
-        b = chunk(a, atom=a.dtype, bparams=blz.bparams())
+        a = nd.array(a)
+        dt = nd.type_of(a).element_type
+        b = chunk(a, atom=dt, bparams=blz.bparams())
         #print "b[1:8000]->", `b[1:8000]`
         assert_array_equal(a[1:8000], b[1:8000], "Arrays are not equal")
 
@@ -1386,7 +1397,6 @@ class iterchunksTest(TestCase):
 ## Local Variables:
 ## mode: python
 ## coding: utf-8
-## python-indent: 4
 ## tab-width: 4
 ## fill-column: 66
 ## End:

@@ -797,9 +797,10 @@ class fancy_indexing_setitemTest(TestCase):
 
     def test02a(self):
         """Testing fancy indexing (setitem) with a boolean array (I)"""
-        N = 1000
+        N = 10
         ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
         t = blz.btable(ra, chunklen=10)
+        print "despres de la creacio"
         sl = np.random.randint(2, size=1000).astype('bool')
         t[sl] = [(-1, -2, -3)]
         ra[sl] = [(-1, -2, -3)]

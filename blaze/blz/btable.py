@@ -217,6 +217,7 @@ class btable(object):
 
         # Attach the attrs to this object
         self.attrs = attrs.attrs(self.rootdir, self.mode, _new=_new)
+        print "despres de crear attrs"
 
         # Cache a structured array of len 1 for btable[int] acceleration
         self._arr1 = np.empty(shape=(1,), dtype=self.dtype)
