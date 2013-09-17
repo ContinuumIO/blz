@@ -261,11 +261,11 @@ cdef class chunk:
     print("atom:", atom, type(atom))
     self.atomsize = atom.data_size
     dtype_ = atom.dtype
-    self.typekind = int(kinds[dtype_.kind])
+    self.typekind = ord(kinds[dtype_.kind])
 
-    if self.typekind == 'B':
+    if self.typekind == ord('B'):
       itemsize = 1
-    elif self.typekind == 'U':
+    elif self.typekind == ord('U'):
       itemsize = 4
     else:
       itemsize = dtype_.data_size
@@ -288,11 +288,6 @@ cdef class chunk:
       self.dobject = dobject
       # Set size info for the instance
       blosc.cbuffer_sizes(self.data, &nbytes, &cbytes, &blocksize)
-    elif dtype_ == 'O':
-      # The objects should arrive here already pickled
-      data = dobject
-      nbytes = len(dobject)
-      cbytes, blocksize = self.compress_data(data, 1, nbytes, bparams)
     else:
       # Compress the data object (a NumPy object)
       print("dobject: %s", dobject)
@@ -341,7 +336,7 @@ cdef class chunk:
       if blocksize == 0:
         blocksize = itemsize
     else:
-      if self.typekind == 'b':
+      if self.typekind == ord('b'):
         self.true_count = true_count(data, nbytes)
 
       if array.strides[0] == 0:
@@ -384,20 +379,6 @@ cdef class chunk:
     assert (not self.isconstant,
             "This function can only be used for persistency")
     string = self.data[:self.cdbytes]
-    return string
-
-  def getudata(self):
-    """Get an uncompressed string out of this chunk (for 'O'bject types)."""
-    cdef int ret
-    cdef char *dest
-
-    dest = <char *>malloc(self.nbytes)
-    # Fill dest with uncompressed data
-    with nogil:
-      ret = blosc.decompress(self.data, dest, self.nbytes)
-    if ret < 0:
-      raise RuntimeError, "fatal error during Blosc decompression: %d" % ret
-    string = dest[:self.nbytes]
     return string
 
   cdef void _getitem(self, int start, int stop, char *dest):
@@ -637,13 +618,8 @@ cdef class chunks(object):
     atomsize = self.dtype.itemsize
     itemsize = self.dtype.base.itemsize
 
-    # For 'O'bject types, the number of chunks is equal to the number of
-    # elements
-    if self.dtype.char == 'O':
-      self.nchunks = self.len
-
-    # Initialize last chunk (not valid for 'O'bject dtypes)
-    if not _new and self.dtype.char != 'O':
+    # Initialize last chunk
+    if not _new:
       self.nchunks = cython.cdiv(self.len, len(lastchunkarr))
       chunksize = len(lastchunkarr) * atomsize
       lastchunk = <char *><Py_uintptr_t>_lowlevel.data_address_of(lastchunkarr)
@@ -868,16 +844,13 @@ cdef class barray:
   property dtype:
     "The dtype of this object."
     def __get__(self):
-      return self._dtype.base
+      return self._dtype.dtype
 
   property len:
     "The length (leading dimension) of this object."
     def __get__(self):
-      if self._dtype.char == 'O':
-        return len(self.chunks)
-      else:
-        # Important to do the cast in order to get a npy_intp result
-        return <blz_int_t>cython.cdiv(self._nbytes, self.atomsize)
+      # Important to do the cast in order to get a npy_intp result
+      return <blz_int_t>cython.cdiv(self._nbytes, self.atomsize)
 
   property mode:
     "The mode used to create/open the `mode`."
@@ -1075,12 +1048,7 @@ cdef class barray:
       self.write_meta()
 
     # Finally, fill the chunks
-    # Object dtype requires special storage
-    if array_.dtype.char == 'O':
-      for obj in array_:
-        self.store_obj(obj)
-    else:
-      self.fill_chunks(array_)
+    self.fill_chunks(array_)
 
     # and flush the data pending...
     self.flush()
@@ -1246,20 +1214,6 @@ cdef class barray:
     dflt = data["dflt"]
     return (shape, bparams, dtype_, dflt, expectedlen, cbytes, chunklen)
 
-  def store_obj(self, object arrobj):
-    cdef chunk chunk_
-    import pickle
-
-    pick_obj = pickle.dumps(arrobj, pickle.HIGHEST_PROTOCOL)
-    chunk_ = chunk(pick_obj, np.dtype('O'), self._bparams,
-                   _memory = self._rootdir is None)
-
-    self.chunks.append(chunk_)
-    # Update some counters
-    nbytes, cbytes = chunk_.nbytes, chunk_.cbytes
-    self._cbytes += cbytes
-    self._nbytes += nbytes
-
   def append(self, object array):
     """
     append(array)
@@ -1287,11 +1241,6 @@ cdef class barray:
     arrcpy = utils.to_ndarray(array, self._dtype)
     if arrcpy.dtype != self._dtype.base:
       raise TypeError, "array dtype does not match with self"
-
-    # Object dtype requires special storage
-    if arrcpy.dtype.char == 'O':
-      self.store_obj(array)
-      return
 
     # Appending a single row should be supported
     if arrcpy.shape == self._dtype.shape:
@@ -1658,20 +1607,6 @@ cdef class barray:
     self.idxcache = -1
     self.blockcache = None
 
-  def getitem_object(self, start, stop=None, step=None):
-    """Retrieve elements of type object."""
-    import pickle
-
-    if stop is None and step is None:
-      # Integer
-      cchunk = self.chunks[start]
-      chunk = cchunk.getudata()
-      return pickle.loads(chunk)
-
-    # Range
-    objs = [self.getitem_object(i) for i in xrange(start, stop, step)]
-    return np.array(objs, dtype=self._dtype)
-
   def __getitem__(self, object key):
     """
     x.__getitem__(key) <==> x[key]
@@ -1773,9 +1708,6 @@ cdef class barray:
     if blen == 0:
       # If empty, return immediately
       return arr
-
-    if self.dtype.char == 'O':
-      return self.getitem_object(start, stop, step)
 
     # Fill it from data in chunks
     nwrow = 0
