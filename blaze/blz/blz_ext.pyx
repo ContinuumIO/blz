@@ -258,7 +258,6 @@ cdef class chunk:
         dobject = nd.array(dobject)
 
     self.atom = atom
-    print("atom:", atom, type(atom))
     self.atomsize = atom.data_size
     dtype_ = atom.dtype
     self.typekind = ord(kinds[dtype_.kind])
@@ -295,7 +294,6 @@ cdef class chunk:
     footprint += 128  # add the (aprox) footprint of this instance in bytes
 
     # Fill instance data
-    print("nbytes:", nbytes)
     self.nbytes = nbytes
     self.cbytes = cbytes + footprint
     self.cdbytes = cbytes
@@ -390,7 +388,6 @@ cdef class chunk:
     nitems = cython.cdiv(bsize, self.itemsize)
     nstart = cython.cdiv(start * self.atomsize, self.itemsize)
 
-    print("Abans de isconstant", self.isconstant, blen, bsize, self.constant)
     if self.isconstant:
       # The chunk is made of constants
       constants = utils.nd_empty_easy((blen,), self.dtype)
@@ -923,29 +920,18 @@ cdef class barray:
 
       Returns the adapted type with the shape modified accordingly.
     """
-    if dtype.hasobject:
-      if dtype != np.object_:
-        raise TypeError, repr(dtype) + ' is not a supported dtype'
-    else:
-      #dtype = np.dtype((dtype, shape[1:]))
-      # Beware, the order of this might change in the future.  See:
-      # https://github.com/ContinuumIO/dynd-python/issues/6
-      dtype = ndt.make_fixed_dim(shape[1:], dtype)
+    #dtype = np.dtype((dtype, shape[1:]))
+    # Beware, the order of this might change in the future.  See:
+    # https://github.com/ContinuumIO/dynd-python/issues/6
+    dtype = ndt.make_fixed_dim(shape[1:], dtype)
 
     return dtype
 
   def create_barray(self, array, bparams, dtype, dflt,
                     expectedlen, chunklen, rootdir, mode):
-    """Create a new array.
-    There are restrictions creating barray objects with dtypes that have objects
-    (dtype.hasobject is True). The only case where this dtype is supported is
-    on unidimensionl arrays whose dtype is object (objects in composite dtypes
-    are not supported).
-
-    """
+    """Create a new array. """
     cdef int itemsize, atomsize, chunksize
     cdef object lastchunkarr, array_, _dflt
-    print("entrant a create_barray")
 
     # Check defaults for bparams
     if bparams is None:
@@ -970,7 +956,7 @@ cdef class barray:
 
     # if no base dtype is provided, use the dtype from the array.
     if dtype is None:
-      dtype = array_.dtype.base
+      dtype = nd.type_of(array_).dtype
 
     # Multidimensional array.  The atom will have array_.shape[1:] dims.
     # atom dimensions will be stored in `self._dtype`, which is different
@@ -1117,11 +1103,13 @@ cdef class barray:
     cdef blz_int_t i, nchunks
     cdef blz_int_t nbytes, cbytes
     cdef chunk chunk_
-    cdef npdefs.ndarray remainder
+    cdef object remainder
+    cdef uintptr_t arrsize
     cdef char* data
 
     # The number of bytes in incoming array
-    nbytes = self.itemsize * array_.size
+    arrsize = np.prod(array_.shape)
+    nbytes = self.itemsize * arrsize
     self._nbytes = nbytes
 
     # Compress data in chunks
@@ -1129,7 +1117,7 @@ cdef class barray:
     chunklen = self._chunklen
     nchunks = <blz_int_t>cython.cdiv(nbytes, self._chunksize)
     for i from 0 <= i < nchunks:
-      assert i*chunklen < array_.size, "i, nchunks: %d, %d" % (i, nchunks)
+      assert i*chunklen < arrsize, "i, nchunks: %d, %d" % (i, nchunks)
       chunk_ = chunk(array_[i*chunklen:(i+1)*chunklen],
                      self._dtype, self._bparams,
                      _memory = self._rootdir is None)
@@ -1671,7 +1659,7 @@ cdef class barray:
     elif isinstance(key, list):
       # Try to convert to a integer array
       try:
-        key = np.array(key, dtype=np.int_)
+        key = nd.array(key, dtype=np.int_)
       except:
         raise IndexError, "key cannot be converted to an array of indices"
       return self[key]
@@ -1688,7 +1676,7 @@ cdef class barray:
         return np.fromiter(self.where(key), dtype=self._dtype, count=count)
       elif np.issubsctype(key, np.int_):
         # An integer array
-        return np.array([self[i] for i in key], dtype=self._dtype)
+        return nd.array([self[i] for i in key], dtype=self._dtype)
       else:
         raise IndexError, \
               "arrays used as indices must be of integer (or boolean) type"
@@ -1703,7 +1691,7 @@ cdef class barray:
 
     # Build a numpy container
     blen = get_len_of_range(start, stop, step)
-    arr = np.empty(shape=(blen,), dtype=self._dtype)
+    arr = utils.nd_empty_easy((blen,), self._dtype)
     if blen == 0:
       # If empty, return immediately
       return arr
@@ -1796,7 +1784,7 @@ cdef class barray:
     elif isinstance(key, list):
       # Try to convert to a integer array
       try:
-        key = np.array(key, dtype=np.int_)
+        key = nd.array(key, dtype=np.int_)
       except:
         raise IndexError, "key cannot be converted to an array of indices"
       self[key] = value

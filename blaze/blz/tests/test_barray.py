@@ -32,6 +32,8 @@ class chunkTest(TestCase):
         dt = nd.type_of(a).element_type
         b = chunk(a, atom=dt, bparams=blz.bparams())
         # print "b[1]->", `b[1]`, type(b[1])
+        # XXX The line below does not work on dynd 0.4.post12
+        #self.assert_(a[1] == b[1], "Values in key 1 are not equal")
         a1, b1 = np.array(a[1]), np.array(b[1])
         self.assert_(a1 == b1, "Values in key 1 are not equal")
 

@@ -135,14 +135,15 @@ def get_len_of_range(start, stop, step):
         n = ((stop - start - 1) // step + 1);
     return n
 
+# XXX This complete function should be migrated to dynd completely
 def to_ndarray(array, dtype, arrlen=None):
     """Convert object to a ndarray."""
 
     if dtype is None:
         if hasattr(array, 'dtype'):
-            return np.array(array, dtype=array.dtype)
+            return nd.array(array, dtype=array.dtype)
         else:
-            return np.array(array)
+            return nd.array(array)
 
     # Arrays with a 0 stride are special
     if (type(array) == np.ndarray and
@@ -150,7 +151,7 @@ def to_ndarray(array, dtype, arrlen=None):
         array.strides[0] == 0):
         if array.dtype != dtype.base:
             raise TypeError("dtypes do not match")
-        return array
+        return nd.array(array)
 
     # Ensure that we have an ndarray of the correct dtype
     if type(array) != np.ndarray or array.dtype != dtype.base:
@@ -172,7 +173,7 @@ def to_ndarray(array, dtype, arrlen=None):
         array2[:] = array   # broadcast
         array = array2
 
-    return array
+    return nd.array(array)
 
 def nd_empty_easy(shape, dtype):
     unfold_shape = ','.join(['%d'%i for i in shape])
