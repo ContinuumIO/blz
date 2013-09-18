@@ -53,7 +53,9 @@ class chunkTest(TestCase):
         dt = nd.type_of(a).element_type
         b = chunk(a, atom=dt, bparams=blz.bparams())
         #print "b[1:8:3]->", `b[1:8:3]`
-        assert_array_equal(a[1:8:3], b[1:8:3], "Arrays are not equal")
+        a1, b1 = nd.as_numpy(a[1:8:3]), nd.as_numpy(b[1:8:3])
+        #assert_array_equal(a[1:8:3], b[1:8:3], "Arrays are not equal")
+        assert_array_equal(a1, b1, "Arrays are not equal")
 
     def test04(self):
         """Testing `__getitem()__` method with long ranges"""

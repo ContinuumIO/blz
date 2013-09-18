@@ -15,6 +15,7 @@ import sys, os, os.path, subprocess, math
 from time import time, clock
 import numpy as np
 from dynd import nd, ndt
+import dynd
 
 
 def show_stats(explain, tref):
@@ -135,45 +136,40 @@ def get_len_of_range(start, stop, step):
         n = ((stop - start - 1) // step + 1);
     return n
 
-# XXX This complete function should be migrated to dynd completely
 def to_ndarray(array, dtype, arrlen=None):
     """Convert object to a ndarray."""
 
-    if dtype is None:
-        if hasattr(array, 'dtype'):
-            return nd.array(array, dtype=array.dtype)
-        else:
-            return nd.array(array)
+    if type(array) != dynd._pydynd.w_array:
+        array = nd.array(array)
 
-    # Arrays with a 0 stride are special
-    if (type(array) == np.ndarray and
-        len(array.strides) > 0 and
-        array.strides[0] == 0):
-        if array.dtype != dtype.base:
-            raise TypeError("dtypes do not match")
-        return nd.array(array)
+    if dtype is None:
+        return array
 
     # Ensure that we have an ndarray of the correct dtype
-    if type(array) != np.ndarray or array.dtype != dtype.base:
+    if nd.type_of(array).dtype != dtype.dtype:
         try:
-            array = np.array(array, dtype=dtype.base)
+            array = nd.array(array, dtype=dtype.dtype)
         except ValueError:
-            raise ValueError("cannot convert to an ndarray object")
+            raise ValueError("cannot convert to an dynd dtype")
 
-    # We need a contiguous array
-    if not array.flags.contiguous:
-        array = array.copy()
-    if len(array.shape) == 0:
-        # We treat scalars like undimensional arrays
-        array.shape = (1,)
+    # # We need a contiguous array
+    # if not array.shape[1:] + (1L,) == array.strides:
+    #     array = array.copy()
+    # if len(array.shape) == 0:
+    #     # We treat scalars like undimensional arrays
+    #     array.shape = (1,)
 
     # Check if we need a broadcast
-    if arrlen is not None and arrlen != len(array):
-        array2 = np.empty(shape=(arrlen,), dtype=dtype)
+    if array.is_scalar:
+        l = 0
+    else:
+        l = len(array)
+    if arrlen is not None and arrlen != l:
+        array2 = nd_empty_easy(shape=(arrlen,), dtype=dtype)
         array2[:] = array   # broadcast
         array = array2
 
-    return nd.array(array)
+    return array
 
 def nd_empty_easy(shape, dtype):
     unfold_shape = ','.join(['%d'%i for i in shape])
