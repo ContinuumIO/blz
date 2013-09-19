@@ -315,7 +315,6 @@ cdef class chunk:
                     or check_zeros(data, nbytes)):
 
       self.isconstant = 1
-      print("Fixant constant a:", array[0])
       self.constant = array[0]
       # Add overhead (64 bytes for the overhead of the numpy container)
       footprint += 64 + nd.dtype_of(self.constant).data_size
@@ -388,7 +387,6 @@ cdef class chunk:
       # The chunk is made of constants
       constants = utils.nd_empty_easy((blen,), self.dtype)
       constants[:] = self.constant
-      print("constants:", constants)
       data = <char *><Py_uintptr_t>_lowlevel.data_address_of(constants)
       memcpy(dest, data, bsize)
       return
@@ -409,7 +407,6 @@ cdef class chunk:
     cdef char* data
     cdef object start, stop, step, clen, idx
 
-    print("key:", key)
     if isinstance(key, _inttypes):
       # Quickly return a single element
       ndarray = nd.empty('1, %s' % self.dtype)
@@ -426,7 +423,7 @@ cdef class chunk:
     (start, stop, step) = slice(start, stop, step).indices(clen)
 
     # Build a dynd container
-    print("start, stop:", start, stop, clen, self.nbytes)
+    #print("start, stop:", start, stop, clen, self.nbytes)
     ndarray = nd.empty('%d, %s' % (stop-start, self.dtype))
     #print("ndarray:", ndarray)
     data = <char *><Py_uintptr_t>_lowlevel.data_address_of(ndarray)
@@ -923,6 +920,20 @@ cdef class barray:
 
     return dtype
 
+  def set_default(self, dtype, dflt):
+    _dflt = nd.empty(dtype)
+    if dflt is not None:
+      _dflt[()] = dflt
+    else:
+      # Provide sensible defaults here
+      if dtype.kind in ('int', 'real', 'complex'):
+        _dflt[()] = 0
+      elif dtype.kind in ('bool',):
+        _dflt[()] = False
+      elif dtype.kind in ('bytes', 'string'):
+        _dflt[()] = ""
+    return _dflt
+
   def create_barray(self, array, bparams, dtype, dflt,
                     expectedlen, chunklen, rootdir, mode):
     """Create a new array. """
@@ -972,13 +983,7 @@ cdef class barray:
     self.itemsize = itemsize = dtype.dtype.data_size
 
     # Check defaults for dflt
-    _dflt = nd.empty(dtype)
-    if dflt is not None:
-      if dtype.ndim == 0:
-        _dflt[()] = dflt
-      else:
-        _dflt[:] = dflt
-    self._dflt = _dflt
+    self._dflt = self.set_default(dtype, dflt)
 
     # Compute the chunklen/chunksize
     if expectedlen is None:
@@ -1259,7 +1264,7 @@ cdef class barray:
       # First, fill the last buffer completely (if needed)
       if leftover:
         nbytesfirst = chunksize - leftover
-        if arrcpy.strides[0] > 0:
+        if bsize == itemsize or arrcpy.strides[0] > 0:
           memcpy(self.lastchunk+leftover, data, nbytesfirst)
         else:
           start = cython.cdiv(leftover, atomsize)
@@ -1278,7 +1283,9 @@ cdef class barray:
       nchunks = <blz_int_t>cython.cdiv(nbytes, chunksize)
       chunklen = self._chunklen
       # Get a new view skipping the elements that have been already copied
-      remainder = arrcpy[cython.cdiv(nbytesfirst, atomsize):]
+      remainelems = cython.cdiv(nbytesfirst, atomsize)
+      if remainelems < len(arrcpy):
+        remainder = arrcpy[remainelems:]
       for i from 0 <= i < nchunks:
         chunk_ = chunk(
           remainder[i*chunklen:(i+1)*chunklen], self._dtype, self._bparams,
@@ -1395,8 +1402,11 @@ cdef class barray:
 
     if nitems > self.len:
       # Create a 0-strided array and append it to self
-      chunk = np.ndarray(nitems-self.len, dtype=self._dtype,
-                         buffer=self._dflt, strides=(0,))
+      # chunk = np.ndarray(nitems-self.len, dtype=self._dtype,
+      #                    buffer=self._dflt, strides=(0,))
+      # XXX Use a strided-zero nd.array when it would be implemented in dynd
+      chunk = utils.nd_empty_easy((nitems - self.len,), self._dtype)
+      chunk[:] = self._dflt
       self.append(chunk)
       self.flush()
     else:
@@ -1745,8 +1755,6 @@ cdef class barray:
       raise RuntimeError(
         "cannot modify data because mode is '%s'" % self.mode)
 
-    print("key:", key, type(key))
-
     # Check for integer
     if isinstance(key, _inttypes):
       if key < 0:
@@ -1837,15 +1845,10 @@ cdef class barray:
       else:
         # Get the data chunk
         chunk_ = self.chunks[nchunk]
-        print("nchunks:", len(self.chunks), nchunk, type(chunk_))
         self._cbytes -= chunk_.cbytes
         # Get all the values there
         cdata = chunk_[:]
         # Overwrite it with data from value
-        print("cdata:", cdata)
-        print("value:", value)
-        print("sss:", startb, stopb, step)
-        print("nwrow:", nwrow, blen)
         cdata[startb:stopb:step] = value[nwrow:nwrow+blen]
         # Replace the chunk
         chunk_ = chunk(cdata, self._dtype, self._bparams,

@@ -16,6 +16,7 @@ import os, os.path
 import glob
 import itertools as it
 import numpy as np
+from dynd import nd, ndt
 import math
 from .blz_ext import barray
 from .btable import btable
@@ -346,7 +347,8 @@ def arange(start=None, stop=None, step=None, dtype=None, **kwargs):
     while bstart < stop:
         if bstop > stop:
             bstop = stop
-        chunk = np.arange(bstart, bstop, step, dtype=dtype)
+        npchunk = np.arange(bstart, bstop, step, dtype=dtype)
+        chunk = nd.view(npchunk)
         obj.append(chunk)
         bstart = bstop
         bstop += incr
