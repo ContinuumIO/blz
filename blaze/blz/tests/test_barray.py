@@ -28,7 +28,7 @@ class chunkTest(TestCase):
     def test01(self):
         """Testing `__getitem()__` method with scalars"""
         a = np.arange(1e3)
-        a = nd.array(a)
+        a = nd.view(a)
         dt = nd.type_of(a).element_type
         b = chunk(a, atom=dt, bparams=blz.bparams())
         # print "b[1]->", `b[1]`, type(b[1])
@@ -40,7 +40,7 @@ class chunkTest(TestCase):
     def test02(self):
         """Testing `__getitem()__` method with ranges"""
         a = np.arange(1e3)
-        a = nd.array(a)
+        a = nd.asarray(a)
         dt = nd.type_of(a).element_type
         b = chunk(a, atom=dt, bparams=blz.bparams())
         #print "b[1:3]->", `b[1:3]`
@@ -60,7 +60,7 @@ class chunkTest(TestCase):
     def test04(self):
         """Testing `__getitem()__` method with long ranges"""
         a = np.arange(1e4)
-        a = nd.array(a)
+        a = nd.view(a)
         dt = nd.type_of(a).element_type
         b = chunk(a, atom=dt, bparams=blz.bparams())
         #print "b[1:8000]->", `b[1:8000]`

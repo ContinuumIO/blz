@@ -253,10 +253,6 @@ cdef class chunk:
     cdef object dtype_
     cdef char *data
 
-    # Convert into a dynd array
-    if type(dobject) == np.ndarray:
-        dobject = nd.array(dobject)
-
     self.atom = atom
     self.atomsize = atom.data_size
     dtype_ = atom.dtype
@@ -782,11 +778,11 @@ cdef class barray:
   cdef char *lastchunk
   cdef object lastchunkarr, where_arr
   cdef object _bparams, _dflt
-  cdef object _dtype
+  cdef object _dtype, _shape
   cdef public object chunks
   cdef object _rootdir, datadir, metadir, _mode
   cdef object _attrs
-  cdef npdefs.ndarray iobuf, where_buf
+  cdef object iobuf, where_buf
 
   property leftovers:
     def __get__(self):
@@ -966,6 +962,7 @@ cdef class barray:
     # Note that objects are a special case. barray does not support object
     # arrays of more than one dimensions.
     self._dtype = dtype = self._adapt_dtype(dtype, array_.shape)
+    self._shape = tuple(array_.shape[1:])
 
     # Check that atom size is less than 2 GB
     if dtype.data_size >= 2**31:
@@ -1047,6 +1044,7 @@ cdef class barray:
 
     if len(shape) == 1:
         self._dtype = dtype
+        self._shape = ()
     else:
       # Multidimensional array.  The atom will have array_.shape[1:] dims.
       # atom dimensions will be stored in `self._dtype`, which is different
@@ -1054,6 +1052,7 @@ cdef class barray:
       # from `self.shape`.  `self.dtype` will always be scalar (NumPy
       # convention).
       self._dtype = dtype = np.dtype((dtype.base, shape[1:]))
+      self._shape = tuple(shape[1:])
 
     self._bparams = bparams
     self.atomsize = dtype.itemsize
@@ -1217,7 +1216,7 @@ cdef class barray:
     cdef int atomsize, itemsize, chunksize, leftover
     cdef int nbytesfirst, chunklen, start, stop
     cdef blz_int_t nbytes, cbytes, bsize, i, nchunks
-    cdef npdefs.ndarray remainder, arrcpy, dflts
+    cdef object remainder, arrcpy, dflts
     cdef chunk chunk_
     cdef char* data
 
@@ -1226,13 +1225,13 @@ cdef class barray:
         "cannot modify data because mode is '%s'" % self.mode)
 
     arrcpy = utils.to_ndarray(array, self._dtype)
-    if arrcpy.dtype != self._dtype.base:
+    if nd.type_of(arrcpy).dtype != self._dtype.dtype:
       raise TypeError, "array dtype does not match with self"
 
     # Appending a single row should be supported
-    if arrcpy.shape == self._dtype.shape:
+    if arrcpy.shape == self._shape:
       arrcpy = arrcpy.reshape((1,)+arrcpy.shape)
-    if arrcpy.shape[1:] != self._dtype.shape:
+    if arrcpy.shape[1:] != self._shape:
       raise ValueError, "array trailing dimensions do not match with self"
     data = <char *><Py_uintptr_t>_lowlevel.data_address_of(arrcpy)
 
@@ -1241,7 +1240,7 @@ cdef class barray:
     chunksize = self._chunksize
     chunks = self.chunks
     leftover = self.leftover
-    bsize = arrcpy.size*itemsize
+    bsize = np.prod(arrcpy.shape) * itemsize
     cbytes = 0
 
     # Check if array fits in existing buffer
@@ -1860,7 +1859,7 @@ cdef class barray:
     assert (nwrow == vlen)
 
   # This is a private function that is specific for `eval`
-  def _getrange(self, blz_int_t start, blz_int_t blen, npdefs.ndarray out):
+  def _getrange(self, blz_int_t start, blz_int_t blen, object out):
     cdef int chunklen
     cdef blz_int_t startb, stopb
     cdef blz_int_t nwrow, stop, cblen
@@ -2093,7 +2092,7 @@ cdef class barray:
       raise ValueError, "`boolarr` must be of the same length than ``self``"
     self.reset_sentinels()
     self.where_mode = True
-    self.where_arr = boolarr
+    self.where_arr = nd.array(boolarr)
     if limit is not None:
       self.limit = limit + skip
     self.skip = skip
@@ -2202,7 +2201,7 @@ cdef class barray:
     cdef int bsize
     cdef blz_int_t nchunk
     cdef barray carr
-    cdef npdefs.ndarray ndarr
+    cdef object ndarr
     cdef chunk chunk_
 
     if isinstance(barr, barray):
