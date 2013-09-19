@@ -861,7 +861,7 @@ cdef class barray:
   property shape:
     "The shape of this object."
     def __get__(self):
-      return tuple((self.len,) + self._dtype.shape)
+      return tuple((self.len,) + self._shape)
 
   property size:
     "The size of this object."
@@ -1583,10 +1583,14 @@ cdef class barray:
       elif self._dtype.type == np.bool_:
         result += chunk_.true_count
       else:
-        result += chunk_[:].sum(dtype=dtype)
+        #result += chunk_[:].sum(dtype=dtype)
+        # XXX workaround until dynd would implement a sum() method
+        result += np.asarray(chunk_[:]).sum(dtype=dtype)
     if self.leftover:
       leftover = self.len - nchunks * self._chunklen
-      result += self.lastchunkarr[:leftover].sum(dtype=dtype)
+      #result += self.lastchunkarr[:leftover].sum(dtype=dtype)
+      # XXX workaround until dynd would implement a sum() method
+      result += np.asarray(self.lastchunkarr[:leftover]).sum(dtype=dtype)
 
     return result
 
@@ -1679,7 +1683,9 @@ cdef class barray:
         if len(key) != self.len:
           raise IndexError, "boolean array length must match len(self)"
         if isinstance(key, barray):
-          count = key.sum()
+          #count = key.sum()
+          # XXX workaround until dynd would implement a sum() method
+          count = np.asarray(key).sum()
         else:
           count = -1
         return np.fromiter(self.where(key), dtype=self._dtype, count=count)
@@ -1915,7 +1921,9 @@ cdef class barray:
     cdef chunk chunk_
     cdef object cdata, boolb
 
-    vlen = boolarr.sum()   # number of true values in bool array
+    #vlen = boolarr.sum()   # number of true values in bool array
+    # XXX workaround until dynd would implement a sum() method
+    vlen = np.asarray(boolarr).sum()   # number of true values in bool array
     value = utils.to_ndarray(value, self._dtype, arrlen=vlen)
 
     # Fill it from data in chunks
@@ -1931,7 +1939,8 @@ cdef class barray:
       # Get boolean values for this chunk
       n = nchunk * chunklen
       boolb = boolarr[n+startb:n+stopb]
-      blen = boolb.sum()
+      #blen = boolb.sum()
+      blen = np.asarray(boolb).sum()
       if blen == 0:
         continue
       # Modify the data in chunk
@@ -2046,7 +2055,7 @@ cdef class barray:
 
     """
     # Check self
-    if self._dtype.base.type != np.bool_:
+    if self._dtype.dtype != ndt.bool:
       raise ValueError, "`self` is not an array of booleans"
     if self.ndim > 1:
       raise NotImplementedError, "`self` is not unidimensional"
@@ -2087,10 +2096,9 @@ cdef class barray:
     # Check input
     if self.ndim > 1:
       raise NotImplementedError, "`self` is not unidimensional"
-    if not hasattr(boolarr, "dtype"):
-      raise ValueError, "`boolarr` is not an array"
-    if boolarr.dtype.type != np.bool_:
-      raise ValueError, "`boolarr` is not an array of booleans"
+
+    boolarr = utils.to_ndarray(boolarr, 'bool')
+
     if len(boolarr) != self.len:
       raise ValueError, "`boolarr` must be of the same length than ``self``"
     self.reset_sentinels()
@@ -2141,9 +2149,13 @@ cdef class barray:
         # Check if we can skip this buffer
         if (self.wheretrue_mode or self.where_mode) and self.skip > 0:
           if self.wheretrue_mode:
-            nhits_buf = self.iobuf.sum()
+            #nhits_buf = self.iobuf.sum()
+            # XXX workaround until dynd would implement a sum() method
+            nhits_buf = np.asarray(self.iobuf).sum()
           else:
-            nhits_buf = self.where_buf.sum()
+            #nhits_buf = self.where_buf.sum()
+            # XXX workaround until dynd would implement a sum() method
+            nhits_buf = np.asarray(self.where_buf).sum()
           if (self.nhits + nhits_buf) < self.skip:
             self.nhits += nhits_buf
             self.nextelement += self.nrowsinbuf
@@ -2159,7 +2171,7 @@ cdef class barray:
       # Return a value depending on the mode we are
       iodata = <char *><Py_uintptr_t>_lowlevel.data_address_of(self.iobuf)
       if self.wheretrue_mode:
-        vbool = <char *>(data + self._row)
+        vbool = <char *>(iodata + self._row)
         if vbool[0]:
           self.nhits += 1
           if self.nhits <= self.skip:
@@ -2177,15 +2189,17 @@ cdef class barray:
         continue
       # Return the current value in I/O buffer
       if self.itemsize == self.atomsize:
-        return npdefs.PyArray_GETITEM(
-          self.iobuf, iodata + self._row*self.atomsize)
+        # return npdefs.PyArray_GETITEM(
+        #   self.iobuf, iodata + self._row*self.atomsize)
+        print "dtype ->", self._dtype
+        return self.iobuf[self._row]
       else:
         return self.iobuf[self._row]
 
     else:
       # Release buffers
-      self.iobuf = np.empty(0, dtype=self._dtype)
-      self.where_buf = np.empty(0, dtype=np.bool_)
+      self.iobuf = utils.nd_empty_easy((0,), dtype=self._dtype)
+      self.where_buf = utils.nd_empty_easy((0,), dtype=ndt.bool)
       self.reset_sentinels()
       raise StopIteration        # end of iteration
 
