@@ -1524,7 +1524,7 @@ cdef class barray:
     expectedlen = kwargs.pop('expectedlen', self.len)
 
     # Create a new, empty barray
-    ccopy = barray(np.empty(0, dtype=self._dtype),
+    ccopy = barray(utils.nd_empty_easy((0,), self._dtype),
                    bparams=bparams,
                    expectedlen=expectedlen,
                    **kwargs)
