@@ -140,7 +140,12 @@ def to_ndarray(array, dtype, arrlen=None):
     """Convert object to a ndarray."""
 
     if type(array) != dynd._pydynd.w_array:
-        array = nd.array(array)
+        # For some reason, nd.asarray(array) segfaults when array is a barray
+        if (hasattr(array, '__class__') and
+            array.__class__.__name__ == 'barray'):
+            array = array[:]
+        else:
+            array = nd.asarray(array)
 
     if dtype is None:
         return array

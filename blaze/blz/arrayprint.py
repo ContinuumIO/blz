@@ -296,7 +296,11 @@ def _array2string(a, max_line_width, precision, suppress_small, separator=' ',
         warnings.warn(msg, DeprecationWarning)
     except AttributeError:
         # find the right formatting function for the array
-        dtypeobj = a.dtype.type
+        if hasattr(a.dtype, "type"):
+            dtypeobj = a.dtype.type
+        else:
+            # accept arrays that can have dynd types too
+            dtypeobj = np.dtype(str(a.dtype)).type
         if issubclass(dtypeobj, _nt.bool_):
             format_function = formatdict['bool']
         elif issubclass(dtypeobj, _nt.integer):

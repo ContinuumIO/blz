@@ -2097,7 +2097,7 @@ cdef class barray:
     if self.ndim > 1:
       raise NotImplementedError, "`self` is not unidimensional"
 
-    boolarr = utils.to_ndarray(boolarr, 'bool')
+    boolarr = utils.to_ndarray(boolarr, ndt.bool)
 
     if len(boolarr) != self.len:
       raise ValueError, "`boolarr` must be of the same length than ``self``"
@@ -2113,6 +2113,7 @@ cdef class barray:
     cdef char *vbool
     cdef int nhits_buf
     cdef char *iodata, *data
+    cdef blz_int_t stop
 
     self.nextelement = self._nrow + self.step
     while (self.nextelement < self.stop) and (self.nhits < self.limit):
@@ -2139,11 +2140,19 @@ cdef class barray:
             self.nextelement += self.nrowsinbuf
             continue
           # Read a chunk of the boolean array
+          # XXX protection until issue #18 of dynd should be fixed
+          stop = self.nrowsread+self.nrowsinbuf
+          if stop > len(self.where_arr): stop = len(self.where_arr)
           self.where_buf = self.where_arr[
-            self.nrowsread:self.nrowsread+self.nrowsinbuf]
+#            self.nrowsread:self.nrowsread+self.nrowsinbuf]
+            self.nrowsread:stop]
 
         # Read a data chunk
-        self.iobuf = self[self.nrowsread:self.nrowsread+self.nrowsinbuf]
+        # XXX protection until issue #18 of dynd should be fixed
+        stop = self.nrowsread+self.nrowsinbuf
+        if stop > len(self): stop = len(self)
+        #self.iobuf = self[self.nrowsread:self.nrowsread+self.nrowsinbuf]
+        self.iobuf = self[self.nrowsread:stop]
         self.nrowsread += self.nrowsinbuf
 
         # Check if we can skip this buffer
@@ -2191,7 +2200,6 @@ cdef class barray:
       if self.itemsize == self.atomsize:
         # return npdefs.PyArray_GETITEM(
         #   self.iobuf, iodata + self._row*self.atomsize)
-        print "dtype ->", self._dtype
         return self.iobuf[self._row]
       else:
         return self.iobuf[self._row]
