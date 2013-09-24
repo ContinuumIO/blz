@@ -7,6 +7,7 @@
 ########################################################################
 
 
+import operator
 import sys
 import blaze.blz as blz
 from blaze.blz import utils, attrs, array2string
@@ -1638,13 +1639,15 @@ cdef class barray:
     chunklen = self._chunklen
 
     # Check for integer
-    if isinstance(key, _inttypes):
+    if (isinstance(key, _inttypes) or
+        (hasattr(key, 'eval') and nd.type_of(key).kind == 'int')):
+      key = operator.index(key)  # convert into an index
       if key < 0:
         # To support negative values
         key += self.len
       if key >= self.len:
         raise IndexError, "index out of range"
-      return np.squeeze(self[slice(key, key+1, 1)])
+      return self[slice(key, key+1, 1)][0]
     # Slices
     elif isinstance(key, slice):
       (start, stop, step) = key.start, key.stop, key.step
@@ -1672,13 +1675,19 @@ cdef class barray:
     elif isinstance(key, list):
       # Try to convert to a integer array
       try:
-        key = nd.array(key, dtype=np.int_)
+        key = nd.array((operator.index(i) for i in key), dtype='int64')
       except:
         raise IndexError, "key cannot be converted to an array of indices"
       return self[key]
     # A boolean or integer array (case of fancy indexing)
-    elif hasattr(key, "dtype"):
-      if key.dtype.type == np.bool_:
+    elif (hasattr(key, "dtype") or hasattr(key, "eval")):
+      # Accept arrays that can have dynd types too
+      if hasattr(key, "eval"):
+        # Quacks like a dynd array
+        typeobj = nd.type_of(key).dtype
+      else:
+        typeobj = ndt.type(key.dtype)
+      if typeobj == ndt.bool:
         # A boolean array
         if len(key) != self.len:
           raise IndexError, "boolean array length must match len(self)"
@@ -1688,10 +1697,10 @@ cdef class barray:
           count = np.asarray(key).sum()
         else:
           count = -1
-        return np.fromiter(self.where(key), dtype=self._dtype, count=count)
-      elif np.issubsctype(key, np.int_):
+        return nd.array(self.where(key), dtype=self._dtype)[:count]
+      elif typeobj.kind == "int":
         # An integer array
-        return nd.array([self[i] for i in key], dtype=self._dtype)
+        return nd.array((self[i] for i in key), dtype=self._dtype)
       else:
         raise IndexError, \
               "arrays used as indices must be of integer (or boolean) type"

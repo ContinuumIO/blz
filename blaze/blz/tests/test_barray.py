@@ -874,7 +874,7 @@ class fancy_indexing_getitemTest(TestCase):
         b = blz.barray(a)
         c = b[[3,1]]
         r = a[[3,1]]
-        assert_array_equal(c, r, "fancy indexing does not work correctly")
+        assert_array_equal(c[:], r, "fancy indexing does not work correctly")
 
     def test01(self):
         """Testing fancy indexing (large list, numpy)"""
@@ -883,7 +883,7 @@ class fancy_indexing_getitemTest(TestCase):
         idx = np.random.randint(1000, size=1000)
         c = b[idx]
         r = a[idx]
-        assert_array_equal(c, r, "fancy indexing does not work correctly")
+        assert_array_equal(c[:], r, "fancy indexing does not work correctly")
 
     def test02(self):
         """Testing fancy indexing (empty list)"""
@@ -891,15 +891,14 @@ class fancy_indexing_getitemTest(TestCase):
         b = blz.barray(a)
         c = b[[]]
         r = a[[]]
-        assert_array_equal(c, r, "fancy indexing does not work correctly")
+        assert_array_equal(c[:], r, "fancy indexing does not work correctly")
 
     def test03(self):
         """Testing fancy indexing (list of floats)"""
         a = np.arange(1,101)
         b = blz.barray(a)
-        c = b[[1.1, 3.3]]
-        r = a[[1.1, 3.3]]
-        assert_array_equal(c, r, "fancy indexing does not work correctly")
+        idx = [1.1, 3.3]
+        self.assertRaises(IndexError, b.__getitem__, idx)
 
     def test04(self):
         """Testing fancy indexing (list of floats, numpy)"""
@@ -916,7 +915,7 @@ class fancy_indexing_getitemTest(TestCase):
         cwt = b[a<5]
         #print "numpy ->", a[a<5]
         #print "where ->", b[a<5]
-        assert_array_equal(wt, cwt, "where() does not work correctly")
+        assert_array_equal(wt, cwt[:], "where() does not work correctly")
 
     def test06(self):
         """Testing `where()` iterator (using array bool in fancy indexing)"""
