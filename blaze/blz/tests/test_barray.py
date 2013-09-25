@@ -925,7 +925,7 @@ class fancy_indexing_getitemTest(TestCase):
         cwt = b[blz.barray((a<5)|(a>9))]
         #print "numpy ->", a[(a<5)|(a>9)]
         #print "where ->", b[blz.barray((a<5)|(a>9))]
-        assert_array_equal(wt, cwt, "where() does not work correctly")
+        assert_array_equal(wt, cwt[:], "where() does not work correctly")
 
 
 class fancy_indexing_setitemTest(TestCase):

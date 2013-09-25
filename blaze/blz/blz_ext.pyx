@@ -1696,8 +1696,13 @@ cdef class barray:
           # XXX workaround until dynd would implement a sum() method
           count = np.asarray(key).sum()
         else:
-          count = -1
-        return nd.array(self.where(key), dtype=self._dtype)[:count]
+          #count = -1         # for the fromiter
+          count = len(self)   # for the iterator
+        # XXX This should be replaced by nd.fromiter() as soon as it would be
+        # implemented (https://github.com/ContinuumIO/dynd-python/issues/24)
+        return nd.array(
+          (v for n, v in enumerate(self.where(key)) if n < count),
+           dtype=self._dtype)
       elif typeobj.kind == "int":
         # An integer array
         return nd.array((self[i] for i in key), dtype=self._dtype)
