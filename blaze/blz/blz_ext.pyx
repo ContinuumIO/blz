@@ -1776,7 +1776,9 @@ cdef class barray:
         "cannot modify data because mode is '%s'" % self.mode)
 
     # Check for integer
-    if isinstance(key, _inttypes):
+    if (isinstance(key, _inttypes) or
+        (hasattr(key, 'eval') and nd.type_of(key).kind == 'int')):
+      key = operator.index(key)  # convert into an index
       if key < 0:
         # To support negative values
         key += self.len
@@ -1811,20 +1813,27 @@ cdef class barray:
     elif isinstance(key, list):
       # Try to convert to a integer array
       try:
-        key = nd.array(key, dtype=np.int_)
+        #key = nd.array(key, dtype=np.int_)
+        key = nd.array((operator.index(i) for i in key), dtype='int64')
       except:
         raise IndexError, "key cannot be converted to an array of indices"
       self[key] = value
       return
     # A boolean or integer array (case of fancy indexing)
-    elif hasattr(key, "dtype"):
-      if key.dtype.type == np.bool_:
+    elif (hasattr(key, "dtype") or hasattr(key, "eval")):
+      # Accept arrays that can have dynd types too
+      if hasattr(key, "eval"):
+        # Quacks like a dynd array
+        typeobj = nd.type_of(key).dtype
+      else:
+        typeobj = ndt.type(key.dtype)
+      if typeobj == ndt.bool:
         # A boolean array
         if len(key) != self.len:
           raise ValueError, "boolean array length must match len(self)"
         self.bool_update(key, value)
         return
-      elif np.issubsctype(key, np.int_):
+      elif typeobj.kind == "int":
         # An integer array
         value = utils.to_ndarray(value, self._dtype, arrlen=len(key))
         # XXX This could be optimised, but it works like this
@@ -1937,6 +1946,10 @@ cdef class barray:
 
     #vlen = boolarr.sum()   # number of true values in bool array
     # XXX workaround until dynd would implement a sum() method
+    if isinstance(boolarr, barray):
+      boolarr = boolarr[:]
+    if not hasattr(boolarr, "eval"):
+      boolarr = nd.view(boolarr)
     vlen = np.asarray(boolarr).sum()   # number of true values in bool array
     value = utils.to_ndarray(value, self._dtype, arrlen=vlen)
 
@@ -1959,7 +1972,11 @@ cdef class barray:
         continue
       # Modify the data in chunk
       if nchunk == nchunks-1 and self.leftover:
-        self.lastchunkarr[boolb] = value[nwrow:nwrow+blen]
+        #self.lastchunkarr[boolb] = value[nwrow:nwrow+blen]
+        # dynd does not support fancy indexing yet...
+        for i, b in enumerate(boolb):
+          if b:
+            self.lastchunkarr[i] = value[nwrow+i]
       else:
         # Get the data chunk
         chunk_ = self.chunks[nchunk]
@@ -1967,7 +1984,11 @@ cdef class barray:
         # Get all the values there
         cdata = chunk_[:]
         # Overwrite it with data from value
-        cdata[boolb] = value[nwrow:nwrow+blen]
+        #cdata[boolb] = value[nwrow:nwrow+blen]
+        # dynd does not support fancy indexing yet...
+        for i, b in enumerate(boolb):
+          if b:
+            cdata[i] = value[nwrow+i]
         # Replace the chunk
         chunk_ = chunk(cdata, self._dtype, self._bparams,
                        _memory = self._rootdir is None)
