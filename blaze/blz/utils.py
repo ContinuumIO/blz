@@ -151,7 +151,7 @@ def to_ndarray(array, dtype, arrlen=None):
         return array
 
     # Ensure that we have an ndarray of the correct dtype
-    if nd.type_of(array).dtype != dtype.dtype:
+    if nd.type_of(array).dtype != dtype:
         try:
             array = nd.array(array, dtype=dtype.dtype)
         except ValueError:

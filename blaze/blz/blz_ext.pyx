@@ -69,10 +69,13 @@ else:
 
 # The type used for size values: indexes, coordinates, dimension
 # lengths, row numbers, shapes, chunk shapes, byte counts...
-SizeType = np.int64
+# XXX Replace this by ndt.intptr as soon it is supported
+SizeType = ndt.int64
 
 # The native int type for this platform
-IntType = np.dtype(np.int_)
+#IntType = np.dtype(np.int_)
+# XXX Replace this by ndt.intptr as soon it is supported
+IntType = ndt.int64
 
 # The numpy API requires this function to be called before
 # using any numpy facilities in an extension module.
@@ -1563,35 +1566,40 @@ cdef class barray:
     cdef object result
 
     if dtype is None:
-      dtype = self._dtype.base
+      dtype = self._dtype
       # Check if we have less precision than required for ints
       # (mimick NumPy logic)
-      if dtype.kind in ('b', 'i') and dtype.itemsize < IntType.itemsize:
+      if (dtype.kind in ('bool', 'int') and
+          dtype.data_size < IntType.itemsize):
         dtype = IntType
     else:
-      dtype = np.dtype(dtype)
-    if dtype.kind == 'S':
+      if type(dtype) == np.dtype:
+        dtype = ndt.type(dtype)
+      elif type(dtype) == str:
+        dtype = ndt.type(np.dtype(dtype))
+    if dtype.kind in ('bytes', 'string'):
       raise TypeError, "cannot perform reduce with flexible type"
 
     # Get a container for the result
-    result = np.zeros(1, dtype=dtype)[0]
+    result = nd.array(0, dtype=dtype)
 
     nchunks = <blz_int_t>cython.cdiv(self._nbytes, self._chunksize)
     for nchunk from 0 <= nchunk < nchunks:
       chunk_ = self.chunks[nchunk]
       if chunk_.isconstant:
         result += chunk_.constant * self._chunklen
-      elif self._dtype.type == np.bool_:
+      elif self._dtype.dtype == ndt.bool:
         result += chunk_.true_count
       else:
         #result += chunk_[:].sum(dtype=dtype)
         # XXX workaround until dynd would implement a sum() method
-        result += np.asarray(chunk_[:]).sum(dtype=dtype)
+        result += np.asarray(chunk_[:]).sum(dtype=str(dtype))
     if self.leftover:
       leftover = self.len - nchunks * self._chunklen
       #result += self.lastchunkarr[:leftover].sum(dtype=dtype)
       # XXX workaround until dynd would implement a sum() method
-      result += np.asarray(self.lastchunkarr[:leftover]).sum(dtype=dtype)
+      result += np.asarray(self.lastchunkarr[:leftover]).sum(dtype=str(dtype))
+      result = result.eval()
 
     return result
 
