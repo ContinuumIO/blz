@@ -1081,25 +1081,25 @@ class arangeTemplate():
         """Testing arange() with only a `stop`."""
         a = np.arange(self.N)
         ac = blz.arange(self.N)
-        self.assert_(np.all(a == ac))
+        self.assert_(np.all(a == nd.as_numpy(ac[:])))
 
     def test01(self):
         """Testing arange() with a `start` and `stop`."""
         a = np.arange(3, self.N)
         ac = blz.arange(3, self.N)
-        self.assert_(np.all(a == ac))
+        self.assert_(np.all(a == nd.as_numpy(ac[:])))
 
     def test02(self):
         """Testing arange() with a `start`, `stop` and `step`."""
         a = np.arange(3, self.N, 4)
         ac = blz.arange(3, self.N, 4)
-        self.assert_(np.all(a == ac))
+        self.assert_(np.all(a == nd.as_numpy(ac[:])))
 
     def test03(self):
         """Testing arange() with a `dtype`."""
         a = np.arange(self.N, dtype="i1")
         ac = blz.arange(self.N, dtype="i1")
-        self.assert_(np.all(a == ac))
+        self.assert_(np.all(a == nd.as_numpy(ac[:])))
 
 class arange_smallTest(arangeTemplate, TestCase):
     N = 10
