@@ -1114,9 +1114,9 @@ class constructorTest(MayBeDiskTest):
         """Testing barray constructor with an int32 `dtype`."""
         a = np.arange(self.N)
         ac = blz.barray(a, dtype='i4', rootdir=self.rootdir)
-        self.assert_(ac.dtype == np.dtype('i4'))
+        self.assert_(str(ac.dtype) == 'int32')
         a = a.astype('i4')
-        self.assert_(a.dtype == ac.dtype)
+        self.assert_(str(a.dtype) == str(ac.dtype))
         self.assert_(np.all(a == ac[:]))
 
     def test01a(self):

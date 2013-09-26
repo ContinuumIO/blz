@@ -963,11 +963,12 @@ cdef class barray:
     if isinstance(array, barray):
       array = array[:]
 
-    array_ = utils.to_ndarray(array, dtype)
-
-    # if no base dtype is provided, use the dtype from the array.
+    # If no base dtype is provided, use the dtype from the array.
     if dtype is None:
-      dtype = nd.type_of(array_).dtype
+      dtype = nd.type_of(array).dtype
+
+    # Build a new array with the possible new dtype
+    array_ = utils.to_ndarray(array, dtype)
 
     # Multidimensional array.  The atom will have array_.shape[1:] dims.
     # atom dimensions will be stored in `self._dtype`, which is different

@@ -149,6 +149,8 @@ def to_ndarray(array, dtype, arrlen=None):
 
     if dtype is None:
         return array
+    elif isinstance(dtype, np.dtype):
+        dtype = ndt.make_fixed_dim((), dtype)
 
     # Ensure that we have an ndarray of the correct dtype
     if nd.type_of(array).dtype != dtype:
