@@ -280,7 +280,6 @@ cdef class chunk:
     footprint = 0
 
     if _compr:
-      print("compr dobject:", dobject)
       # Data comes in an already compressed state inside a Python bytes object
       self.data = dobject
       # Increment the reference so that data don't go away
@@ -427,9 +426,7 @@ cdef class chunk:
     (start, stop, step) = slice(start, stop, step).indices(clen)
 
     # Build a dynd container
-    #print("start, stop:", start, stop, clen, self.nbytes)
     ndarray = nd.empty('%d, %s' % (stop-start, self.dtype))
-    #print("ndarray:", ndarray)
     data = <char *><Py_uintptr_t>_lowlevel.data_address_of(ndarray)
     # Read actual data
     self._getitem(start, stop, data)
@@ -594,7 +591,7 @@ cdef class chunks(object):
       return os.path.join(self.rootdir, DATA_DIR)
 
   def __cinit__(self, rootdir, metainfo=None, _new=False):
-    cdef npdefs.ndarray lastchunkarr
+    cdef object lastchunkarr
     cdef char *decompressed, *compressed
     cdef int leftover
     cdef char *lastchunk
@@ -607,8 +604,8 @@ cdef class chunks(object):
     self.nchunks = 0
     self.nchunk_cached = -1    # no chunk cached initially
     self.dtype, self.bparams, self.len, lastchunkarr, self._mode = metainfo
-    atomsize = self.dtype.itemsize
-    itemsize = self.dtype.base.itemsize
+    atomsize = self.dtype.data_size
+    itemsize = self.dtype.dtype.data_size
 
     # Initialize last chunk
     if not _new:
@@ -1156,7 +1153,7 @@ cdef class barray:
       """Write metadata persistently."""
       storagef = os.path.join(self.metadir, STORAGE_FILE)
       with open(storagef, 'wb') as storagefh:
-        dflt_list = self.dflt.tolist()
+        dflt_list = nd.as_py(self.dflt)
         if type(dflt_list) in (datetime.datetime,
                                datetime.date, datetime.time):
             # The datetime cannot be serialized with JSON.  Use a 0 int.
