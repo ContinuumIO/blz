@@ -1123,7 +1123,7 @@ class constructorTest(MayBeDiskTest):
         """Testing zeros() constructor."""
         a = np.zeros(self.N)
         ac = blz.zeros(self.N, rootdir=self.rootdir)
-        self.assert_(a.dtype == ac.dtype)
+        self.assert_(str(a.dtype) == str(ac.dtype))
         self.assert_(np.all(a == ac[:]))
 
     def test01b(self):
@@ -1131,37 +1131,39 @@ class constructorTest(MayBeDiskTest):
         a = np.zeros(self.N, dtype='i4')
         ac = blz.zeros(self.N, dtype='i4', rootdir=self.rootdir)
         #print "dtypes-->", a.dtype, ac.dtype
-        self.assert_(a.dtype == ac.dtype)
+        self.assert_(str(a.dtype) == str(ac.dtype))
         self.assert_(np.all(a == ac[:]))
 
+    @skip("Strings not supported yet")
     def test01c(self):
         """Testing zeros() constructor, with a string type."""
         a = np.zeros(self.N, dtype='S5')
         ac = blz.zeros(self.N, dtype='S5', rootdir=self.rootdir)
         #print "ac-->", `ac`
-        self.assert_(a.dtype == ac.dtype)
+        self.assert_(str(a.dtype) == str(ac.dtype))
         self.assert_(np.all(a == ac[:]))
 
     def test02a(self):
         """Testing ones() constructor."""
         a = np.ones(self.N)
         ac = blz.ones(self.N, rootdir=self.rootdir)
-        self.assert_(a.dtype == ac.dtype)
+        self.assert_(str(a.dtype) == str(ac.dtype))
         self.assert_(np.all(a == ac[:]))
 
     def test02b(self):
         """Testing ones() constructor, with a `dtype`."""
         a = np.ones(self.N, dtype='i4')
         ac = blz.ones(self.N, dtype='i4', rootdir=self.rootdir)
-        self.assert_(a.dtype == ac.dtype)
+        self.assert_(str(a.dtype) == str(ac.dtype))
         self.assert_(np.all(a == ac[:]))
 
+    @skip("Strings not supported yet")
     def test02c(self):
         """Testing ones() constructor, with a string type"""
         a = np.ones(self.N, dtype='S3')
         ac = blz.ones(self.N, dtype='S3', rootdir=self.rootdir)
         #print "a-->", a, ac
-        self.assert_(a.dtype == ac.dtype)
+        self.assert_(str(a.dtype) == str(ac.dtype))
         self.assert_(np.all(a == ac[:]))
 
 class constructorSmallTest(constructorTest, TestCase):

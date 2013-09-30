@@ -912,21 +912,13 @@ cdef class barray:
     self.wheretrue_mode = False
     self.where_mode = False
 
-  cdef _adapt_dtype(self, dtype, shape):
-    """Adapt the dtype to one supported in barray.
-
-      Returns the adapted type with the shape modified accordingly.
-    """
-    #dtype = np.dtype((dtype, shape[1:]))
-    # Beware, the order of this might change in the future.  See:
-    # https://github.com/ContinuumIO/dynd-python/issues/6
-    dtype = ndt.make_fixed_dim(shape[1:], dtype)
-
-    return dtype
-
   def set_default(self, dtype, dflt):
     _dflt = nd.empty(dtype)
     if dflt is not None:
+      if not hasattr(dflt, "eval") and dflt.shape == ():
+        # Convert zero-dim numpy array into an scalar so as to avoid a
+        # segfault (see https://github.com/ContinuumIO/dynd-python/issues/25)
+        dflt = dflt[()]
       _dflt[()] = dflt
     else:
       # Provide sensible defaults here
@@ -980,7 +972,7 @@ cdef class barray:
     #
     # Note that objects are a special case. barray does not support object
     # arrays of more than one dimensions.
-    self._dtype = dtype = self._adapt_dtype(dtype, array_.shape)
+    self._dtype = dtype = ndt.make_fixed_dim(array_.shape[1:], dtype)
     self._shape = tuple(array_.shape[1:])
 
     # Check that atom size is less than 2 GB
@@ -990,7 +982,7 @@ cdef class barray:
     self.atomsize = atomsize = dtype.data_size
     self.itemsize = itemsize = dtype.dtype.data_size
 
-    # Check defaults for dflt
+    # Check defaults for dflts
     self._dflt = self.set_default(dtype, dflt)
 
     # Compute the chunklen/chunksize
@@ -1006,6 +998,7 @@ cdef class barray:
     except OverflowError:
       raise OverflowError(
         "The size cannot be larger than 2**31 on 32-bit platforms")
+
     if chunklen is None:
       # Try a guess
       chunksize = utils.calc_chunksize((expectedlen * atomsize) / float(_MB))
@@ -1028,7 +1021,6 @@ cdef class barray:
     # XXX Use nd.zeros when this would be implemented
     lastchunkarr = nd.empty("%d, %s" % (chunklen, dtype))
     lastchunkarr[:] = 0
-    #self.lastchunk = lastchunkarr.data
     self.lastchunk = <char *><Py_uintptr_t>_lowlevel.data_address_of(lastchunkarr)
     self.lastchunkarr = lastchunkarr
 
