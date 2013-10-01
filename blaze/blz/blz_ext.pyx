@@ -955,9 +955,9 @@ cdef class barray:
     # If no base dtype is provided, use the dtype from the array.
     if dtype is None:
       if isinstance(array, nd.array):
-        dtype = nd.type_of(array).dtype   # dynd array
+        dtype = nd.dtype_of(array)   # dynd array
       else:
-        dtype = ndt.make_fixed_dim((), str(array.dtype))  # numpy array
+        dtype = ndt.type(array.dtype)  # numpy array
 
     # Build a new array with the possible new dtype
     array_ = utils.to_ndarray(array, dtype)
