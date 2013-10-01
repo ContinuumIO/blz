@@ -912,7 +912,7 @@ cdef class barray:
   def set_default(self, dtype, dflt):
     _dflt = nd.empty(dtype)
     if dflt is not None:
-      if not hasattr(dflt, "eval") and dflt.shape == ():
+      if not isinstance(dflt, nd.array) and dflt.shape == ():
         # Convert zero-dim numpy array into an scalar so as to avoid a
         # segfault (see https://github.com/ContinuumIO/dynd-python/issues/25)
         dflt = dflt[()]
@@ -954,7 +954,7 @@ cdef class barray:
 
     # If no base dtype is provided, use the dtype from the array.
     if dtype is None:
-      if hasattr(array, 'eval'):
+      if isinstance(array, nd.array):
         dtype = nd.type_of(array).dtype   # dynd array
       else:
         dtype = ndt.make_fixed_dim((), str(array.dtype))  # numpy array
@@ -1641,7 +1641,7 @@ cdef class barray:
 
     # Check for integer
     if (isinstance(key, _inttypes) or
-        (hasattr(key, 'eval') and nd.type_of(key).kind == 'int')):
+        (isinstance(key, nd.array) and nd.type_of(key).kind == 'int')):
       key = operator.index(key)  # convert into an index
       if key < 0:
         # To support negative values
@@ -1681,9 +1681,9 @@ cdef class barray:
         raise IndexError, "key cannot be converted to an array of indices"
       return self[key]
     # A boolean or integer array (case of fancy indexing)
-    elif (hasattr(key, "dtype") or hasattr(key, "eval")):
+    elif (isinstance(key, np.ndarray) or isinstance(key, nd.array)):
       # Accept arrays that can have dynd types too
-      if hasattr(key, "eval"):
+      if isinstance(key, nd.array):
         # Quacks like a dynd array
         typeobj = nd.type_of(key).dtype
       else:
@@ -1778,7 +1778,7 @@ cdef class barray:
 
     # Check for integer
     if (isinstance(key, _inttypes) or
-        (hasattr(key, 'eval') and nd.type_of(key).kind == 'int')):
+        (isinstance(key, nd.array) and nd.type_of(key).kind == 'int')):
       key = operator.index(key)  # convert into an index
       if key < 0:
         # To support negative values
@@ -1821,10 +1821,9 @@ cdef class barray:
       self[key] = value
       return
     # A boolean or integer array (case of fancy indexing)
-    elif (hasattr(key, "dtype") or hasattr(key, "eval")):
+    elif (isinstance(key, np.ndarray) or isinstance(key, nd.array)):
       # Accept arrays that can have dynd types too
-      if hasattr(key, "eval"):
-        # Quacks like a dynd array
+      if isinstance(key, nd.array):
         typeobj = nd.type_of(key).dtype
       else:
         typeobj = ndt.type(key.dtype)
@@ -1949,7 +1948,7 @@ cdef class barray:
     # XXX workaround until dynd would implement a sum() method
     if isinstance(boolarr, barray):
       boolarr = boolarr[:]
-    if not hasattr(boolarr, "eval"):
+    if not isinstance(boolarr, nd.array):
       boolarr = nd.view(boolarr)
     vlen = np.asarray(boolarr).sum()   # number of true values in bool array
     value = utils.to_ndarray(value, self._dtype, arrlen=vlen)
