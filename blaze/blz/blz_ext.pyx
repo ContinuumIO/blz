@@ -221,7 +221,7 @@ cdef int true_count(char *data, int nbytes):
 #-------------------------------------------------------------
 
 kinds = {'bool': 'b', 'int': 'i', 'real': 'r', 'complex': 'c',
-         'bytes': 'B', 'string': 'U'}
+         'bytes': 'B', 'string': 'U', 'struct': 's'}
 
 cdef class chunk:
   """
@@ -1016,7 +1016,7 @@ cdef class barray:
     # Use np.zeros here because they compress better
     #lastchunkarr = np.zeros(dtype=dtype, shape=(chunklen,))
     # XXX Use nd.zeros when this would be implemented
-    lastchunkarr = nd.empty("%d, %s" % (chunklen, dtype))
+    lastchunkarr = nd.empty(chunklen, dtype)
     lastchunkarr[:] = 0
     self.lastchunk = <char *><Py_uintptr_t>_lowlevel.data_address_of(lastchunkarr)
     self.lastchunkarr = lastchunkarr

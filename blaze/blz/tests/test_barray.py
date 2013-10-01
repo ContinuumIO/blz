@@ -1187,29 +1187,32 @@ class dtypesTest(TestCase):
         """Testing barray constructor with a float32 `dtype`."""
         a = np.arange(10)
         ac = blz.barray(a, dtype='f4')
-        self.assert_(ac.dtype == np.dtype('f4'))
+        self.assert_(ac.dtype == ndt.float32)
         a = a.astype('f4')
-        self.assert_(a.dtype == ac.dtype)
-        self.assert_(np.all(a == ac))
+        self.assert_(str(a.dtype) == str(ac.dtype))
+        self.assert_(np.all(a == ac[:]))
 
     def test01(self):
         """Testing barray constructor with a `dtype` with an empty input."""
         a = np.array([], dtype='i4')
         ac = blz.barray([], dtype='f4')
-        self.assert_(ac.dtype == np.dtype('f4'))
+        self.assert_(ac.dtype == ndt.float32)
         a = a.astype('f4')
-        self.assert_(a.dtype == ac.dtype)
-        self.assert_(np.all(a == ac))
+        self.assert_(str(a.dtype) == str(ac.dtype))
+        self.assert_(np.all(a == ac[:]))
 
     def test02(self):
         """Testing barray constructor with a plain compound `dtype`."""
         dtype = np.dtype("f4,f8")
         a = np.ones(30000, dtype=dtype)
-        ac = blz.barray(a, dtype=dtype)
-        self.assert_(ac.dtype == dtype)
-        self.assert_(a.dtype == ac.dtype)
+        dtype_dy = ndt.make_cstruct([ndt.float32, ndt.float64], ['f0', 'f1'])
+        ac = blz.barray(a, dtype=dtype_dy)
+        self.assert_(str(ac.dtype) == str(dtype_dy))
         #print "ac-->", `ac`
-        assert_array_equal(a, ac[:], "Arrays are not equal")
+        #assert_array_equal(a, nd.as_numpy(ac[:]), "Arrays are not equal")
+        # XXX workaround for allowing a comparison
+        b = nd.as_numpy(ac[:])
+        self.assert_(all([np.all(a[x] == b[x]) for x in a.dtype.names]))
 
     def test03(self):
         """Testing barray constructor with a nested compound `dtype`."""
@@ -1217,6 +1220,7 @@ class dtypesTest(TestCase):
         a = np.ones(3000, dtype=dtype)
         ac = blz.barray(a, dtype=dtype)
         self.assert_(ac.dtype == dtype)
+        self.assert_(str(a.dtype) == str(ac.dtype))
         self.assert_(a.dtype == ac.dtype)
         #print "ac-->", `ac`
         assert_array_equal(a, ac[:], "Arrays are not equal")
@@ -1226,6 +1230,7 @@ class dtypesTest(TestCase):
         a = np.array(["ale", "e", "aco"], dtype="S4")
         ac = blz.barray(a, dtype='S4')
         self.assert_(ac.dtype == np.dtype('S4'))
+        self.assert_(str(a.dtype) == str(ac.dtype))
         self.assert_(a.dtype == ac.dtype)
         #print "ac-->", `ac`
         assert_array_equal(a, ac, "Arrays are not equal")
@@ -1236,6 +1241,7 @@ class dtypesTest(TestCase):
         ac = blz.barray(a, dtype='U4')
         self.assert_(ac.dtype == np.dtype('U4'))
         self.assert_(a.dtype == ac.dtype)
+        self.assert_(str(a.dtype) == str(ac.dtype))
         #print "ac-->", `ac`
         assert_array_equal(a, ac, "Arrays are not equal")
 
@@ -1245,6 +1251,7 @@ class dtypesTest(TestCase):
         a = np.array(["ale", "e", "aco"], dtype=dtype)
         ac = blz.barray(a, dtype=dtype)
         self.assert_(ac.dtype == dtype)
+        self.assert_(str(a.dtype) == str(ac.dtype))
         self.assert_(a.dtype == ac.dtype)
         assert_array_equal(a, ac, "Arrays are not equal")
 
@@ -1264,7 +1271,8 @@ class dtypesTest(TestCase):
             for t in types:
                 a = blz.zeros(shape, t)
                 b = blz.barray(a)
-                self.assertEqual(a.dtype, b.dtype)
+                #self.assertEqual(a.dtype, b.dtype)
+                self.assert_(str(a.dtype) == str(b.dtype))
                 self.assertEqual(a.shape, b.shape)
                 self.assertEqual(a.shape, shape)
 
