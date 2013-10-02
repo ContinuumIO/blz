@@ -317,58 +317,46 @@ class setitemDiskTest(setitemTest):
 
 class appendTest(MayBeDiskTest, TestCase):
 
-    def test00(self):
-        """Testing `append()` method"""
+    def test_basic(self):
         a = np.arange(1000)
         b = blz.barray(a, rootdir=self.rootdir)
         b.append(a)
-        #print "b->", `b`
         c = np.concatenate((a, a))
         assert_array_equal(c, b[:], "Arrays are not equal")
 
-    def test01(self):
-        """Testing `append()` method (small chunklen)"""
+    def test_chunklen_1(self):
         a = np.arange(1000)
         b = blz.barray(a, chunklen=1, rootdir=self.rootdir)
         b.append(a)
-        #print "b->", `b`
         c = np.concatenate((a, a))
         assert_array_equal(c, b[:], "Arrays are not equal")
 
-    def test02a(self):
-        """Testing `append()` method (large chunklen I)"""
+    def test_chunklen_10k_1(self):
         a = np.arange(1000)
         b = blz.barray(a, chunklen=10*1000, rootdir=self.rootdir)
         b.append(a)
-        #print "b->", `b`
         c = np.concatenate((a, a))
         assert_array_equal(c, b[:], "Arrays are not equal")
 
-    def test02b(self):
-        """Testing `append()` method (large chunklen II)"""
+    def test_chunklen_10k_2(self):
         a = np.arange(100*1000)
         b = blz.barray(a, chunklen=10*1000, rootdir=self.rootdir)
         b.append(a)
-        #print "b->", `b`
         c = np.concatenate((a, a))
         assert_array_equal(c, b[:], "Arrays are not equal")
 
-    def test02c(self):
-        """Testing `append()` method (large chunklen III)"""
+    def test_100km1(self):
         a = np.arange(1000*1000)
         b = blz.barray(a, chunklen=100*1000-1, rootdir=self.rootdir)
         b.append(a)
-        #print "b->", `b`
         c = np.concatenate((a, a))
         assert_array_equal(c, b[:], "Arrays are not equal")
 
-    def test03(self):
-        """Testing `append()` method (large append)"""
+    def test_large(self):
         a = np.arange(1e4)
         c = np.arange(2e5)
         b = blz.barray(a, rootdir=self.rootdir)
         b.append(c)
-        #print "b->", `b`
         d = np.concatenate((a, c))
         assert_array_equal(d, b[:], "Arrays are not equal")
 
