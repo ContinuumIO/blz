@@ -336,7 +336,7 @@ cdef class chunk:
 
       if array.strides[0] == 0:
         # The chunk is made of constants.  Regenerate the actual data.
-        array = array.copy()
+        array = nd.array(array)
 
       # Compress data
       cbytes, blocksize = self.compress_data(data, itemsize, nbytes,
