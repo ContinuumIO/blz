@@ -13,6 +13,7 @@ import sys
 import numpy as np
 from numpy.testing import assert_equal, assert_array_equal, assert_array_almost_equal
 from unittest import TestCase
+from dynd import nd, ndt, _lowlevel
 
 
 from blaze import blz
@@ -29,16 +30,14 @@ class createTest(MayBeDiskTest, TestCase):
         a = blz.barray(np.arange(N, dtype='i4'))
         b = blz.barray(np.arange(N, dtype='f8')+1)
         t = blz.btable((a, b), ('f0', 'f1'), rootdir=self.rootdir)
-        #print "t->", `t`
-        ra = np.rec.fromarrays([a[:],b[:]]).view(np.ndarray)
-        #print "ra[:]", ra[:]
+        ra = nd.array(np.rec.fromarrays([a[:],b[:]]))
         assert_array_equal(t[:], ra, "btable values are not correct")
 
     def test00b(self):
         """Testing btable creation from a tuple of lists"""
         t = blz.btable(([1,2,3],[4,5,6]), ('f0', 'f1'), rootdir=self.rootdir)
         #print "t->", `t`
-        ra = np.rec.fromarrays([[1,2,3],[4,5,6]]).view(np.ndarray)
+        ra = nd.array(np.rec.fromarrays([[1,2,3],[4,5,6]]))
         #print "ra[:]", ra[:]
         assert_array_equal(t[:], ra, "btable values are not correct")
 
@@ -800,7 +799,6 @@ class fancy_indexing_setitemTest(TestCase):
         N = 10
         ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
         t = blz.btable(ra, chunklen=10)
-        print "despres de la creacio"
         sl = np.random.randint(2, size=1000).astype('bool')
         t[sl] = [(-1, -2, -3)]
         ra[sl] = [(-1, -2, -3)]

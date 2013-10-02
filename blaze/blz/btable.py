@@ -15,6 +15,7 @@ from collections import namedtuple
 import json
 import os, os.path
 import shutil
+from dynd import nd, ndt, _lowlevel
 
 from .blz_ext import barray
 from .bparams import bparams
@@ -162,8 +163,9 @@ class btable(object):
     def dtype(self):
         "The data type of this object (numpy dtype)."
         names, cols = self.names, self.cols
-        l = [(name, cols[name].dtype) for name in names]
-        return np.dtype(l)
+        dtypes = [cols[name].dtype for name in names]
+        return ndt.make_cstruct(dtypes, names)
+
 
     @property
     def names(self):
@@ -217,10 +219,6 @@ class btable(object):
 
         # Attach the attrs to this object
         self.attrs = attrs.attrs(self.rootdir, self.mode, _new=_new)
-        print "despres de crear attrs"
-
-        # Cache a structured array of len 1 for btable[int] acceleration
-        self._arr1 = np.empty(shape=(1,), dtype=self.dtype)
 
     def create_btable(self, columns, names, **kwargs):
         """Create a btable anew."""
@@ -477,8 +475,6 @@ class btable(object):
 
         # Insert the column
         self.cols.insert(name, pos, newcol)
-        # Update _arr1
-        self._arr1 = np.empty(shape=(1,), dtype=self.dtype)
 
     def delcol(self, name=None, pos=None):
         """
@@ -524,8 +520,6 @@ class btable(object):
 
         # Remove the column
         self.cols.pop(name)
-        # Update _arr1
-        self._arr1 = np.empty(shape=(1,), dtype=self.dtype)
 
     def copy(self, **kwargs):
         """
@@ -761,15 +755,12 @@ class btable(object):
 
         # First, check for integer
         if isinstance(key, _inttypes):
-            # Get a copy of the len-1 array
-            ra = self._arr1.copy()
+            # Get a copy of the scalar array
+            ra = nd.empty(self.dtype)
             # Fill it
             for name in self.names:
-                ra[0][name] = self.cols[name][key]
-            # The next gives conversion problems with unicode
-            # (the responsible being probably numpy)
-            #ra[0] = tuple([self.cols[name][key] for name in self.names])
-            return ra[0]
+                setattr(ra, name, self.cols[name][key])
+            return ra
         # Slices
         elif type(key) == slice:
             (start, stop, step) = key.start, key.stop, key.step
@@ -828,10 +819,10 @@ class btable(object):
         (start, stop, step) = slice(start, stop, step).indices(self.len)
         # Build a numpy container
         n = utils.get_len_of_range(start, stop, step)
-        ra = np.empty(shape=(n,), dtype=self.dtype)
+        ra = nd.empty((n,), self.dtype)
         # Fill it
         for name in self.names:
-            ra[name][:] = self.cols[name][start:stop:step]
+            setattr(ra, name, self.cols[name][start:stop:step])
 
         return ra
 
