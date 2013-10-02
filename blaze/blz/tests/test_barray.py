@@ -1215,16 +1215,6 @@ class dtypesTest(TestCase):
         #print "ac-->", `ac`
         assert_array_equal(a, ac, "Arrays are not equal")
 
-    def test06(self):
-        """Testing barray constructor with an object `dtype`."""
-        dtype = np.dtype("object")
-        a = np.array(["ale", "e", "aco"], dtype=dtype)
-        ac = blz.barray(a, dtype=dtype)
-        self.assert_(ac.dtype == dtype)
-        self.assert_(str(a.dtype) == str(ac.dtype))
-        self.assert_(a.dtype == ac.dtype)
-        assert_array_equal(a, ac, "Arrays are not equal")
-
     def test07(self):
         """Checking barray constructor from another barray.
 
