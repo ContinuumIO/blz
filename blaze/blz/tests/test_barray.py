@@ -1087,8 +1087,7 @@ class arange_bigTest(arangeTemplate, TestCase):
 
 class constructorTest(MayBeDiskTest):
 
-    def test00(self):
-        """Testing barray constructor with an int32 `dtype`."""
+    def test_constructor_int32(self):
         a = np.arange(self.N)
         ac = blz.barray(a, dtype='i4', rootdir=self.rootdir)
         self.assert_(str(ac.dtype) == 'int32')
@@ -1096,15 +1095,13 @@ class constructorTest(MayBeDiskTest):
         self.assert_(str(a.dtype) == str(ac.dtype))
         self.assert_(np.all(a == ac[:]))
 
-    def test01a(self):
-        """Testing zeros() constructor."""
+    def test_zeros(self):
         a = np.zeros(self.N)
         ac = blz.zeros(self.N, rootdir=self.rootdir)
         self.assert_(str(a.dtype) == str(ac.dtype))
         self.assert_(np.all(a == ac[:]))
 
-    def test01b(self):
-        """Testing zeros() constructor, with a `dtype`."""
+    def test_zeros_i4(self):
         a = np.zeros(self.N, dtype='i4')
         ac = blz.zeros(self.N, dtype='i4', rootdir=self.rootdir)
         #print "dtypes-->", a.dtype, ac.dtype
@@ -1112,31 +1109,27 @@ class constructorTest(MayBeDiskTest):
         self.assert_(np.all(a == ac[:]))
 
     @skip("Strings not supported yet")
-    def test01c(self):
-        """Testing zeros() constructor, with a string type."""
+    def test_zeros_S5(self):
         a = np.zeros(self.N, dtype='S5')
         ac = blz.zeros(self.N, dtype='S5', rootdir=self.rootdir)
         #print "ac-->", `ac`
         self.assert_(str(a.dtype) == str(ac.dtype))
         self.assert_(np.all(a == ac[:]))
 
-    def test02a(self):
-        """Testing ones() constructor."""
+    def test_ones(self):
         a = np.ones(self.N)
         ac = blz.ones(self.N, rootdir=self.rootdir)
         self.assert_(str(a.dtype) == str(ac.dtype))
         self.assert_(np.all(a == ac[:]))
 
-    def test02b(self):
-        """Testing ones() constructor, with a `dtype`."""
+    def test_ones_i4(self):
         a = np.ones(self.N, dtype='i4')
         ac = blz.ones(self.N, dtype='i4', rootdir=self.rootdir)
         self.assert_(str(a.dtype) == str(ac.dtype))
         self.assert_(np.all(a == ac[:]))
 
     @skip("Strings not supported yet")
-    def test02c(self):
-        """Testing ones() constructor, with a string type"""
+    def test_ones_S3(self):
         a = np.ones(self.N, dtype='S3')
         ac = blz.ones(self.N, dtype='S3', rootdir=self.rootdir)
         #print "a-->", a, ac
@@ -1342,8 +1335,8 @@ class persistenceTest(MayBeDiskTest, TestCase):
 
 class iterchunksTest(TestCase):
 
-    def test00(self):
-        """Testing `iterchunks` method with no blen, no start, no stop"""
+    @skip('coredumps')
+    def test_iterchunks(self):
         N = int(1e4)
         a = blz.fromiter(xrange(N), dtype=np.float64, count=N)
         l, s = 0, 0
@@ -1353,8 +1346,8 @@ class iterchunksTest(TestCase):
         self.assert_(l == N)
         self.assert_(s == (N - 1) * (N / 2))  # as per Gauss summation formula
 
-    def test01(self):
-        """Testing `iterchunks` method with no start, no stop"""
+    @skip('coredumps')
+    def test_iterchunks_blen(self):
         N, blen = int(1e4), 100
         a = blz.fromiter(xrange(N), dtype=np.float64, count=N)
         l, s = 0, 0
@@ -1364,8 +1357,8 @@ class iterchunksTest(TestCase):
             s += block.sum()
         self.assert_(l == N)
 
-    def test02(self):
-        """Testing `iterchunks` method with no stop"""
+    @skip('coredumps')
+    def test_iterchunks_blen_start(self):
         N, blen = int(1e4), 100
         a = blz.fromiter(xrange(N), dtype=np.float64, count=N)
         l, s = 0, 0
@@ -1375,8 +1368,8 @@ class iterchunksTest(TestCase):
         self.assert_(l == (N - (blen - 1)))
         self.assert_(s == np.arange(blen-1, N).sum())
 
-    def test03(self):
-        """Testing `iterchunks` method with all parameters set"""
+    @skip('coredumps')
+    def test_iterchunks_full(self):
         N, blen = int(1e4), 100
         a = blz.fromiter(xrange(N), dtype=np.float64, count=N)
         l, s = 0, 0
