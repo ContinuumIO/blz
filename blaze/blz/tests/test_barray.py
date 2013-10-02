@@ -26,8 +26,7 @@ if sys.version_info >= (3, 0):
 
 class chunkTest(TestCase):
 
-    def test01(self):
-        """Testing `__getitem()__` method with scalars"""
+    def test_getitem_scalar(self):
         a = np.arange(1e3)
         a = nd.view(a)
         dt = nd.type_of(a).element_type
@@ -38,8 +37,7 @@ class chunkTest(TestCase):
         a1, b1 = np.array(a[1]), np.array(b[1])
         self.assert_(a1 == b1, "Values in key 1 are not equal")
 
-    def test02(self):
-        """Testing `__getitem()__` method with ranges"""
+    def test_getitem_ranges(self):
         a = np.arange(1e3)
         a = nd.asarray(a)
         dt = nd.type_of(a).element_type
@@ -47,8 +45,7 @@ class chunkTest(TestCase):
         #print "b[1:3]->", `b[1:3]`
         assert_array_equal(a[1:3], b[1:3], "Arrays are not equal")
 
-    def test03(self):
-        """Testing `__getitem()__` method with ranges and steps"""
+    def test_getitem_ranges_steps(self):
         a = np.arange(1e3)
         a = nd.array(a)
         dt = nd.type_of(a).element_type
@@ -58,8 +55,7 @@ class chunkTest(TestCase):
         #assert_array_equal(a[1:8:3], b[1:8:3], "Arrays are not equal")
         assert_array_equal(a1, b1, "Arrays are not equal")
 
-    def test04(self):
-        """Testing `__getitem()__` method with long ranges"""
+    def test_getitem_long_ranges(self):
         a = np.arange(1e4)
         a = nd.view(a)
         dt = nd.type_of(a).element_type
@@ -1035,8 +1031,7 @@ class fromiterTest(TestCase):
 
 class computeMethodsTest(TestCase):
 
-    def test00(self):
-        """Testing sum()."""
+    def test_sum(self):
         a = np.arange(1e5)
         sa = a.sum()
         ac = blz.barray(a)
@@ -1044,8 +1039,8 @@ class computeMethodsTest(TestCase):
         self.assert_(sa.dtype == sac.dtype, "sum() is not working correctly.")
         self.assert_(sa == sac, "sum() is not working correctly.")
 
-    def test01(self):
-        """Testing sum() with dtype."""
+    def test_sum_i8(self):
+        # this tests also that it works with an explicit dtype
         a = np.arange(1e5)
         sa = a.sum(dtype='i8')
         ac = blz.barray(a)
@@ -1057,34 +1052,28 @@ class computeMethodsTest(TestCase):
         self.assert_(sa == sac, "sum() is not working correctly.")
 
     @skip("strings not supported yet with dynd in the core")
-    def _test02(self):
-        """Testing sum() with strings (TypeError)."""
+    def test_sum_strings(self):
         ac = blz.zeros(10, 'S3')
         self.assertRaises(TypeError, ac.sum)
 
 
 class arangeTemplate():
-
-    def test00(self):
-        """Testing arange() with only a `stop`."""
+    def test_only_stop(self):
         a = np.arange(self.N)
         ac = blz.arange(self.N)
         self.assert_(np.all(a == nd.as_numpy(ac[:])))
 
-    def test01(self):
-        """Testing arange() with a `start` and `stop`."""
+    def test_start_stop(self):
         a = np.arange(3, self.N)
         ac = blz.arange(3, self.N)
         self.assert_(np.all(a == nd.as_numpy(ac[:])))
 
-    def test02(self):
-        """Testing arange() with a `start`, `stop` and `step`."""
+    def test_start_stop_step(self):
         a = np.arange(3, self.N, 4)
         ac = blz.arange(3, self.N, 4)
         self.assert_(np.all(a == nd.as_numpy(ac[:])))
 
-    def test03(self):
-        """Testing arange() with a `dtype`."""
+    def test_with_dtype(self):
         a = np.arange(self.N, dtype="i1")
         ac = blz.arange(self.N, dtype="i1")
         self.assert_(np.all(a == nd.as_numpy(ac[:])))
