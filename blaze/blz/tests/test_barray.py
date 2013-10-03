@@ -22,6 +22,14 @@ is_64bit = (struct.calcsize("P") == 8)
 if sys.version_info >= (3, 0):
     xrange = range
 
+
+def coredumps(func):
+    def wrapped(*args, **kwargs):
+        raise AssertionError("this test coredumps")
+    wrapped.__name__ = func.__name__
+    return wrapped
+
+
 ########################################################################
 # Just memory tests for now
 
@@ -1179,7 +1187,7 @@ class persistenceTest(MayBeDiskTest, TestCase):
 
 class iterchunksTest(TestCase):
 
-    @skip('coredumps')
+    @coredumps
     def test_iterchunks(self):
         N = int(1e4)
         a = blz.fromiter(xrange(N), dtype=np.float64, count=N)
@@ -1190,7 +1198,7 @@ class iterchunksTest(TestCase):
         self.assert_(l == N)
         self.assert_(s == (N - 1) * (N / 2))  # as per Gauss summation formula
 
-    @skip('coredumps')
+    @coredumps
     def test_iterchunks_blen(self):
         N, blen = int(1e4), 100
         a = blz.fromiter(xrange(N), dtype=np.float64, count=N)
@@ -1201,7 +1209,7 @@ class iterchunksTest(TestCase):
             s += block.sum()
         self.assert_(l == N)
 
-    @skip('coredumps')
+    @coredumps
     def test_iterchunks_blen_start(self):
         N, blen = int(1e4), 100
         a = blz.fromiter(xrange(N), dtype=np.float64, count=N)
@@ -1212,7 +1220,7 @@ class iterchunksTest(TestCase):
         self.assert_(l == (N - (blen - 1)))
         self.assert_(s == np.arange(blen-1, N).sum())
 
-    @skip('coredumps')
+    @coredumps
     def test_iterchunks_full(self):
         N, blen = int(1e4), 100
         a = blz.fromiter(xrange(N), dtype=np.float64, count=N)
