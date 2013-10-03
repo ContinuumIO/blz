@@ -36,9 +36,7 @@ class createTest(MayBeDiskTest, TestCase):
     def test00b(self):
         """Testing btable creation from a tuple of lists"""
         t = blz.btable(([1,2,3],[4,5,6]), ('f0', 'f1'), rootdir=self.rootdir)
-        #print "t->", `t`
-        ra = nd.array(np.rec.fromarrays([[1,2,3],[4,5,6]]))
-        #print "ra[:]", ra[:]
+        ra = nd.array(np.rec.fromarrays([[1,2,3],[4,5,6]], dtype="i4,i4"))
         assert_array_equal(t[:], ra, "btable values are not correct")
 
     def test00c(self):
@@ -54,7 +52,7 @@ class createTest(MayBeDiskTest, TestCase):
         b = np.arange(N, dtype='f8')+1
         t = blz.btable((a, b), ('f0', 'f1'), rootdir=self.rootdir)
         #print "t->", `t`
-        ra = np.rec.fromarrays([a,b]).view(np.ndarray)
+        ra = nd.array(np.rec.fromarrays([a,b]))
         #print "ra[:]", ra[:]
         assert_array_equal(t[:], ra, "btable values are not correct")
 
@@ -72,7 +70,7 @@ class createTest(MayBeDiskTest, TestCase):
         N = 10*1000
         ra = np.fromiter(((i, i*2.) for i in xrange(N)), dtype='i4,f8')
         t = blz.fromiter(((i, i*2.) for i in xrange(N)), dtype='i4,f8',
-                        count=N, rootdir=self.rootdir)
+                         count=N, rootdir=self.rootdir)
         #print "t->", `t`
         #print "ra[:]", ra[:]
         assert_array_equal(t[:], ra, "btable values are not correct")

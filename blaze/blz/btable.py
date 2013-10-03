@@ -249,10 +249,11 @@ class btable(object):
         names = list(nt._fields)
 
         # Guess the kind of columns input
-        calist, nalist, ratype = False, False, False
+        calist, nalist, ndlist, ratype = False, False, False, False
         if type(columns) in (tuple, list):
             calist = [type(v) for v in columns] == [barray for v in columns]
             nalist = [type(v) for v in columns] == [np.ndarray for v in columns]
+            ndlist = [type(v) for v in columns] == [nd.array for v in columns]
         elif isinstance(columns, np.ndarray):
             ratype = hasattr(columns.dtype, "names")
             if ratype:
@@ -260,8 +261,9 @@ class btable(object):
                     raise ValueError("only unidimensional shapes supported")
         else:
             raise ValueError("`columns` input is not supported")
-        if not (calist or nalist or ratype):
+        if not (calist or nalist or ndlist or ratype):
             # Try to convert the elements to barrays
+            columns = [barray(col) for col in columns]
             try:
                 columns = [barray(col) for col in columns]
                 calist = True

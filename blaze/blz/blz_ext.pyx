@@ -956,11 +956,13 @@ cdef class barray:
     if dtype is None:
       if isinstance(array, nd.array):
         dtype = nd.dtype_of(array)   # dynd array
-      else:
+      elif isinstance(array, np.ndarray):
         dtype = ndt.type(array.dtype)  # numpy array
 
     # Build a new array with the possible new dtype
     array_ = utils.to_ndarray(array, dtype)
+    # Reassign dtype to the final dtype
+    dtype = nd.type_of(array_).dtype
 
     # Multidimensional array.  The atom will have array_.shape[1:] dims.
     # atom dimensions will be stored in `self._dtype`, which is different
