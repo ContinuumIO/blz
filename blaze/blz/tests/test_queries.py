@@ -6,6 +6,8 @@ from unittest import TestCase
 import numpy as np
 from numpy.testing import assert_array_equal, assert_array_almost_equal
 
+from .common import coredumps
+
 from blaze import blz
 
 if sys.version_info >= (3, 0):
@@ -66,6 +68,7 @@ class big_with_listTest(with_listTest, TestCase):
 
 class wherechunksTest(TestCase):
 
+    @coredumps
     def test00(self):
         """Testing `wherechunks` method with only an expression"""
         N = int(1e4)
@@ -78,6 +81,7 @@ class wherechunksTest(TestCase):
         self.assert_(l == N - 1)
         self.assert_(s == (N - 1) * (N / 2))  # Gauss summation formula
 
+    @coredumps
     def test01(self):
         """Testing `wherechunks` method with a `blen`"""
         N = int(1e4)
@@ -93,6 +97,7 @@ class wherechunksTest(TestCase):
         self.assert_(l == N)
         self.assert_(s == (N - 1) * (N / 2))  # Gauss summation formula
 
+    @coredumps
     def test02(self):
         """Testing `wherechunks` method with a `outfields` with 2 fields"""
         N = int(1e4)
@@ -106,6 +111,7 @@ class wherechunksTest(TestCase):
         self.assert_(l == N - 1)
         self.assert_(s == (N - 1) * (N / 2))  # Gauss summation formula
 
+    @coredumps
     def test03(self):
         """Testing `wherechunks` method with a `outfields` with 1 field"""
         N = int(1e4)
@@ -119,6 +125,7 @@ class wherechunksTest(TestCase):
         self.assert_(l == N - 1)
         self.assert_(s == (N - 1) * (N / 2))  # Gauss summation formula
 
+    @coredumps
     def test04(self):
         """Testing `wherechunks` method with a `limit` parameter"""
         N, M = int(1e4), 101
@@ -131,6 +138,7 @@ class wherechunksTest(TestCase):
         self.assert_(l == M)
         self.assert_(s == M * ((M + 1) / 2))  # Gauss summation formula
 
+    @coredumps
     def test05(self):
         """Testing `wherechunks` method with a `limit` parameter"""
         N, M = int(1e4), 101
@@ -143,6 +151,7 @@ class wherechunksTest(TestCase):
         self.assert_(l == M)
         self.assert_(s == M * ((M + 1) / 2))  # Gauss summation formula
 
+    @coredumps
     def test06(self):
         """Testing `wherechunks` method with a `skip` parameter"""
         N, M = int(1e4), 101
@@ -155,6 +164,7 @@ class wherechunksTest(TestCase):
         self.assert_(l == M - 1)
         self.assert_(s == np.arange(N-M+1, N).sum())
 
+    @coredumps
     def test07(self):
         """Testing `wherechunks` method with a `limit`, `skip` parameter"""
         N, M = int(1e4), 101

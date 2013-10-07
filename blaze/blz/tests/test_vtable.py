@@ -16,7 +16,7 @@ from numpy.testing import (
 from unittest import TestCase
 
 from blaze import blz
-from .common import MayBeDiskTest
+from .common import MayBeDiskTest, coredumps
 
 if sys.version_info >= (3, 0):
     xrange = range
@@ -35,6 +35,7 @@ class createTest(MayBeDiskTest, TestCase):
         r = np.array([(1, 3.)], dtype='i4,f8')[0]
         assert_array_equal(vt[N+1], r, "vtable values are not correct")
 
+    @coredumps
     def test01a(self):
         """vtable from a collection of equally sized btables"""
         N = int(1e1)
@@ -46,6 +47,7 @@ class createTest(MayBeDiskTest, TestCase):
         ra = np.fromiter(((i, i*2.) for i in xrange(N*2)), dtype='i4,f8')
         assert_array_equal(vt[:], ra, "vtable values are not correct")
 
+    @coredumps
     def test01b(self):
         """vtable from a collection of differently sized btables"""
         N = int(1e1)
@@ -57,6 +59,7 @@ class createTest(MayBeDiskTest, TestCase):
         ra = np.fromiter(((i, i*2.) for i in xrange(N*2)), dtype='i4,f8')
         assert_array_equal(vt[:], ra, "vtable values are not correct")
 
+    @coredumps
     def test01c(self):
         """vtable from a collection of differently sized btables"""
         N = int(1e1)
@@ -70,6 +73,7 @@ class createTest(MayBeDiskTest, TestCase):
         ra = np.fromiter(((i, i*2.) for i in xrange(N*3)), dtype='i4,f8')
         assert_array_equal(vt[:], ra, "vtable values are not correct")
 
+    @coredumps
     def test02a(self):
         """vtable with start"""
         N = int(1e1)
@@ -83,6 +87,7 @@ class createTest(MayBeDiskTest, TestCase):
         ra = np.fromiter(((i, i*2.) for i in xrange(N*3)), dtype='i4,f8')
         assert_array_equal(vt[2:], ra[2:], "vtable values are not correct")
 
+    @coredumps
     def test02b(self):
         """vtable with stop"""
         N = int(1e1)
@@ -97,6 +102,7 @@ class createTest(MayBeDiskTest, TestCase):
         assert_array_equal(vt[:N*3-2], ra[:N*3-2],
                            "vtable values are not correct")
 
+    @coredumps
     def test02c(self):
         """vtable with start, stop"""
         N = int(1e1)
@@ -111,6 +117,7 @@ class createTest(MayBeDiskTest, TestCase):
         assert_array_equal(vt[3:-4], ra[3:-4],
                            "vtable values are not correct")
 
+    @coredumps
     def test02d(self):
         """vtable with start, stop, step"""
         N = int(1e1)
