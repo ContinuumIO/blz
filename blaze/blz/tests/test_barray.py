@@ -15,19 +15,12 @@ from dynd import nd, ndt
 
 import blaze.blz as blz
 from blaze.blz.blz_ext import chunk
-from .common import MayBeDiskTest
+from .common import MayBeDiskTest, coredumps
 
 is_64bit = (struct.calcsize("P") == 8)
 
 if sys.version_info >= (3, 0):
     xrange = range
-
-
-def coredumps(func):
-    def wrapped(*args, **kwargs):
-        raise AssertionError("this test coredumps")
-    wrapped.__name__ = func.__name__
-    return wrapped
 
 
 ########################################################################

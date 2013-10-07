@@ -32,3 +32,11 @@ class MayBeDiskTest():
                 shutil.rmtree(dir_)
 
 
+# Useful for avoiding coredumps during numpy -> dynd migration
+def coredumps(func):
+    def wrapped(*args, **kwargs):
+        raise AssertionError("this test coredumps")
+    wrapped.__name__ = func.__name__
+    return wrapped
+
+
