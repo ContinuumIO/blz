@@ -149,11 +149,9 @@ def to_ndarray(array, dtype, arrlen=None):
 
     if dtype is None:
         return array
-    elif isinstance(dtype, np.dtype):
-        dtype = ndt.make_fixed_dim((), dtype)
 
     # Ensure that we have an ndarray of the correct dtype
-    if nd.type_of(array).dtype != dtype:
+    if nd.type_of(array).dtype != dtype.dtype:
         try:
             array = nd.array(array, dtype=dtype.dtype)
         except ValueError:
@@ -162,9 +160,6 @@ def to_ndarray(array, dtype, arrlen=None):
     # # We need a contiguous array
     # if not array.shape[1:] + (1L,) == array.strides:
     #     array = array.copy()
-    # if len(array.shape) == 0:
-    #     # We treat scalars like undimensional arrays
-    #     array.shape = (1,)
 
     # Check if we need a broadcast
     if array.is_scalar:
@@ -172,16 +167,11 @@ def to_ndarray(array, dtype, arrlen=None):
     else:
         l = len(array)
     if arrlen is not None and arrlen != l:
-        array2 = nd_empty_easy(shape=(arrlen,), dtype=dtype)
+        array2 = nd.empty((arrlen,), dtype)
         array2[:] = array   # broadcast
         array = array2
 
     return array
-
-def nd_empty_easy(shape, dtype):
-    unfold_shape = ','.join(['%d'%i for i in shape])
-    dshape = "%s, %s" % (unfold_shape, dtype)
-    return nd.empty(dshape)
 
 def human_readable_size(size):
     """Return a string for better assessing large number of bytes."""

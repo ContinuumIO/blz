@@ -388,7 +388,7 @@ cdef class chunk:
 
     if self.isconstant:
       # The chunk is made of constants
-      constants = utils.nd_empty_easy((blen,), self.dtype)
+      constants = nd.empty((blen,), self.dtype)
       constants[:] = self.constant
       data = <char *><Py_uintptr_t>_lowlevel.data_address_of(constants)
       memcpy(dest, data, bsize)
@@ -862,7 +862,7 @@ cdef class barray:
   property shape:
     "The shape of this object."
     def __get__(self):
-      return tuple((self.len,) + self._shape)
+      return tuple((self.len,) + self._dtype.shape)
 
   property size:
     "The size of this object."
@@ -942,7 +942,9 @@ cdef class barray:
 
     # Convert input to an appropriate type
     if type(dtype) is str:
-        dtype = np.dtype(dtype)
+      dtype = np.dtype(dtype)
+    if isinstance(dtype, np.dtype):
+      dtype = ndt.type(dtype)
 
     # avoid bad performance with another barray, as in utils it would
     # construct the temp ndarray using a slow iterator.
@@ -961,18 +963,12 @@ cdef class barray:
 
     # Build a new array with the possible new dtype
     array_ = utils.to_ndarray(array, dtype)
-    # Reassign dtype to the final dtype
-    dtype = nd.type_of(array_).dtype
 
     # Multidimensional array.  The atom will have array_.shape[1:] dims.
     # atom dimensions will be stored in `self._dtype`, which is different
     # than `self.dtype` in that `self._dtype` dimensions are borrowed
     # from `self.shape`.  `self.dtype` will always be scalar.
-    #
-    # Note that objects are a special case. barray does not support object
-    # arrays of more than one dimensions.
     self._dtype = dtype = ndt.make_fixed_dim(array_.shape[1:], dtype)
-    self._shape = tuple(array_.shape[1:])
 
     # Check that atom size is less than 2 GB
     if dtype.data_size >= 2**31:
@@ -1016,10 +1012,7 @@ cdef class barray:
 
     # Book memory for last chunk (uncompressed)
     # Use np.zeros here because they compress better
-    #lastchunkarr = np.zeros(dtype=dtype, shape=(chunklen,))
-    # XXX Use nd.zeros when this would be implemented
-    lastchunkarr = nd.empty(chunklen, dtype)
-    lastchunkarr[:] = 0
+    lastchunkarr = nd.zeros(chunklen, dtype, access='rw')
     self.lastchunk = <char *><Py_uintptr_t>_lowlevel.data_address_of(lastchunkarr)
     self.lastchunkarr = lastchunkarr
 
@@ -1048,7 +1041,6 @@ cdef class barray:
 
     if len(shape) == 1:
         self._dtype = dtype
-        self._shape = ()
     else:
       # Multidimensional array.  The atom will have array_.shape[1:] dims.
       # atom dimensions will be stored in `self._dtype`, which is different
@@ -1056,7 +1048,6 @@ cdef class barray:
       # from `self.shape`.  `self.dtype` will always be scalar (NumPy
       # convention).
       self._dtype = dtype = np.dtype((dtype.base, shape[1:]))
-      self._shape = tuple(shape[1:])
 
     self._bparams = bparams
     self.atomsize = dtype.itemsize
@@ -1068,11 +1059,7 @@ cdef class barray:
 
     # Book memory for last chunk (uncompressed)
     # Use np.zeros here because they compress better
-    #lastchunkarr = np.zeros(dtype=dtype, shape=(chunklen,))
-    # XXX Use nd.zeros when this would be implemented
-    lastchunkarr = nd.empty("%d, %s" % (chunklen, dtype))
-    lastchunkarr[:] = 0
-    #self.lastchunk = lastchunkarr.data
+    lastchunkarr = nd.zeros("%d, %s" % (chunklen, dtype), access='rw')
     self.lastchunk = <char *><Py_uintptr_t>_lowlevel.data_address_of(lastchunkarr)
     self.lastchunkarr = lastchunkarr
 
@@ -1233,9 +1220,9 @@ cdef class barray:
       raise TypeError, "array dtype does not match with self"
 
     # Appending a single row should be supported
-    if arrcpy.shape == self._shape:
+    if arrcpy.shape == self._dtype.shape:
       arrcpy = arrcpy.reshape((1,)+arrcpy.shape)
-    if arrcpy.shape[1:] != self._shape:
+    if arrcpy.shape[1:] != self._dtype.shape:
       raise ValueError, "array trailing dimensions do not match with self"
     data = <char *><Py_uintptr_t>_lowlevel.data_address_of(arrcpy)
 
@@ -1404,7 +1391,7 @@ cdef class barray:
       # chunk = np.ndarray(nitems-self.len, dtype=self._dtype,
       #                    buffer=self._dflt, strides=(0,))
       # XXX Use a strided-zero nd.array when it would be implemented in dynd
-      chunk = utils.nd_empty_easy((nitems - self.len,), self._dtype)
+      chunk = nd.empty((nitems - self.len,), self._dtype)
       chunk[:] = self._dflt
       self.append(chunk)
       self.flush()
@@ -1523,7 +1510,7 @@ cdef class barray:
     expectedlen = kwargs.pop('expectedlen', self.len)
 
     # Create a new, empty barray
-    ccopy = barray(utils.nd_empty_easy((0,), self._dtype),
+    ccopy = barray(nd.empty((0,), self._dtype),
                    bparams=bparams,
                    expectedlen=expectedlen,
                    **kwargs)
@@ -1723,7 +1710,7 @@ cdef class barray:
 
     # Build a numpy container
     blen = get_len_of_range(start, stop, step)
-    arr = utils.nd_empty_easy((blen,), self._dtype)
+    arr = nd.empty((blen,), self._dtype)
     if blen == 0:
       # If empty, return immediately
       return arr
@@ -2243,8 +2230,8 @@ cdef class barray:
 
     else:
       # Release buffers
-      self.iobuf = utils.nd_empty_easy((0,), dtype=self._dtype)
-      self.where_buf = utils.nd_empty_easy((0,), dtype=ndt.bool)
+      self.iobuf = nd.empty((0,), self._dtype)
+      self.where_buf = nd.empty((0,), ndt.bool)
       self.reset_sentinels()
       raise StopIteration        # end of iteration
 
