@@ -44,7 +44,15 @@ MAX_CHUNKS = (2**63)-1
 cimport blosc
 cimport cpython
 
-from libc.stdint cimport intptr_t, uintptr_t
+# Can't use this because MSVC 2008 (still used by python 2.x)
+# doesn't have stdint.h.
+#from libc.stdint cimport intptr_t, uintptr_t
+cdef extern from 'stddef.h':
+    ctypedef long ptrdiff_t
+    ctypedef unsigned long size_t
+ctypedef ptrdiff_t intptr_t
+ctypedef size_t uintptr_t
+
 from libc.stdlib cimport malloc, realloc, free
 from libc.string cimport memcpy, memset
 
