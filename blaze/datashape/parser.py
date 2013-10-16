@@ -30,7 +30,7 @@ class DatashapeSyntaxError(CustomSyntaxError):
 tokens = (
     'TYPE', 'NAME', 'NUMBER', 'STRING', 'ELLIPSIS', 'EQUALS',
     'COMMA', 'COLON', 'LBRACE', 'RBRACE', 'SEMI', 'BIT',
-    'VAR', 'JSON', 'DATA', 'ARROW',
+    'VAR', 'JSON', 'DATA', 'ARROW', 'LBRACK', 'RBRACK',
 )
 
 literals = [
@@ -56,10 +56,12 @@ bits = set([
     'int32',
     'int64',
     'int64',
+    'intptr',
     'uint8',
     'uint16',
     'uint32',
     'uint64',
+    'uintptr',
     'float16',
     'float32',
     'float64',
@@ -81,7 +83,9 @@ t_LBRACE    = r'\{'
 t_RBRACE    = r'\}'
 t_ELLIPSIS  = r'\.\.\.'
 t_ARROW     = r'->'
-t_ignore    = '[ ]'
+t_LBRACK    = r'\['
+t_RBRACK    = r'\]'
+t_ignore    = ' '
 
 def t_TYPE(t):
     r'type'
@@ -219,15 +223,19 @@ def p_rhs_expr(p):
     '''rhs_expr : rhs_expression_list'''
     if len(p[1]) == 1:
         rhs = p[1][0]
-        if getattr(rhs, 'cls', T.MEASURE) != T.MEASURE:
-            raise TypeError('Only a measure can appear on the last position of a datashape, not %s' % repr(rhs))
+        # if getattr(rhs, 'cls', T.MEASURE) != T.MEASURE:
+        #     raise TypeError(
+        #         'Only a measure can appear on the last position of a '
+        #         'datashape, not %s' % repr(rhs))
         p[0] = rhs
     else:
         p[0] = T.DataShape(*p[1])
 
 def p_rhs_expression_list_node1(p):
     '''rhs_expression_list : appl
-                           | record'''
+                           | record
+                           | ctor
+    '''
     p[0] = (p[1],)
 
 def p_rhs_expression_list__bit(p):
@@ -357,6 +365,24 @@ def p_appl(p):
 
 #------------------------------------------------------------------------
 
+def p_ctor(p):
+    """ctor : NAME LBRACK rhs_expression RBRACK"""
+
+    # Application of a type constructor. Square brackets are more apt for
+    # type constructor application than parentheses when types are implemented
+    # as Python classes (e.g. in Numba). Parentheses then instantiate the type
+    # to a value, and square brackets parameterize the type.
+
+    name = p[1]
+    args = p[3]
+
+    n = len(args)
+    flags = [{'coercible': False} for i in range(n)]
+    ctor = T.TypeConstructor(name, n, flags)
+    p[0] = ctor(*args)
+
+#------------------------------------------------------------------------
+
 def p_record(p):
     'record : LBRACE record_opt RBRACE'
     p[0] = T.Record(p[2])
@@ -446,21 +472,37 @@ def debug_parse(data, lexer, parser):
 
 def rebuild():
     """ Rebuild the parser and lexer tables. """
-    path = os.path.relpath(__file__)
+    path = os.path.abspath(__file__)
     output = os.path.dirname(path)
     module = sys.modules[__name__]
+
+    # Remove the cached files if they exist
+    dlexfile = os.path.join(output, 'dlex.py')
+    dyaccfile = os.path.join(output, 'dyacc.py')
+    if os.path.exists(dlexfile):
+        os.remove(dlexfile)
+    if os.path.exists(dyaccfile):
+        os.remove(dyaccfile)
 
     lex.lex(module=module, lextab="dlex", outputdir=output, debug=0, optimize=1)
     yacc.yacc(tabmodule='dyacc',outputdir=output, write_tables=1, debug=0, optimize=1)
 
-    sys.stdout.write("Parse and lexer tables rebuilt.\n")
+    if not os.path.exists(dlexfile):
+        raise RuntimeError('Failed to rebuild %s' % dlexfile)
+    if not os.path.exists(dyaccfile):
+        raise RuntimeError('Failed to rebuild %s' % dyaccfile)
+
+    sys.stdout.write("Parse and lexer tables rebuilt in path:\n")
+    sys.stdout.write("    %s\n" % output)
 
 def _parse(source):
     try:
         from . import dlex
         from . import dyacc
     except ImportError:
-        raise RuntimeError("Parse tables not built, run install script.")
+        rebuild()
+        from . import dlex
+        from . import dyacc
 
     module = sys.modules[__name__]
     lexer  = lexfrom(module, dlex)
@@ -491,7 +533,7 @@ def parse(pattern):
             raise TypeError('building a simple dshape with '
                             'type parameters is not supported')
     # Require that the type be concrete, not parameterized
-    if isinstance(ds, T.TypeVar):
+    if isinstance(ds, (T.Fixed, T.Var)):
         raise TypeError(('Only a measure can appear on the last '
                         'position of a datashape, not %s') % repr(ds))
     return ds
@@ -515,3 +557,10 @@ if __name__ == '__main__':
                 print(ast)
             except EOFError:
                 break
+
+if int(os.environ.get('BLAZE_REBUILD_PARSER', 0)):
+    # Rebuild the parser before it is used anywhere
+    rebuild()
+    # Exit immediately with success
+    import sys
+    sys.exit(0)

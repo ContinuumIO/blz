@@ -5,7 +5,7 @@ import unittest
 
 from blaze import error
 from blaze import dshape
-from blaze.datashape import unify, dshapes
+from blaze.datashape import unify, unify_simple, dshapes, coretypes as T
 
 #------------------------------------------------------------------------
 # Tests
@@ -46,6 +46,12 @@ class TestUnification(unittest.TestCase):
         self.assertEqual(str(arg1), '10, B, int16')
         self.assertEqual(str(arg2), '10, 10, float32')
 
+    def test_unify_datashape_scalar(self):
+        d1 = dshape('1, T1, int32')
+        d2 = dshape('float64')
+        result = unify_simple(d1, d2)
+        self.assertEqual(result, dshape('1, 1, float64'))
+
     def test_unify_broadcasting1(self):
         ds1 = dshape('A, B, int32')
         ds2 = dshape('K, M, N, float32')
@@ -64,6 +70,40 @@ class TestUnification(unittest.TestCase):
         [result], constraints = unify([(ds1, ds2)], [True])
         self.assertEqual(str(result), 'A, N, ..., S, B, float32')
 
+    def test_unify_ellipsis_to_scalar(self):
+        # Test that the A... solved in the argument gets
+        # propagated to the result
+        ds1 = dshape('A..., int32 -> A..., int32')
+        ds2 = dshape('int32 -> R')
+
+        # Try with (ds1, ds2)
+        [result], constraints = unify([(ds1, ds2)], [True])
+        self.assertEqual(str(result), 'int32 -> int32')
+        self.assertEqual(constraints, [])
+
+        # Try with (ds2, ds1)
+        [result], constraints = unify([(ds2, ds1)], [True])
+        self.assertEqual(str(result), 'int32 -> int32')
+        # We have one constraint, namely that R must be coercible to int32
+        self.assertEqual(len(constraints), 1)
+
+    def test_unify_ellipsis_broadcast(self):
+        # Test that the A... broadcasting doesn't add "1, "
+        # dimensions to the front
+        ds1 = dshape('A..., int32 -> A..., int32 -> A..., int32')
+        ds2 = dshape('3, int32 -> int32 -> R')
+
+        # Try with (ds1, ds2)
+        [result], constraints = unify([(ds1, ds2)], [True])
+        self.assertEqual(str(result), '3, int32 -> int32 -> 3, int32')
+        self.assertEqual(constraints, [])
+
+        # Try with (ds2, ds1)
+        [result], constraints = unify([(ds2, ds1)], [True])
+        self.assertEqual(str(result), '3, int32 -> int32 -> 3, int32')
+        # We have one constraint
+        self.assertEqual(len(constraints), 1)
+
     def test_unify_ellipsis2(self):
         ds1 = dshape('X, Y, float32 -> ..., float32 -> Z')
         ds2 = dshape('10, T1, int32 -> T2, T2, float32 -> R')
@@ -77,8 +117,19 @@ class TestUnification(unittest.TestCase):
         self.assertEqual(str(res), '10, int32')
         self.assertFalse(constraints)
 
-
 class TestUnificationErrors(unittest.TestCase):
+
+    def test_unify_datashape_bad_unifications(self):
+        d1 = dshape('2, int32')
+        d2 = dshape('3, int32')
+        self.assertRaises(error.UnificationError, unify, [(d1, d2)], [True])
+        d1 = dshape('1, int32')
+        d2 = dshape('3, int32')
+        self.assertRaises(error.UnificationError, unify, [(d1, d2)], [True])
+        self.assertRaises(error.UnificationError, unify, [(d2, d1)], [True])
+        d1 = dshape('3, T, int32')
+        d2 = dshape('1, S, int32')
+        self.assertRaises(error.UnificationError, unify, [(d1, d2)], [True])
 
     def test_unify_datashape_error(self):
         d1 = dshape('10, 11, int32')
@@ -92,5 +143,5 @@ class TestUnificationErrors(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    # TestUnification('test_unify_ellipsis2').debug()
-    unittest.main()
+    #TestUnification('test_unify_ellipsis_to_scalar').debug()
+    unittest.main(verbosity=2)

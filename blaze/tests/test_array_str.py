@@ -15,6 +15,10 @@ class TestArrayStr(unittest.TestCase):
         self.assertEqual(str(blaze.array(True)), 'True')
         self.assertEqual(str(blaze.array(False)), 'False')
 
+    def test_deferred_scalar(self):
+        a = blaze.array(3) + blaze.array(5)
+        self.assertEqual(str(a), '8')
+
     def test_ctypes_scalar(self):
         dd = data_descriptor_from_ctypes(ctypes.c_int32(1022), writable=True)
         a = blaze.array(dd)
@@ -32,11 +36,8 @@ class TestArrayStr(unittest.TestCase):
         a = blaze.array(dd)
         self.assertEqual(str(a), '[ 3  6 10]')
 
-    # This is broken, needs to be revisited
-    @skip('ragged array printing not working')
     def test_ragged_array(self):
-        dd = DyNDDataDescriptor(nd.array([[1,2,3],[4,5]]))
-        a = blaze.array(dd)
+        a = blaze.array([[1,2,3],[4,5]])
         self.assertEqual(str(a),
             '[[        1         2         3]\n [        4         5]]')
 

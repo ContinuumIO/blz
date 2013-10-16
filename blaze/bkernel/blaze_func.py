@@ -5,7 +5,7 @@ import re
 from blaze.datashape.traits import TypeSet, matches_typeset
 
 from ..datashape import (DataShape, from_numba_str, to_numba, broadcastable)
-from ..datadescriptor.blaze_func_descriptor import BlazeFuncDescriptor
+from ..datadescriptor.blaze_func_descriptor import BlazeFuncDeprecatedDescriptor
 from ..py2help import _strtypes, PY2
 from .. import llvm_array as lla
 from .blaze_kernels import BlazeElementKernel, frompyfunc
@@ -151,12 +151,16 @@ def process_typetable(typetable):
 #        element-wise expression graph where elements can be any contiguous
 #        primitive type (right-most part of the data-shape)
 #   * Kernels have a type signature which we break up into the rank-signature
-#       and the primitive type signature because a BlazeFunc will have one
+#       and the primitive type signature because a BlazeFuncDeprecated will have one
 #       rank-signature but possibly multiple primitive type signatures.
-#   * Example BlazeFuncs are sin, svd, eig, fft, sum, prod, inner1d, add, mul
+#   * Example BlazeFuncDeprecateds are sin, svd, eig, fft, sum, prod, inner1d, add, mul
 #       etc --- kernels all work on in-memory "elements"
 
-class BlazeFunc(object):
+class BlazeFuncDeprecated(object):
+    # DEPRECATION NOTE:
+    #   This particular blaze func class is being deprecated in favour of
+    #   a new implementation, using the pykit system. Functionality will
+    #   be moved/copied from here as needed until this class can be removed.
     def __init__(self, name, typetable=None, template=None, inouts=[]):
         """
         Construct a Blaze Function from a rank-signature and keyword arguments.
@@ -275,69 +279,3 @@ class BlazeFunc(object):
         if self.ranks is None:
             self.ranks = [0]*len(keysig)
 
-
-
-    def __call__(self, *args, **kwds):
-        # convert inputs to Arrays
-        # build an AST and return Arrays with a Deferred Data Descriptor
-        # The eval method of the Array does the actual computation
-        #args = map(blaze.asarray, args)
-
-
-        # FIXME:  The compatible function should unify a suitable
-        #          function even if the types are not all the same
-
-        # Find the kernel from the dispatch table
-        types = tuple(arr.dshape for arr in args)
-        kernel = self.find_best_kernel(types)
-
-        # Check rank-signature compatibility and broadcastability of arguments
-        outshape = self.compatible(args)
-
-        # Construct output dshape
-        out_type = kernel.dshapes[-1]
-        if len(out_type) > 1:
-            out_type = out_type.measure
-
-        if len(outshape)==0:
-            outdshape = out_type
-        else:
-            outdshape = DataShape(*outshape+(out_type,))
-
-        # Create a new BlazeFuncDescriptor with this
-        # kerneltree and a new set of args depending on
-        #  unique new arguments in the expression.
-        children = []
-        for i, arg in enumerate(args):
-            data = arg._data
-            if isinstance(data, BlazeFuncDescriptor):
-                tree = data.kerneltree
-                treerank = tree.kernel.ranks[-1]
-                argrank = self.ranks[i]
-                if argrank != treerank:
-                    if argrank > treerank:
-                        tree = data.kerneltree.adapt(argrank, kernel.kinds[i][0])
-                    else:
-                        raise ValueError("Cannot use rank-%d output "
-                            "when rank-%d input is required" % (treerank, argrank))
-                children.append(tree)
-            else:
-                tree_arg = Argument(arg, kernel.kinds[i],
-                                    self.ranks[i], kernel.argtypes[i])
-                children.append(tree_arg)
-
-        kerneltree = KernelTree(kernel, children)
-        data = BlazeFuncDescriptor(kerneltree, outdshape)
-
-        # Construct an Array object from new data descriptor
-        # Standard propagation of user-defined meta-data.
-        user = {self.name: [arg.user for arg in args]}
-
-        # FIXME:  Check for axes alignment and labels alignment
-        axes = args[0].axes
-        labels = args[0].labels
-
-        # This import is here to avoid a circular dependency
-        from ..array import Array
-
-        return Array(data, axes, labels, user)

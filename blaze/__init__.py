@@ -6,13 +6,20 @@ logging.basicConfig()
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.WARNING)
 
+# TODO: Don't mess with numba. But for now, numba seems
+#       to default to verbose debugging output.
+import numba.codegen.debug
+numbalogger = logging.getLogger('numba.codegen.debug')
+numbalogger.setLevel(logging.WARNING)
+
 # build the blaze namespace with selected functions
 
 from . import datashape, bkernel, ckernel
-from .datashape import dshape, dshapes
+from .datashape import dshape, dshapes, parser
 from .array import Array
+from .function import kernel, elementwise, BlazeFunc
 from .constructors import array, empty, ones, zeros
-from .eval import eval, append
+from .eval import strategy, current_strategy, set_strategy, eval, append
 from .storage import open, drop, Storage
 import ctypes
 
@@ -30,7 +37,7 @@ class complex64(ctypes.Structure):
                 ('imag', ctypes.c_float)]
     _blaze_type_ = datashape.complex64
 
-__version__ = '0.3dev'
+__version__ = '0.3.0'
 
 def print_versions():
     """Print all the versions of software that Blaze relies on."""

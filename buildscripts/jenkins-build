@@ -46,6 +46,14 @@ else
  exit 1
 fi
 
+# Temporary hack to install pykit
+rm -rf pykit
+git clone https://github.com/pykit/pykit.git
+pushd pykit
+${PYTHON_EXECUTABLE} setup.py install || exit 1
+popd
+
+
 # Build/install Blaze
 ${PYTHON_EXECUTABLE} setup.py install || exit 1
 

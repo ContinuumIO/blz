@@ -1,5 +1,6 @@
 from __future__ import absolute_import
 
+from . import parser
 from .traversal import transform, tmap, tzip, traverse
 from .coretypes import *
 from .traits import *
@@ -9,4 +10,4 @@ from .normalization import (normalize, simplify,
 from .validation import validate
 from .promotion import promote, promote_units
 from .unification import unify, unify_simple, substitute
-from .coercion import coerce
+from .coercion import coercion_cost

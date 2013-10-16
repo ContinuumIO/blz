@@ -13,7 +13,6 @@ from fnmatch import fnmatchcase
 
 from distutils.core import Command, setup
 from distutils.util import convert_path
-from distutils.command.build import build
 from distutils.command.build_ext import build_ext
 
 #------------------------------------------------------------------------
@@ -255,15 +254,17 @@ def make_build(build_command):
             # run the default build command first
             build_command.run(self)
             print('Rebuilding the datashape parser...')
-            # add the build destination to the module path so we can load it
-            sys.path.insert(0, self.build_lib)
-            rebuild_parse_tables()
+            import subprocess
+            # This signals to the parser module to rebuild
+            os.environ['BLAZE_REBUILD_PARSER'] = '1'
+            # Call python to do the rebuild in a separate process
+            # We add the build directory to the beginning of the python path
+            # so it finds the right temporary files.
+            subprocess.check_call([sys.executable, "-c",
+                        "import sys;sys.path.insert(0, r'%s');from blaze.datashape import parser"% self.build_lib])
+            del os.environ['BLAZE_REBUILD_PARSER']
 
     return BuildParser
-
-def rebuild_parse_tables():
-    from blaze.datashape.parser import rebuild
-    rebuild()
 
 #------------------------------------------------------------------------
 # Setup
@@ -298,6 +299,5 @@ setup(
     cmdclass = {
         'build_ext' : make_build(build_ext),
         'clean'     : CleanCommand,
-        'build'     : make_build(build),
     }
 )

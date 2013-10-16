@@ -2,11 +2,12 @@ import unittest
 
 import blaze
 from blaze import error, datashape
+from blaze.tests import common
 from blaze.datashape.parser import parse
 from blaze.datashape.coretypes import Enum, Option, Function
 from blaze.datashape.traits import integral
 
-class TestDatashapeParser(unittest.TestCase):
+class TestDatashapeParser(common.BTestCase):
 
     def test_simple_parse(self):
         x = parse('2, 3, int32')
@@ -48,7 +49,7 @@ class TestDatashapeParser(unittest.TestCase):
         x = parse('800, 600, int64')
         y = parse('800, 600, int64')
 
-        assert x._equal(y)
+        assert x == y
 
     def test_parse_vars(self):
         x = parse('Range(1,2), int32')
@@ -193,7 +194,7 @@ class TestDatashapeParser(unittest.TestCase):
         """)
 
 
-class TestCategorical(unittest.TestCase):
+class TestCategorical(common.BTestCase):
 
     def test_categorical_single(self):
         res = blaze.dshape('Categorical(Foo)')
@@ -217,7 +218,7 @@ class TestCategorical(unittest.TestCase):
 
         assert isinstance(res[0], Enum)
 
-class TestOption(unittest.TestCase):
+class TestOption(common.BTestCase):
 
     def test_categorical_single(self):
         res = blaze.dshape('Option(int32)')
@@ -229,7 +230,7 @@ class TestOption(unittest.TestCase):
 
         assert isinstance(res[2], Option)
 
-class TestFunction(unittest.TestCase):
+class TestFunction(common.BTestCase):
 
     def test_function_signature(self):
         res = parse("A, int32 -> B, float64 -> T, T, X")

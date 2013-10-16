@@ -7,7 +7,7 @@ from collections import Iterable
 
 import blaze
 from blaze.datashape import coretypes as T
-from blaze.bkernel import BlazeFunc
+from blaze import BlazeFunc
 
 from .graph import ArrayOp, KernelOp
 from .context import ExprContext, unify
@@ -17,16 +17,25 @@ from .conf import conf
 # Graph construction (entry point)
 #------------------------------------------------------------------------
 
-def construct(kernel, *args):
+def construct(bfunc, ctx, overload, args):
     """
+    Blaze expression graph construction for deferred evaluation.
+
     Parameters
     ----------
-    kernel : Blaze Function
+    bfunc : Blaze Function
         (Overloaded) blaze function representing the operation
-    args   : list
-        kernel parameters
+
+    ctx: ExprContext
+        Context of the expression
+
+    overload: blaze.overload.Overload
+        Instance representing the overloaded function
+
+    args: list
+        bfunc parameters
     """
-    assert isinstance(kernel, BlazeFunc)
+    assert isinstance(bfunc, BlazeFunc), bfunc
 
     params = [] # [(graph_term, ExprContext)]
 
@@ -34,27 +43,31 @@ def construct(kernel, *args):
     # Build type unification parameters
 
     for i, arg in enumerate(args):
-        if isinstance(arg, blaze.Array):
+        if isinstance(arg, blaze.Array) and arg.expr:
             # Compose new expression using previously constructed expression
-            if arg.expr:
-                params.append(arg.expr)
-                continue
+            term, context = arg.expr
+            if not arg.deferred:
+                ctx.add_input(term, arg)
+        elif isinstance(arg, blaze.Array):
+            term = ArrayOp(arg.dshape)
+            ctx.add_input(term, arg)
+            empty = ExprContext()
+            arg.expr = (term, empty)
+        elif not isinstance(arg, blaze.Array):
+            term = ArrayOp(T.typeof(arg))
 
-        if isinstance(arg, blaze.Array):
-            term = blaze.Array(arg.dshape, arg)
-        else:
-            term = from_value(arg)
-
-        empty = ExprContext()
-        arg.expr = (term, empty)
-        params.append(arg.expr)
+        ctx.terms[term] = arg
+        params.append(term)
 
     # -------------------------------------------------
 
-    ## TODO:
-    # dshape = reconstruct(kernel, params)
-    dshape = T.promote_cvals(*[term.dshape for term, context in params])
-    return KernelOp(dshape, *args)
+    assert isinstance(overload.resolved_sig, T.Function)
+    restype = blaze.dshape(overload.resolved_sig.parameters[-1])
+
+    # -------------------------------------------------
+
+    return KernelOp(restype, *params, kernel=bfunc, overload=overload,
+                    **bfunc.metadata)
 
 def from_value(value):
     return ArrayOp(T.typeof(value), value)

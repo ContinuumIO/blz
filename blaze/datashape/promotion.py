@@ -5,10 +5,12 @@ Type promotion.
 """
 
 from itertools import product
+from functools import reduce
 
 from blaze import error
-from blaze.datashape import (DataShape, IntegerConstant, StringConstant,
-                             CType, Fixed, to_numpy, TypeSet, TypeVar)
+from blaze.util import gensym
+from blaze.datashape import (DataShape, CType, Fixed, Var, to_numpy,
+                             TypeSet, TypeVar, TypeConstructor, verify)
 
 import numpy as np
 
@@ -20,32 +22,54 @@ def promote_units(*units):
     """
     Promote unit types, which are either CTypes or Constants.
     """
-    return reduce(_promote_units, units)
+    return reduce(promote, units)
 
-def _promote_units(a, b):
+def promote(a, b):
+    """Promote two blaze types"""
+
+    # -------------------------------------------------
+    # Fixed
+
     if isinstance(a, Fixed):
-        assert isinstance(b, Fixed)
-        if a == IntegerConstant(1):
-            return b
-        elif b == IntegerConstant(1):
+        if isinstance(b, Fixed):
+            if a == Fixed(1):
+                return b
+            elif b == Fixed(1):
+                return a
+            else:
+                if a != b:
+                    raise error.UnificationError(
+                        "Cannot unify differing fixed dimensions "
+                        "%s and %s" % (a, b))
+                return a
+        elif isinstance(b, Var):
+            if a == Fixed(1):
+                return b
+            else:
+                return a
+        else:
+            raise TypeError("Unknown types, cannot promote: %s and %s" % (a, b))
+
+    # -------------------------------------------------
+    # Var
+
+    elif isinstance(a, Var):
+        if isinstance(b, Fixed):
+            if b == Fixed(1):
+                return a
+            else:
+                return b
+        elif isinstance(b, Var):
             return a
         else:
-            if a != b:
-                raise error.UnificationError(
-                    "Cannot unify differing fixed dimensions "
-                    "%s and %s" % (a, b))
-            return a
+            raise TypeError("Unknown types, cannot promote: %s and %s" % (a, b))
 
-    elif isinstance(a, StringConstant):
-        if a != b:
-            raise error.UnificationError(
-                "Cannot unify string constants %s and %s" % (a, b))
-
-        return a
+    # -------------------------------------------------
+    # Typeset
 
     elif isinstance(a, TypeSet) and isinstance(b, TypeSet):
         # TODO: Find the join in the lattice with the below as a fallback ?
-        return TypeSet(*set(_promote_units(t1, t2)
+        return TypeSet(*set(promote(t1, t2)
                                 for t1, t2 in product(a.types, b.types)))
 
     elif isinstance(a, TypeSet):
@@ -55,23 +79,72 @@ def _promote_units(a, b):
         return b
 
     elif isinstance(b, TypeSet):
-        return _promote_units(b, a)
+        return promote(b, a)
+
+    # -------------------------------------------------
+    # Units
+
+    elif isinstance(a, CType) and isinstance(b, CType):
+        # Promote CTypes -- this should use coercion_cost()
+        return promote_scalars(a, b)
+
+    # -------------------------------------------------
+    # DataShape
+
+    elif isinstance(a, (DataShape, CType)) and isinstance(b, (DataShape, CType)):
+        return promote_datashapes(a, b)
+
+    elif isinstance(type(a), TypeConstructor) and isinstance(type(b), TypeConstructor):
+        return promote_type_constructor(a, b)
 
     else:
-        # Promote CTypes -- this should go through coerce()
-        return promote(a, b)
+        raise TypeError("Unknown types, cannot promote: %s and %s" % (a, b))
+
 
 def eq(a, b):
     if isinstance(a, TypeVar) and isinstance(b, TypeVar):
         return True
     return a == b
 
-def promote(a, b):
-    """Promote a series of CType or DataShape types"""
-    if isinstance(a, DataShape):
-        assert isinstance(b, DataShape)
-        assert all(eq(p1, p2) for p1, p2 in zip(a.parameters[:-1],
-                                                b.parameters[:-1]))
-        return DataShape(*a.parameters[:-1] + (promote(a.measure, b.measure),))
-
+def promote_scalars(a, b):
+    """Promote two CTypes"""
     return CType.from_numpy_dtype(np.result_type(to_numpy(a), to_numpy(b)))
+
+def promote_datashapes(a, b):
+    """Promote two DataShapes"""
+    from .unification import unify
+    from .normalization import normalize_simple
+
+    # Normalize to determine parameters (eliminate broadcasting, etc)
+    a, b = normalize_simple(a, b)
+    n = len(a.parameters[:-1])
+
+    # Allocate dummy result type for unification
+    dst = DataShape(*[TypeVar(gensym()) for i in range(n + 1)])
+
+    # Unify
+    [result1, result2], _ = unify([(a, dst), (b, dst)], [True, True])
+
+    assert result1 == result2
+    return result1
+
+def promote_type_constructor(a, b):
+    """Promote two generic type constructors"""
+    # Verify type constructor equality
+    verify(a, b)
+
+    # Promote parameters according to flags
+    args = []
+    for flag, t1, t2 in zip(a.flags, a.parameters, b.parameters):
+        if flag['coercible']:
+            result = promote(t1, t2)
+        else:
+            if t1 != t2:
+                raise error.UnificationError(
+                    "Got differing types %s and %s for unpromotable type "
+                    "parameter" % (t1, t2))
+            result = t1
+
+        args.append(result)
+
+    return type(a)(*args)

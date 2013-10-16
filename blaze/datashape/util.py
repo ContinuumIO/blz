@@ -8,13 +8,15 @@ import ctypes
 import sys
 
 from blaze import error
+from blaze.datashape.coretypes import TypeConstructor
 from blaze.util import IdentityDict, gensym
 from . import parser
 from .validation import validate
-from .coretypes import (DataShape, Fixed, TypeVar, Record, Ellipsis,
-               uint8, uint16, uint32, uint64, CType, Mono, type_constructor,
+from .coretypes import (DataShape, Fixed, TypeVar, Record, Ellipsis, String,
+               uint8, uint16, uint32, uint64, CType, Mono, JSON,
                int8, int16, int32, int64,
-               float32, float64, complex64, complex128, Type, free)
+               float32, float64, complex64, complex128,
+               Type, free, type_constructor)
 from .traversal import tmap
 from blaze.datashape.traits import TypeSet
 
@@ -39,9 +41,7 @@ def dshapes(*args):
     Parse all datashapes a single context. This means two datashapes
     'A, B, int32' and 'X, B, float32' will now share type variable 'B'.
     """
-    from . import substitute
-
-    result = map(dshape, args)
+    result = [dshape(arg) for arg in args]
     S = IdentityDict()
     for t in result:
         for typevar in free(t):
@@ -66,6 +66,8 @@ def dshape(o, multi=False):
     """
     ds = _dshape(o, multi)
     validate(ds)
+    if isinstance(ds, CType):
+        ds = DataShape(ds)
     return _unique_typevars(ds)
 
 def _dshape(o, multi=False):
@@ -73,8 +75,10 @@ def _dshape(o, multi=False):
         return list(parser.parse_mod(o))
     if isinstance(o, str):
         return parser.parse(o)
-    elif isinstance(o, DataShape):
+    elif isinstance(o, Mono):
         return o
+    elif isinstance(o, (CType, String, Record, JSON)):
+        return DataShape(o)
     elif hasattr(o, 'read'):
         return list(parser.parse_mod(o.read()))
     else:
@@ -150,6 +154,7 @@ def verify(t1, t2):
     if len(args1) != len(args2):
         raise error.UnificationError("%s got %d and %d arguments" % (
             tcon1, len(args1), len(args2)))
+
 
 def broadcastable(dslist, ranks=None, rankconnect=[]):
     """Return output (outer) shape if datashapes are broadcastable.
@@ -482,5 +487,5 @@ def to_numba(ds):
     import numba
     # Fixup the complex type to how numba does it
     s = str(ds)
-    s = {'cfloat32':'complex64', 'cfloat64':'complex128'}.get(s, s)
+    s = {'cfloat32':'complex64', 'cfloat64':'complex128', 'bool':'bool_'}.get(s, s)
     return getattr(numba, s)

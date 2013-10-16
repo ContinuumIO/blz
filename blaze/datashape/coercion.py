@@ -15,7 +15,7 @@ from itertools import chain, product
 from blaze import error
 from .coretypes import CType, TypeVar
 from .traits import *
-from . import verify, normalize, Implements, Fixed, Ellipsis, DataShape
+from . import verify, normalize, Implements, Fixed, Var, Ellipsis, DataShape
 
 class CoercionTable(object):
     """Table to hold coercion rules"""
@@ -47,17 +47,17 @@ class CoercionTable(object):
 
 _table = CoercionTable()
 add_coercion = _table.add_coercion
-coercion_cost = _table.coercion_cost
+coercion_cost_table = _table.coercion_cost
 
 #------------------------------------------------------------------------
 # Coercion function
 #------------------------------------------------------------------------
 
-def coerce(a, b, seen=None):
+def coercion_cost(a, b, seen=None):
     """
     Determine a coercion cost from type `a` to type `b`.
 
-    Type `a` and `b'` must be unifyable and normalized.
+    Type `a` and `b'` must be unifiable and normalized.
     """
     # TODO: Cost functions for conversion between type constructors in the
     # lattice (implement a "type join")
@@ -69,7 +69,7 @@ def coerce(a, b, seen=None):
         return 0
     elif isinstance(a, CType) and isinstance(b, CType):
         try:
-            return coercion_cost(a, b)
+            return coercion_cost_table(a, b)
         except KeyError:
             raise error.CoercionError(a, b)
     elif isinstance(b, TypeVar):
@@ -82,15 +82,25 @@ def coerce(a, b, seen=None):
         else:
             raise error.CoercionError(a, b)
     elif isinstance(b, Fixed):
-        assert isinstance(a, Fixed) and a.val in (1, b.val)
+        if isinstance(a, Var):
+            return 0.1 # broadcasting penalty
+
+        assert isinstance(a, Fixed)
         if a.val != b.val:
+            assert a.val == 1 or b.val == 1
+            return 0.1 # broadcasting penalty
+        return 0
+    elif isinstance(b, Var):
+        assert type(a) in [Var, Fixed]
+        if isinstance(a, Fixed):
             return 0.1 # broadcasting penalty
         return 0
     elif isinstance(a, DataShape) and isinstance(b, DataShape):
         return coerce_datashape(a, b, seen)
     else:
         verify(a, b)
-        return sum([coerce(x, y, seen) for x, y in zip(a.parameters, b.parameters)])
+        return sum([coercion_cost(x, y, seen) for x, y in zip(a.parameters,
+                                                              b.parameters)])
 
 def coerce_datashape(a, b, seen):
     # Penalize broadcasting
@@ -107,7 +117,7 @@ def coerce_datashape(a, b, seen):
     [(a, b)], _ = normalize([(a, b)], [True])
     verify(a, b)
     for x, y in zip(a.parameters, b.parameters):
-        penalty += coerce(x, y, seen)
+        penalty += coercion_cost(x, y, seen)
 
     return penalty
 

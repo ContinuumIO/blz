@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 """
@@ -17,7 +18,7 @@ import blaze
 from blaze import dshape, dshapes
 from blaze.datashape import (unify_simple as unify,
                              normalize_ellipses as normalize,
-                             promote, tmap, coerce)
+                             promote, tmap, coercion_cost, typeof)
 
 logging.getLogger('blaze').setLevel(logging.DEBUG)
 
@@ -34,6 +35,9 @@ The Blaze typing interpreter.
         parse a series of blaze types in the same context, so they will
         shared type variables of equal name.
 
+    typeof(val)
+        Return a blaze DataShape for a python object
+
     unify(t1, t2):
         unify t1 with t2, and return a result type and a list of additional
         constraints
@@ -42,10 +46,10 @@ The Blaze typing interpreter.
         promote two blaze types to a common type general enough to represent
         values of either type
 
-    normalize(ds1, ds2):
-        normalize two datashapes for unification (ellipses, broadcasting)
+    normalize_ellipses(ds1, ds2):
+        normalize_ellipses takes two datashapes for unification (ellipses, broadcasting)
 
-    coerce(t1, t2):
+    coercion_cost(t1, t2):
         Determine a coercion cost for coercing type t1 to type t2
 
     tmap(f, t):
@@ -56,10 +60,11 @@ env = {
     'blaze':     blaze,
     'dshape':    dshape,
     'dshapes':   dshapes,
+    'typeof':    typeof,
     'unify':     unify,
     'promote':   promote,
-    'normalize': normalize,
-    'coerce':    coerce,
+    'normalize_ellipses': normalize,
+    'coercion_cost': coercion_cost,
     'tmap':      tmap,
 }
 

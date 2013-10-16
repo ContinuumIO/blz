@@ -20,7 +20,7 @@ from dynd import nd, ndt, _lowlevel
 from .blz_ext import barray
 from .bparams import bparams
 from .chunked_eval import evaluate
-from ..py2help import _inttypes, imap, xrange
+from ..py2help import _inttypes, _strtypes, imap, xrange
 
 # BLZ utilities
 from . import utils, attrs, arrayprint
@@ -166,7 +166,6 @@ class btable(object):
         dtypes = [cols[name].dtype for name in names]
         return ndt.make_cstruct(dtypes, names)
 
-
     @property
     def names(self):
         "The names of the object (list)."
@@ -245,8 +244,10 @@ class btable(object):
                 raise ValueError(
                     "`columns` and `names` must have the same length")
         # Check names validity
-        nt = namedtuple('_nt', names, verbose=False)
-        names = list(nt._fields)
+        # XXX This is too strict for the vltable object. Disabled temporarily.
+        # nt = namedtuple('_nt', names, verbose=False)
+        # names = list(nt._fields)
+        names = [str(name) for name in names]
 
         # Guess the kind of columns input
         calist, nalist, ndlist, ratype = False, False, False, False
@@ -290,8 +291,10 @@ class btable(object):
             elif ratype:
                 column = barray(columns[name], **kwargs)
             self.cols[name] = column
-            if clen >= 0 and clen != len(column):
-                raise ValueError("all `columns` must have the same length")
+            # XXX This is too strict for the vltable object.
+            # Disabled temporarily.
+            # if clen >= 0 and clen != len(column):
+            #     raise ValueError("all `columns` must have the same length")
             clen = len(column)
 
         self.len = clen
@@ -373,8 +376,10 @@ class btable(object):
                 clen2 = 1
             else:
                 clen2 = len(column)
-            if clen >= 0 and clen != clen2:
-                raise ValueError("all cols in `rows` must have the same length")
+            # XXX This is too strict for the vltable object.
+            # Disabled temporarily.
+            # if clen >= 0 and clen != clen2:
+            #     raise ValueError("all cols in `rows` must have the same length")
             clen = clen2
         self.len += clen
 
@@ -457,12 +462,16 @@ class btable(object):
         if name is None:
             name = "f%d" % pos
         else:
-            if type(name) != str:
+            if type(name) not in _strtypes:
                 raise ValueError("`name` must be a string")
         if name in self.names:
             raise ValueError("'%s' column already exists" % name)
-        if len(newcol) != self.len:
-            raise ValueError("`newcol` must have the same length than btable")
+        # if len(newcol) != self.len:
+        #     raise ValueError("`newcol` must have the same length than btable")
+
+        # The default is to persist columns if the table is persisted
+        if self.rootdir and 'rootdir' not in kwargs:
+            kwargs['rootdir'] = os.path.join(self.rootdir, name)
 
         if isinstance(newcol, np.ndarray):
             if 'bparams' not in kwargs:
@@ -801,7 +810,7 @@ class btable(object):
                 raise IndexError(
                       "arrays used as indices must be integer (or boolean)")
         # Column name or expression
-        elif type(key) is str:
+        elif type(key) in _strtypes:
             if key not in self.names:
                 # key is not a column name, try to evaluate
                 arr = self.eval(key, depth=4)

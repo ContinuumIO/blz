@@ -1,13 +1,12 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function, division, absolute_import
 
-import sys
-import collections
+import inspect
+from collections import namedtuple, defaultdict
 from itertools import chain
-from pprint import pformat
 
 from blaze import error
-from blaze.util import flatargs, listify
+from blaze.util import flatargs, listify, alpha_equivalent
 from blaze.datashape import (coretypes as T, unify, dshape,
                              dummy_signature)
 
@@ -17,20 +16,32 @@ class Dispatcher(object):
     def __init__(self):
         self.f = None
         self.overloads = []
+        self.argspec = None
 
-    def add_overload(self, f, signature, kwds):
-        # TODO: assert signature is compatible with current signatures
+    def add_overload(self, f, signature, kwds, argspec=None):
+        # TODO: assert signature is "compatible" with current signatures
         if self.f is None:
             self.f = f
+
+        # Process signature
+        argspec = argspec or inspect.getargspec(f)
+        if self.argspec is None:
+            self.argspec = argspec
+        alpha_equivalent(self.argspec, argspec)
+
+        # TODO: match signature to be a Function type with correct arity
         self.overloads.append((f, signature, kwds))
 
-    def dispatch(self, *args, **kwargs):
+    def lookup_dispatcher(self, args, kwargs, constraints=None):
         assert self.f is not None
-        args = flatargs(self.f, args, kwargs)
+        args = flatargs(self.f, tuple(args), kwargs)
         types = list(map(T.typeof, args))
-        dst_sig, sig, func = best_match(self, types)
-        # TODO: convert argument types using dst_sig
-        return func(*args)
+        match = best_match(self, types, constraints)
+        return match, args
+
+    def dispatch(self, *args, **kwargs):
+        match, args = self.lookup_dispatcher(args, kwargs)
+        return match.func(*args)
 
     def simple_dispatch(self, *args, **kwargs):
         assert self.f is not None
@@ -48,9 +59,8 @@ class Dispatcher(object):
     __call__ = dispatch
 
     def __repr__(self):
-        f, _, _ = iter(self.overloads).next()
         signatures = [sig for f, sig, _ in self.overloads]
-        return '<%s: \n%s>' % (f.__name__,
+        return '<%s: \n%s>' % (self.f and self.f.__name__,
                                "\n".join("    %s" % (s,) for s in signatures))
 
 def overload(signature, func=None, **kwds):
@@ -68,7 +78,7 @@ def overload(signature, func=None, **kwds):
         else:
             signature = dshape(signature)
 
-        dispatcher = func or sys._getframe(1).f_locals.get(f.__name__)
+        dispatcher = func or f.__globals__.get(f.__name__)
         dispatcher = dispatcher or Dispatcher()
         dispatcher.add_overload(f, signature, kwds)
         return dispatcher
@@ -86,7 +96,9 @@ def overloadable(f):
 # Matching
 #------------------------------------------------------------------------
 
-def best_match(func, argtypes, constraints=()):
+Overload = namedtuple('Overload', 'resolved_sig, sig, func, constraints, kwds')
+
+def best_match(func, argtypes, constraints=None):
     """
     Find a best match in for overloaded function `func` given `argtypes`.
 
@@ -103,29 +115,29 @@ def best_match(func, argtypes, constraints=()):
 
     Returns
     -------
-    (dst_sig, sig, func)
+    Overloaded function as an `Overload` instance.
     """
-    from blaze.datashape import coerce
+    from blaze.datashape import coercion_cost
     overloads = func.overloads
 
     # -------------------------------------------------
     # Find candidates
 
-    candidates = find_matches(overloads, argtypes, constraints)
+    candidates = find_matches(overloads, argtypes, constraints or [])
 
     # -------------------------------------------------
     # Weigh candidates
 
-    matches = collections.defaultdict(list)
-    for candidate in candidates:
-        dst_sig, sig, func = candidate
-        params = dst_sig.parameters[:-1]
+    matches = defaultdict(list)
+    for match in candidates:
+        in_signature = T.Function(*argtypes + [T.TypeVar('R')])
+        signature = match.sig
         try:
-            weight = sum([coerce(a, p) for a, p in zip(argtypes, params)])
-        except error.CoercionError, e:
+            weight = coercion_cost(in_signature, signature)
+        except error.CoercionError:
             pass
         else:
-            matches[weight].append(candidate)
+            matches[weight].append(match)
 
     if not matches:
         raise error.OverloadError(
@@ -140,7 +152,7 @@ def best_match(func, argtypes, constraints=()):
         raise error.OverloadError(
             "Ambiguous overload for function %s with inputs (%s): \n%s" % (
                 func, ", ".join(map(str, argtypes)),
-                "\n".join("    %s" % (sig,) for _, sig, _ in candidates)))
+                "\n".join("    %s" % (overload.resolved_sig,) for overload in candidates)))
     else:
         return candidates[0]
 
@@ -161,13 +173,13 @@ def find_matches(overloads, argtypes, constraints=()):
         # -------------------------------------------------
         # Unification
 
-        constraints = list(chain([(input, sig)], constraints))
+        equations = list(chain([(input, sig)], constraints))
         broadcasting = [True] * l1
 
         try:
-            result, _ = unify(constraints, broadcasting)
-        except error.UnificationError, e:
+            result, remaining = unify(equations, broadcasting)
+        except error.UnificationError:
             continue
         else:
             dst_sig = result[0]
-            yield dst_sig, sig, func
+            yield Overload(dst_sig, sig, func, remaining, kwds)

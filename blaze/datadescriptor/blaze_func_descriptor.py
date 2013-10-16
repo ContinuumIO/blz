@@ -1,6 +1,6 @@
 from __future__ import absolute_import
 
-from .data_descriptor import (IDataDescriptor, IElementReader, IElementReadIter)
+from .data_descriptor import IDataDescriptor
 
 from ..bkernel.kernel_tree import find_unique_args, Argument
 
@@ -22,18 +22,36 @@ def blaze_func_iter(bfd, noiter_dims):
             iters.append(a.__iter__())
     # TODO continue...
 
-class BlazeFuncDescriptor(IDataDescriptor):
+
+class BlazeFuncDeprecatedDescriptor(IDataDescriptor):
+    """
+    Data descriptor for blaze.bkernel.BlazeFunc
+
+    Attributes:
+    ===========
+    kerneltree: blaze.bkernel.kernel_tree.KernelTree
+        deferred expression DAG/tree
+
+    outdshape: DataShape
+        result type
+
+    argmap: { blaze.bkernel.kernel_tree.Argument : Array }
+        Keeps track of concrete input arrays
+    """
+
     _args = None
     deferred = True
 
-    def __init__(self, kerneltree, outdshape):
+    def __init__(self, kerneltree, outdshape, argmap):
         self.kerneltree = kerneltree
         self.outdshape = outdshape
+        self.argmap = argmap
+
 
     def _reset_args(self):
         unique_args = []
         find_unique_args(self.kerneltree, unique_args)
-        self._args = [argument for argument in unique_args]
+        self._args = [self.argmap[argument] for argument in unique_args]
 
     @property
     def is_concrete(self):
@@ -91,10 +109,5 @@ class BlazeFuncDescriptor(IDataDescriptor):
             raise IndexError('Cannot iterate over a scalar')
 
     def __getitem__(self, key):
-        raise NotImplemented
+        raise NotImplementedError
 
-    def element_read_iter(self):
-        raise NotImplemented
-
-    def element_reader(self, nindex):
-        raise NotImplemented

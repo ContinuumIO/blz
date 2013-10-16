@@ -23,22 +23,22 @@ def letters(source=string.ascii_lowercase):
 #     to the correct llvmtype when needed.
 class Argument(object):
     _shape = None
-    def __init__(self, arg, kind, rank, llvmtype):
-        self.arr = arg
+    def __init__(self, dshape, kind, rank, llvmtype):
+        self.dshape = dshape
         if isinstance(kind, tuple):
             kind = kind[0]
         self.kind = kind
         self.rank = rank
         self._llvmtype = llvmtype
 
-    def __eq__(self, other):
-        if not isinstance(other, Argument):
-            return NotImplemented
-        # FIXME: Should remove kind check and cast different kinds
-        #        in the generated code.
-        return ((self.arr is other.arr) and
-                (self.rank == other.rank) and
-                (self.kind==other.kind))
+    #def __eq__(self, other):
+    #    if not isinstance(other, Argument):
+    #        return NotImplemented
+    #    # FIXME: Should remove kind check and cast different kinds
+    #    #        in the generated code.
+    #    return ((self.dshape is other.dshape) and
+    #            (self.rank == other.rank) and
+    #            (self.kind==other.kind))
 
     # FIXME:
     #   Because module linking destroys struct names we need to store
@@ -49,24 +49,19 @@ class Argument(object):
         self._llvmtype = refresh_name(self._llvmtype)
         return self._llvmtype
 
-    @property
-    def shape(self):
-        if self._shape is None:
-            if self.rank == 0:
-                self._shape = ()
-            else:
-                self._shape = self.arr.dshape.shape[-self.rank:]
-        return self._shape
-
-    def lift(self, newrank, newkind, module=None):
-        oldtype = get_eltype(self.llvmtype, self.kind)
-        newtype = lc.Type.pointer(array_type(newrank, newkind, oldtype, module))
-        return Argument(self.arr, newkind, newrank, newtype)
+    #@property
+    #def shape(self):
+    #    if self._shape is None:
+    #        if self.rank == 0:
+    #            self._shape = ()
+    #        else:
+    #            self._shape = self.arr.dshape.shape[-self.rank:]
+    #    return self._shape
 
     def get_kernel_dshape(self):
         """Returns the kernel data-shape of the argument."""
         rank = self.rank
-        total_dshape = self.arr.dshape
+        total_dshape = self.dshape
         sub = len(total_dshape)-1-rank
         return total_dshape.subarray(sub)
 
@@ -137,9 +132,9 @@ class KernelTree(object):
     def fuse(self):
         if self._fused is not None:
             return self._fused
-        if self.leafnode:
-            self._update_kernelptrs(self)
-            return self
+        # Even if self is a leaf node (self.leafnode is True), do
+        # this processing, so as to consistently combine repeated
+        # arguments.
         krnlobj, children = fuse_kerneltree(self, self.kernel.module)
         new = KernelTree(krnlobj, children)
         self._update_kernelptrs(new)
@@ -163,27 +158,8 @@ class KernelTree(object):
             self.fuse()
         return self._ctypes
 
-    def make_unbound_ckernel(self, strided):
-        return self.fuse().kernel.make_unbound_ckernel(strided=strided)
-
-    def adapt(self, newrank, newkind):
-        """
-        Take this kernel tree and create a new kerneltree adapted
-        so that the it can be the input to another element kernel
-        with rank newrank and kind newkind
-        """
-        if self.leafnode:
-            krnlobj = self.kernel
-            children = self.children
-        else:
-            krnlobj, children = fuse_kerneltree(self, self.kernel.module)
-        typechar = blaze_kernels.orderchar[newkind]
-        new = krnlobj.lift(newrank, typechar)
-        children = [child.lift(newrank, newkind) for child in children]
-        return KernelTree(new, children)
-
-    def __call__(self, *args):
-        return self.ctypes_func(*args)
+    def make_ckernel_deferred(self, out_dshape):
+        return self.fuse().kernel.make_ckernel_deferred(out_dshape)
 
     def __str__(self):
         pre = self.name + '('

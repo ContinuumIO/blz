@@ -25,7 +25,8 @@ from blaze.py2help import dict_iteritems, _strtypes
 from blaze.util import IdentityDict, IdentitySet
 from blaze.datashape import (promote_units, normalize, simplify, tmap,
                              dshape, verify)
-from blaze.datashape.coretypes import TypeVar, free
+from blaze.datashape.coretypes import (TypeVar, Mono, free, TypeConstructor,
+                MEASURE)
 
 logger = logging.getLogger(__name__)
 
@@ -42,7 +43,7 @@ def unify_simple(a, b):
     [res], _ = unify([(a, b)], [True])
     return res
 
-def unify(constraints, broadcasting):
+def unify(constraints, broadcasting=None):
     """
     Unify a set of constraints and return a concrete solution
 
@@ -76,7 +77,6 @@ def unify(constraints, broadcasting):
 
     # Reify and promote the datashapes
     result = [substitute(substitution, ds2) for ds1, ds2 in constraints]
-    remaining = [(a, c) for a, b in remaining for c in solution[b] if a is not c]
     return result, remaining
 
 #------------------------------------------------------------------------
@@ -130,11 +130,18 @@ def unify_single(t1, t2, solution, remaining):
         if t1 in free(t2):
             raise error.UnificationError("Cannot unify recursive types")
         solution[t1].add(t2)
+        remaining.append((t1, t2))
     elif isinstance(t2, TypeVar):
-        unify_single(t2, t1, solution, remaining)
-    elif not free(t1) and not free(t2):
-        # No need to recurse, this will be caught by promote()
-        pass
+        if t2 in free(t1):
+            raise error.UnificationError("Cannot unify recursive types")
+        solution[t2].add(t1)
+    elif isinstance(t1, TypeConstructor):
+        verify(t1, t2)
+    elif not isinstance(t1, Mono) and not isinstance(t2, Mono):
+        verify(t1, t2)
+    elif getattr(t1, 'cls', None) == MEASURE and getattr(t2, 'cls', None) == MEASURE:
+        # If both types are measures, verify they can be promoted
+        promote_units(t1, t2)
     else:
         verify(t1, t2)
         for arg1, arg2 in zip(t1.parameters, t2.parameters):
@@ -149,8 +156,8 @@ def seed_typesets(constraints, solution):
     # We can do this since there is no constraint on the free variable
     empty = IdentitySet()
     for a, b in constraints:
-        if not solution[b] or b in empty:
-            solution[b].add(a)
+        if not solution.get(b) or b in empty:
+            solution.setdefault(b, IdentitySet()).add(a)
             empty.add(b)
 
 def merge_typevar_sets(constraints, solution):
@@ -202,6 +209,7 @@ def reify(solution, S=None):
     queue = deque(dict_iteritems(solution))
     while queue:
         typevar, t = queue.popleft()
+        t = frozenset(t)
         if typevar in S:
             continue
 

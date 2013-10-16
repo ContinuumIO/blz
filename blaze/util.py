@@ -5,6 +5,7 @@ import string
 import inspect
 import functools
 import collections
+from functools import partial
 
 try:
     from collections import MutableMapping
@@ -27,7 +28,7 @@ def listify(f):
 # Argument parsing
 #------------------------------------------------------------------------
 
-def flatargs(f, args, kwargs):
+def flatargs(f, args, kwargs, argspec=None):
     """
     Return a single args tuple matching the actual function signature, with
     extraneous args appended to a new tuple 'args' and extraneous keyword
@@ -45,7 +46,7 @@ def flatargs(f, args, kwargs):
             ...
         TypeError: f() got multiple values for keyword argument 'a'
     """
-    argspec = inspect.getargspec(f)
+    argspec = inspect.getargspec(f) if argspec is None else argspec
     defaults = argspec.defaults or ()
     kwargs = dict(kwargs)
 
@@ -91,6 +92,15 @@ def flatargs(f, args, kwargs):
     return args + tuple(extra_args)
 
 
+def alpha_equivalent(spec1, spec2):
+    """
+    Return whether the inspect argspec `spec1` and `spec2` are equivalent
+    modulo naming.
+    """
+    return (len(spec1.args) == len(spec2.args) and
+            bool(spec1.varargs) == bool(spec2.varargs) and
+            bool(spec1.keywords) == bool(spec2.keywords))
+
 #------------------------------------------------------------------------
 # Data Structures
 #------------------------------------------------------------------------
@@ -135,10 +145,24 @@ class IdentityDict(MutableMapping):
         self.ks.remove(key)
         del self.data[id(key)]
 
+    def __contains__(self, item):
+        try:
+            self[item]
+        except KeyError:
+            return False
+        else:
+            return True
+
     def __repr__(self):
         # This is not correctly implemented in DictMixin for us, since it takes
         # the dict() of iteritems(), merging back equal keys
         return "{ %s }" % ", ".join("%r: %r" % (k, self[k]) for k in self.keys())
+
+    def __iter__(self):
+        return iter(self.ks)
+
+    def __len__(self):
+        return len(self.ks)
 
     def keys(self):
         return list(self.ks)
@@ -149,12 +173,6 @@ class IdentityDict(MutableMapping):
         for key in iterable:
             d[key] = value
         return d
-
-    def __iter__(self):
-        return iter(self.ks)
-
-    def __len__(self):
-        return len(self.ks)
 
 
 class IdentitySet(set):
@@ -199,7 +217,7 @@ def make_stream(seq, _temp=make_temper()):
         for x in seq:
             yield _temp(x)
 
-gensym = next(make_stream(string.ascii_uppercase))
+gensym = partial(next, make_stream(string.ascii_uppercase))
 
 # ______________________________________________________________________
 

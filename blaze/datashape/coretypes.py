@@ -10,17 +10,15 @@ import sys
 import ctypes
 import operator
 import datetime
-import numpy as np
+
+import blaze
 from ..py2help import _inttypes, _strtypes, unicode
+
+import numpy as np
 
 #------------------------------------------------------------------------
 # Type Metaclass
 #------------------------------------------------------------------------
-
-###########################################################################
-### TODO: itemsize and alignment should not be here, but should rather be #
-###       conveyed externally                                             #
-###########################################################################
 
 # Classes of unit types.
 DIMENSION = 1
@@ -114,7 +112,7 @@ class Unit(Mono):
 # Parse Types
 #------------------------------------------------------------------------
 
-class Ellipsis(Unit):
+class Ellipsis(Mono):
     """
     Ellipsis (...). Used to indicate a variable number of dimensions.
     E.g.:
@@ -137,7 +135,7 @@ class Ellipsis(Unit):
         return '...'
 
     def __repr__(self):
-        return 'dshape("...")'
+        return 'Ellipsis("%s")' % (str(self),)
 
     def __hash__(self):
         return hash('...')
@@ -210,18 +208,6 @@ class StringConstant(Unit):
 class Bytes(Unit):
     """ Bytes type """
     cls = MEASURE
-
-    def __init__(self):
-        self._c_itemsize = 2 * ctypes.sizeof(ctypes.c_void_p)
-        self._c_alignment = ctypes.alignment(ctypes.c_void_p)
-
-    @property
-    def c_itemsize(self):
-        return self._c_itemsize
-
-    @property
-    def c_alignment(self):
-        return self._c_alignment
 
     def __str__(self):
         return 'bytes'
@@ -298,16 +284,6 @@ class String(Unit):
 
         # Put it in a canonical form
         self.encoding = _canonical_string_encodings[self.encoding]
-        self._c_itemsize = 2 * ctypes.sizeof(ctypes.c_void_p)
-        self._c_alignment = ctypes.alignment(ctypes.c_void_p)
-
-    @property
-    def c_itemsize(self):
-        return self._c_itemsize
-
-    @property
-    def c_alignment(self):
-        return self._c_alignment
 
     def __str__(self):
         if self.fixlen is None and self.encoding == 'U8':
@@ -321,7 +297,7 @@ class String(Unit):
                             (self.fixlen, repr(self.encoding).strip('u'))
 
     def __repr__(self):
-        return ''.join(["dshape(\"", str(self).encode('unicode_escape').decode('ascii'), "\")"])
+        return ''.join(["ctype(\"", str(self).encode('unicode_escape').decode('ascii'), "\")"])
 
     def __eq__(self, other):
         if type(other) is String:
@@ -345,7 +321,7 @@ class DataShape(Mono):
     composite = False
 
     def __init__(self, *parameters, **kwds):
-        if len(parameters) > 1:
+        if len(parameters) > 0:
             self.parameters = tuple(parameters)
             if getattr(self.parameters[-1], 'cls', MEASURE) != MEASURE:
                 raise TypeError(('Only a measure can appear on the'
@@ -373,51 +349,6 @@ class DataShape(Mono):
         # TODO: the datashape?
         ###
 
-        # Calculate the C itemsize and strides, which
-        # are based on a C-order contiguous assumption
-        c_itemsize = getattr(parameters[-1], 'c_itemsize', None)
-        c_alignment = getattr(parameters[-1], 'c_alignment', None)
-        c_strides = []
-        for p in parameters[-2::-1]:
-            c_strides.insert(0, c_itemsize)
-            if c_itemsize is not None:
-                if isinstance(p, Fixed):
-                    c_itemsize *= operator.index(p)
-                else:
-                    c_itemsize = None
-        self._c_itemsize = c_itemsize
-        if c_itemsize is None:
-            self._c_alignment = None
-            self._c_strides = None
-        else:
-            self._c_alignment = c_alignment
-            self._c_strides = tuple(c_strides)
-
-    @property
-    def c_itemsize(self):
-        """The size of one element of this type, with C-contiguous storage."""
-        if self._c_itemsize is not None:
-            return self._c_itemsize
-        else:
-            raise AttributeError('data shape does not have a fixed C itemsize')
-
-    @property
-    def c_alignment(self):
-        """The alignment of one element of this type, with C-contiguous storage."""
-        if self._c_alignment is not None:
-            return self._c_alignment
-        else:
-            raise AttributeError('data shape does not have a fixed C alignment')
-
-    @property
-    def c_strides(self):
-        """A tuple of all the strides for the data shape,
-        assuming C-contiguous storage."""
-        if self._c_strides is not None:
-            return self._c_strides
-        else:
-            raise AttributeError('data shape does not have a fixed C layout')
-
     def __len__(self):
         return len(self.parameters)
 
@@ -432,18 +363,9 @@ class DataShape(Mono):
 
         return res
 
-    def _equal(self, other):
-        """ Structural equality """
-        def eq(a,b):
-            if isinstance(a, Ellipsis) or isinstance(b, Ellipsis):
-                return True
-            else:
-                return a == b
-        return all(eq(a,b) for a,b in zip(self, other))
-
     def __eq__(self, other):
         if isinstance(other, DataShape):
-            return self._equal(other)
+            return self.parameters == other.parameters
         elif isinstance(other, Mono):
             return False
         else:
@@ -451,9 +373,6 @@ class DataShape(Mono):
                             'type %s to datashape') % type(other))
 
     def __hash__(self):
-        for val in self[:-1]:
-            if isinstance(val, Ellipsis):
-                raise TypeError("Data-shape with '...' is unhashable")
         return hash(tuple(a for a in self))
 
     def __ne__(self, other):
@@ -538,14 +457,6 @@ class Option(DataShape):
         self.parameters = params
         self.ty = params[0]
 
-    @property
-    def c_itemsize(self):
-        return self.ty.c_itemsize
-
-    @property
-    def c_alignment(self):
-        return self.ty.c_alignment
-
     def __str__(self):
         return 'Option(%s)' % str(self.ty)
 
@@ -607,7 +518,7 @@ class CType(Unit):
         return self.name
 
     def __repr__(self):
-        return ''.join(["dshape(\"", str(self).encode('unicode_escape').decode('ascii'), "\")"])
+        return ''.join(["ctype(\"", str(self).encode('unicode_escape').decode('ascii'), "\")"])
 
     def __eq__(self, other):
         if type(other) is CType:
@@ -669,6 +580,9 @@ class Var(Unit):
 
     def __eq__(self, other):
         return isinstance(other, Var)
+
+    def __hash__(self):
+        return id(Var)
 
 #------------------------------------------------------------------------
 # Variable
@@ -810,6 +724,13 @@ class Function(Mono):
     def argtypes(self):
         return self.parameters[:-1]
 
+    def __eq__(self, other):
+        return (isinstance(other, type(self)) and
+                self.parameters == other.parameters)
+
+    def __ne__(self, other):
+        return not self == other
+
     # def __repr__(self):
     #     return " -> ".join(map(repr, self.parameters))
 
@@ -842,34 +763,6 @@ class Record(Mono):
         self.__v = [f[1] for f in fields]
         self.parameters = (fields,)
 
-        c_alignment = 1
-        c_itemsize = 0
-        c_offsets = []
-        for t in self.__v:
-            al = getattr(t, 'c_alignment', None)
-            sz = getattr(t, 'c_itemsize', None)
-            if None in (al, sz):
-                c_alignment = None
-                c_itemsize = None
-                break
-            c_alignment = max(c_alignment, al)
-            # Advance itemsize so this type is aligned
-            c_itemsize = (c_itemsize + al - 1) & (-al)
-            c_offsets.append(c_itemsize)
-            c_itemsize += sz
-        # Advance itemsize so the whole itemsize is aligned
-        if c_itemsize is not None:
-            c_itemsize = (c_itemsize + c_alignment - 1) & (-c_alignment)
-        c_offsets = c_offsets and tuple(c_offsets)
-        if c_itemsize is None:
-            self._c_itemsize = None
-            self._c_alignment = None
-            self._c_offsets = None
-        else:
-            self._c_itemsize = c_itemsize
-            self._c_alignment = c_alignment
-            self._c_offsets = c_offsets
-
     @property
     def fields(self):
         return self.__d
@@ -881,30 +774,6 @@ class Record(Mono):
     @property
     def types(self):
         return self.__v
-
-    @property
-    def c_itemsize(self):
-        """The size of one element of this type stored in a C layout."""
-        if self._c_itemsize is not None:
-            return self._c_itemsize
-        else:
-            raise AttributeError('data shape does not have a fixed C itemsize')
-
-    @property
-    def c_alignment(self):
-        """The alignment of one element of this type stored in a C layout."""
-        if self._c_itemsize is not None:
-            return self._c_alignment
-        else:
-            raise AttributeError('data shape does not have a fixed C alignment')
-
-    @property
-    def c_offsets(self):
-        """The offsets of all the fields of this type stored in a C layout."""
-        if self._c_offsets is not None:
-            return self._c_offsets
-        else:
-            raise AttributeError('data shape does not have fixed C offsets')
 
     def to_numpy_dtype(self):
         """
@@ -942,22 +811,78 @@ class JSON(Mono):
 
     def __init__(self):
         self.parameters = ()
-        self._c_itemsize = 2 * ctypes.sizeof(ctypes.c_void_p)
-        self._c_alignment = ctypes.alignment(ctypes.c_void_p)
-
-    @property
-    def c_itemsize(self):
-        return self._c_itemsize
-
-    @property
-    def c_alignment(self):
-        return self._c_alignment
 
     def __str__(self):
         return 'json'
 
     def __eq__(self, other):
         return isinstance(other, JSON)
+
+#------------------------------------------------------------------------
+# Generic type constructors
+#------------------------------------------------------------------------
+
+class TypeConstructor(type):
+    """
+    Generic type constructor.
+
+    Attributes:
+    ===========
+        n: int
+            number of parameters
+
+        flags: [{str: object}]
+            flag for each parameter. Built-in flags include:
+
+                * 'coercible': True/False. The default is False
+    """
+
+    def __new__(cls, name, n, flags):
+        def __init__(self, *params):
+            if len(params) != n:
+                raise TypeError(
+                    "Expected %d parameters for constructor %s, got %d" % (
+                        n, name, len(params)))
+            self.parameters = params
+
+        def __eq__(self, other):
+            return (isinstance(other, type(self)) and
+                    self.parameters == other.parameters and
+                    self.flags == other.flags)
+
+        def __hash__(self):
+            return hash((name, n, self.parameters))
+
+        def __str__(self):
+            return "%s[%s]" % (name, ", ".join(map(str, self.parameters)))
+
+        d = {
+            '__init__': __init__,
+            '__repr__': __str__,
+            '__str__': __str__,
+            '__eq__': __eq__,
+            '__ne__': lambda self, other: not (self == other),
+            '__hash__': __hash__,
+            'flags': flags,
+        }
+        self = super(TypeConstructor, cls).__new__(cls, name, (Mono,), d)
+
+        self.name = name
+        self.n = n
+        self.flags = flags
+        return self
+
+
+    def __eq__(cls, other):
+        return (isinstance(other, TypeConstructor) and
+                cls.name == other.name and cls.n == other.n and
+                cls.flags == other.flags)
+
+    def __ne__(cls, other):
+        return not (cls == other)
+
+    def __hash__(cls):
+        return hash((cls.name, cls.n))
 
 #------------------------------------------------------------------------
 # Unit Types
@@ -1009,11 +934,13 @@ else:
     c_ulong = uint64
 
 if ctypes.sizeof(ctypes.c_void_p) == 4:
-    c_intptr = c_ssize_t = int32
-    c_uintptr = c_size_t = uint32
+    intptr = c_ssize_t = int32
+    uintptr = c_size_t = uint32
 else:
-    c_intptr = c_ssize_t = int64
-    c_uintptr = c_size_t = uint64
+    intptr = c_ssize_t = int64
+    uintptr = c_size_t = uint64
+Type.register('intptr', intptr)
+Type.register('uintptr', uintptr)
 
 c_half = float16
 c_float = float32
@@ -1026,7 +953,7 @@ single = float32
 double = float64
 
 # TODO: the semantics of these are still being discussed
-int_ = float32
+int_ = int32
 float_ = float32
 
 void = CType('void', 0, 1)
@@ -1134,24 +1061,28 @@ def from_numpy(shape, dt):
 # Python Compatibility
 #------------------------------------------------------------------------
 
-def typeof(scalar):
+def typeof(obj):
     """
     Return a datashape ctype for a python scalar.
     """
-    if isinstance(scalar, int):
-        return int_
-    elif isinstance(scalar, float):
-        return double
-    elif isinstance(scalar, complex):
-        return complex128
-    elif isinstance(scalar, _strtypes):
-        return string
-    elif isinstance(scalar, datetime.timedelta):
-        return timedelta64
-    elif isinstance(scalar, datetime.datetime):
-        return datetime64
+    if isinstance(obj, blaze.Array):
+        return obj.dshape
+    elif isinstance(obj, np.ndarray):
+        return from_numpy(obj.shape, obj.dtype)
+    elif isinstance(obj, _inttypes):
+        return DataShape(int_)
+    elif isinstance(obj, float):
+        return DataShape(double)
+    elif isinstance(obj, complex):
+        return DataShape(complex128)
+    elif isinstance(obj, _strtypes):
+        return DataShape(string)
+    elif isinstance(obj, datetime.timedelta):
+        return DataShape(timedelta64)
+    elif isinstance(obj, datetime.datetime):
+        return DataShape(datetime64)
     else:
-        return pyobj
+        return DataShape(pyobj)
 
 #------------------------------------------------------------------------
 # Printing

@@ -1,4 +1,5 @@
 import blaze
+import ctypes
 from blaze import dshape, error, datashape
 import numpy as np
 import unittest
@@ -17,26 +18,34 @@ class TestDatashapeCreation(unittest.TestCase):
         self.assertRaises(Exception, blaze.dshape, "int")
 
     def test_atom_shapes(self):
-        self.assertEqual(blaze.dshape('bool'), datashape.bool_)
-        self.assertEqual(blaze.dshape('int8'), datashape.int8)
-        self.assertEqual(blaze.dshape('int16'), datashape.int16)
-        self.assertEqual(blaze.dshape('int32'), datashape.int32)
-        self.assertEqual(blaze.dshape('int64'), datashape.int64)
-        self.assertEqual(blaze.dshape('uint8'), datashape.uint8)
-        self.assertEqual(blaze.dshape('uint16'), datashape.uint16)
-        self.assertEqual(blaze.dshape('uint32'), datashape.uint32)
-        self.assertEqual(blaze.dshape('uint64'), datashape.uint64)
-        self.assertEqual(blaze.dshape('float32'), datashape.float32)
-        self.assertEqual(blaze.dshape('float64'), datashape.float64)
-        self.assertEqual(blaze.dshape('complex64'), datashape.complex64)
-        self.assertEqual(blaze.dshape('complex128'), datashape.complex128)
-        self.assertEqual(blaze.dshape("string"), blaze.datashape.string)
-        self.assertEqual(blaze.dshape("json"), blaze.datashape.json)
+        self.assertEqual(blaze.dshape('bool'),       dshape(datashape.bool_))
+        self.assertEqual(blaze.dshape('int8'),       dshape(datashape.int8))
+        self.assertEqual(blaze.dshape('int16'),      dshape(datashape.int16))
+        self.assertEqual(blaze.dshape('int32'),      dshape(datashape.int32))
+        self.assertEqual(blaze.dshape('int64'),      dshape(datashape.int64))
+        self.assertEqual(blaze.dshape('uint8'),      dshape(datashape.uint8))
+        self.assertEqual(blaze.dshape('uint16'),     dshape(datashape.uint16))
+        self.assertEqual(blaze.dshape('uint32'),     dshape(datashape.uint32))
+        self.assertEqual(blaze.dshape('uint64'),     dshape(datashape.uint64))
+        self.assertEqual(blaze.dshape('float32'),    dshape(datashape.float32))
+        self.assertEqual(blaze.dshape('float64'),    dshape(datashape.float64))
+        self.assertEqual(blaze.dshape('complex64'),  dshape(datashape.complex64))
+        self.assertEqual(blaze.dshape('complex128'), dshape(datashape.complex128))
+        self.assertEqual(blaze.dshape("string"),     blaze.datashape.string)
+        self.assertEqual(blaze.dshape("json"),       blaze.datashape.json)
+        if ctypes.sizeof(ctypes.c_void_p) == 4:
+            self.assertEqual(blaze.dshape('intptr'), dshape(datashape.int32))
+            self.assertEqual(blaze.dshape('uintptr'), dshape(datashape.uint32))
+        else:
+            self.assertEqual(blaze.dshape('intptr'), dshape(datashape.int64))
+            self.assertEqual(blaze.dshape('uintptr'), dshape(datashape.uint64))
 
     def test_atom_shape_errors(self):
         self.assertRaises(TypeError, blaze.dshape, 'boot')
         self.assertRaises(TypeError, blaze.dshape, 'int33')
         self.assertRaises(TypeError, blaze.dshape, '12')
+        self.assertRaises(TypeError, blaze.dshape, 'var')
+        self.assertRaises(TypeError, blaze.dshape, 'N')
 
     def test_constraints_error(self):
         self.assertRaises(error.BlazeTypeError, dshape,
