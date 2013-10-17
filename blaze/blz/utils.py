@@ -139,7 +139,7 @@ def get_len_of_range(start, stop, step):
 def to_ndarray(array, dtype, arrlen=None):
     """Convert object to a ndarray."""
 
-    if type(array) != dynd._pydynd.w_array:
+    if not isinstance(array, nd.array):
         # For some reason, nd.asarray(array) segfaults when array is a barray
         if (hasattr(array, '__class__') and
             array.__class__.__name__ == 'barray'):
@@ -151,7 +151,7 @@ def to_ndarray(array, dtype, arrlen=None):
         return array
 
     # Ensure that we have an ndarray of the correct dtype
-    if nd.type_of(array).dtype != dtype.dtype:
+    if nd.dtype_of(array) != dtype.dtype:
         try:
             array = nd.array(array, dtype=dtype.dtype)
         except ValueError:
@@ -167,7 +167,7 @@ def to_ndarray(array, dtype, arrlen=None):
     else:
         l = len(array)
     if arrlen is not None and arrlen != l:
-        array2 = nd.empty((arrlen,), dtype)
+        array2 = nd.empty(arrlen, dtype)
         array2[:] = array   # broadcast
         array = array2
 
