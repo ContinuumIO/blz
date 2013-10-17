@@ -18,8 +18,8 @@ def blz_descriptor_iter(blzarr):
     for i in range(len(blzarr)):
         # BLZ doesn't have a convenient way to avoid collapsing
         # to a scalar, this is a way to avoid that
-        el = np.array(blzarr[i], dtype=blzarr.dtype)
-        yield DyNDDataDescriptor(nd.array(el))
+        el = nd.asarray(blzarr[i])
+        yield DyNDDataDescriptor(el)
 
 class BLZDataDescriptor(IDataDescriptor):
     """
@@ -46,7 +46,7 @@ class BLZDataDescriptor(IDataDescriptor):
     def dshape(self):
         # This cannot be cached because the BLZ can change the dshape
         obj = self.blzarr
-        return datashape.from_numpy(obj.shape, obj.dtype)
+        return datashape.dshape(','.join(str(s) for s in obj.shape + (obj.dtype,)))
 
     @property
     def writable(self):
