@@ -798,7 +798,7 @@ class btable(object):
                 raise IndexError(
                       "key cannot be converted to an array of indices")
             return np.fromiter((self[i] for i in key),
-                               dtype=self.dtype, count=len(key))
+                               dtype=self.dtype.as_numpy(), count=len(key))
         # A boolean array (case of fancy indexing)
         elif hasattr(key, "dtype"):
             if key.dtype.type == np.bool_:

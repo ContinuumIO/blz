@@ -413,7 +413,7 @@ def iterblocks(bobj, blen=None, start=0, stop=None):
         if blen is None:
             blen = bobj.chunklen
         for i in xrange(start, stop, blen):
-            buf = np.empty(blen, dtype=bobj.dtype)
+            buf = nd.empty(blen, bobj.dtype)
             bobj._getrange(i, blen, buf)
             if i + blen > stop:
                 buf = buf[:stop - i]

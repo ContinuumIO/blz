@@ -5,8 +5,9 @@ from __future__ import absolute_import
 import sys
 import struct
 import os, os.path
+import unittest
 from unittest import TestCase
-from ...py2help import skip
+from blaze.py2help import skip
 
 import numpy as np
 from numpy.testing import assert_array_equal, assert_array_almost_equal
@@ -15,7 +16,7 @@ from dynd import nd, ndt
 
 import blaze.blz as blz
 from blaze.blz.blz_ext import chunk
-from .common import MayBeDiskTest, coredumps
+from blaze.blz.tests.common import MayBeDiskTest
 
 is_64bit = (struct.calcsize("P") == 8)
 
@@ -1182,18 +1183,16 @@ class persistenceTest(MayBeDiskTest, TestCase):
 
 class iterchunksTest(TestCase):
 
-    @coredumps
     def test_iterchunks(self):
         N = int(1e4)
         a = blz.fromiter(xrange(N), dtype=np.float64, count=N)
         l, s = 0, 0
         for block in blz.iterblocks(a):
             l += len(block)
-            s += block.sum()
+            s += np.sum(block)
         self.assert_(l == N)
         self.assert_(s == (N - 1) * (N / 2))  # as per Gauss summation formula
 
-    @coredumps
     def test_iterchunks_blen(self):
         N, blen = int(1e4), 100
         a = blz.fromiter(xrange(N), dtype=np.float64, count=N)
@@ -1201,28 +1200,26 @@ class iterchunksTest(TestCase):
         for block in blz.iterblocks(a, blen):
             self.assert_(len(block) == blen)
             l += len(block)
-            s += block.sum()
+            s += np.sum(block)
         self.assert_(l == N)
 
-    @coredumps
     def test_iterchunks_blen_start(self):
         N, blen = int(1e4), 100
         a = blz.fromiter(xrange(N), dtype=np.float64, count=N)
         l, s = 0, 0
         for block in blz.iterblocks(a, blen, blen-1):
             l += len(block)
-            s += block.sum()
+            s += np.sum(block)
         self.assert_(l == (N - (blen - 1)))
         self.assert_(s == np.arange(blen-1, N).sum())
 
-    @coredumps
     def test_iterchunks_full(self):
         N, blen = int(1e4), 100
         a = blz.fromiter(xrange(N), dtype=np.float64, count=N)
         l, s = 0, 0
         for block in blz.iterblocks(a, blen, blen-1, 3*blen+2):
             l += len(block)
-            s += block.sum()
+            s += np.sum(block)
         self.assert_(l == 2*blen + 3)
         self.assert_(s == np.arange(blen-1, 3*blen+2).sum())
 
@@ -1233,3 +1230,7 @@ class iterchunksTest(TestCase):
 ## tab-width: 4
 ## fill-column: 66
 ## End:
+
+if __name__ == '__main__':
+    #iterchunksTest('test_iterchunks').debug()
+    unittest.main(verbosity=2)

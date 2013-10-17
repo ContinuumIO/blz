@@ -434,7 +434,7 @@ cdef class chunk:
     (start, stop, step) = slice(start, stop, step).indices(clen)
 
     # Build a dynd container
-    ndarray = nd.empty('%d, %s' % (stop-start, self.dtype))
+    ndarray = nd.empty(stop-start, self.dtype)
     data = <char *><Py_uintptr_t>_lowlevel.data_address_of(ndarray)
     # Read actual data
     self._getitem(start, stop, data)

@@ -13,6 +13,7 @@ btables in a single, virtual one.
 
 from __future__ import absolute_import, print_function
 import numpy as np
+from dynd import nd, ndt
 
 from ..py2help import _inttypes, imap, xrange
 _inttypes += (np.integer,)
@@ -134,7 +135,7 @@ class vtable(object):
         (start, stop, step) = slice(start, stop, step).indices(self.len)
         # Build a numpy container
         n = utils.get_len_of_range(start, stop, step=1)
-        ra = np.empty(shape=(n,), dtype=self.dtype)
+        ra = nd.empty(n, self.dtype)
 
         # Fill it by iterating through all the arrays
         stable, sidx = self.gettable_idx(start)

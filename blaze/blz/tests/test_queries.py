@@ -1,12 +1,12 @@
 from __future__ import absolute_import
 
 import sys
+import unittest
 from unittest import TestCase
 
 import numpy as np
+from dynd import nd, ndt
 from numpy.testing import assert_array_equal, assert_array_almost_equal
-
-from .common import coredumps
 
 from blaze import blz
 
@@ -20,10 +20,10 @@ class with_listTest:
         a = blz.zeros(self.N, dtype="bool")
         a[30:40] = blz.ones(10, dtype="bool")
         alist = list(a)
-        blist1 = [r for r in a.wheretrue()]
-        self.assert_(blist1 == list(range(30,40)))
+        blist1 = [nd.as_py(r) for r in a.wheretrue()]
+        self.assertEqual(blist1, list(range(30,40)))
         alist2 = list(a)
-        self.assert_(alist == alist2, "wheretrue() not working correctly")
+        self.assertEqual(alist, alist2, "wheretrue() not working correctly")
 
     def test00b(self):
         """Testing wheretrue() with a multidimensional array"""
@@ -37,8 +37,8 @@ class with_listTest:
         a[30:40] = blz.ones(10, dtype="bool")
         b = blz.arange(self.N, dtype="f4")
         blist = list(b)
-        blist1 = [r for r in b.where(a)]
-        self.assert_(blist1 == list(range(30,40)))
+        blist1 = [nd.as_py(r) for r in b.where(a)]
+        self.assertEqual(blist1, list(range(30,40)))
         blist2 = list(b)
         self.assert_(blist == blist2, "where() not working correctly")
 
@@ -53,8 +53,8 @@ class with_listTest:
         """Testing iter() in combination with a list constructor"""
         b = blz.arange(self.N, dtype="f4")
         blist = list(b)
-        blist1 = [r for r in b.iter(3,10)]
-        self.assert_(blist1 == list(range(3,10)))
+        blist1 = [nd.as_py(r) for r in b.iter(3,10)]
+        self.assertEqual(blist1, list(range(3,10)))
         blist2 = list(b)
         self.assert_(blist == blist2, "iter() not working correctly")
 
@@ -68,7 +68,6 @@ class big_with_listTest(with_listTest, TestCase):
 
 class wherechunksTest(TestCase):
 
-    @coredumps
     def test00(self):
         """Testing `wherechunks` method with only an expression"""
         N = int(1e4)
@@ -81,7 +80,6 @@ class wherechunksTest(TestCase):
         self.assert_(l == N - 1)
         self.assert_(s == (N - 1) * (N / 2))  # Gauss summation formula
 
-    @coredumps
     def test01(self):
         """Testing `wherechunks` method with a `blen`"""
         N = int(1e4)
@@ -94,10 +92,9 @@ class wherechunksTest(TestCase):
             # which should be 0
             self.assert_(len(block) in (0, 100))
             s += block['f0'].sum()
-        self.assert_(l == N)
-        self.assert_(s == (N - 1) * (N / 2))  # Gauss summation formula
+        self.assertEqual(l, N)
+        self.assertEqual(s, (N - 1) * (N / 2))  # Gauss summation formula
 
-    @coredumps
     def test02(self):
         """Testing `wherechunks` method with a `outfields` with 2 fields"""
         N = int(1e4)
@@ -111,7 +108,6 @@ class wherechunksTest(TestCase):
         self.assert_(l == N - 1)
         self.assert_(s == (N - 1) * (N / 2))  # Gauss summation formula
 
-    @coredumps
     def test03(self):
         """Testing `wherechunks` method with a `outfields` with 1 field"""
         N = int(1e4)
@@ -125,7 +121,6 @@ class wherechunksTest(TestCase):
         self.assert_(l == N - 1)
         self.assert_(s == (N - 1) * (N / 2))  # Gauss summation formula
 
-    @coredumps
     def test04(self):
         """Testing `wherechunks` method with a `limit` parameter"""
         N, M = int(1e4), 101
@@ -138,7 +133,6 @@ class wherechunksTest(TestCase):
         self.assert_(l == M)
         self.assert_(s == M * ((M + 1) / 2))  # Gauss summation formula
 
-    @coredumps
     def test05(self):
         """Testing `wherechunks` method with a `limit` parameter"""
         N, M = int(1e4), 101
@@ -151,7 +145,6 @@ class wherechunksTest(TestCase):
         self.assert_(l == M)
         self.assert_(s == M * ((M + 1) / 2))  # Gauss summation formula
 
-    @coredumps
     def test06(self):
         """Testing `wherechunks` method with a `skip` parameter"""
         N, M = int(1e4), 101
@@ -164,7 +157,6 @@ class wherechunksTest(TestCase):
         self.assert_(l == M - 1)
         self.assert_(s == np.arange(N-M+1, N).sum())
 
-    @coredumps
     def test07(self):
         """Testing `wherechunks` method with a `limit`, `skip` parameter"""
         N, M = int(1e4), 101
@@ -184,3 +176,7 @@ class wherechunksTest(TestCase):
 ## tab-width: 4
 ## fill-column: 72
 ## End:
+
+if __name__ == '__main__':
+    #fancy_indexing_getitemTest('test00').debug()
+    unittest.main(verbosity=2)

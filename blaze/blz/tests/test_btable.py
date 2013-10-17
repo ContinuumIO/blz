@@ -12,12 +12,13 @@ import sys
 
 import numpy as np
 from numpy.testing import assert_equal, assert_array_equal, assert_array_almost_equal
+import unittest
 from unittest import TestCase
 from dynd import nd, ndt, _lowlevel
 
 
 from blaze import blz
-from .common import MayBeDiskTest, coredumps
+from blaze.blz.tests.common import MayBeDiskTest
 
 if sys.version_info >= (3, 0):
     xrange = range
@@ -711,7 +712,6 @@ class specialTest(TestCase):
 
 class fancy_indexing_getitemTest(TestCase):
 
-    @coredumps
     def test00(self):
         """Testing fancy indexing with a small list"""
         N = 10
@@ -721,9 +721,8 @@ class fancy_indexing_getitemTest(TestCase):
         rar = ra[[3,1]]
         #print "rt->", rt
         #print "rar->", rar
-        assert_array_equal(rt, rar, "btable values are not correct")
+        assert_array_equal(nd.as_numpy(rt), nd.as_numpy(rar), "btable values are not correct")
 
-    @coredumps
     def test01(self):
         """Testing fancy indexing with a large numpy array"""
         N = 10*1000
@@ -736,7 +735,6 @@ class fancy_indexing_getitemTest(TestCase):
         #print "rar->", rar
         assert_array_equal(rt, rar, "btable values are not correct")
 
-    @coredumps
     def test02(self):
         """Testing fancy indexing with an empty list"""
         N = 10*1000
@@ -748,7 +746,6 @@ class fancy_indexing_getitemTest(TestCase):
         #print "rar->", rar
         assert_array_equal(rt, rar, "btable values are not correct")
 
-    @coredumps
     def test03(self):
         """Testing fancy indexing (list of floats)"""
         N = 101
@@ -760,7 +757,6 @@ class fancy_indexing_getitemTest(TestCase):
         #print "rar->", rar
         assert_array_equal(rt, rar, "btable values are not correct")
 
-    @coredumps
     def test04(self):
         """Testing fancy indexing (list of floats, numpy)"""
         a = np.arange(1,101)
@@ -857,7 +853,6 @@ class fancy_indexing_setitemTest(TestCase):
 
 class iterTest(MayBeDiskTest, TestCase):
 
-    @coredumps
     def test00(self):
         """Testing btable.__iter__"""
         N = 10
@@ -869,7 +864,6 @@ class iterTest(MayBeDiskTest, TestCase):
         #print "nl ->", nl
         self.assert_(cl == nl, "iter not working correctily")
 
-    @coredumps
     def test01(self):
         """Testing btable.iter() without params"""
         N = 10
@@ -881,7 +875,6 @@ class iterTest(MayBeDiskTest, TestCase):
         #print "nl ->", nl
         self.assert_(cl == nl, "iter not working correctily")
 
-    @coredumps
     def test02(self):
         """Testing btable.iter() with start,stop,step"""
         N = 10
@@ -893,7 +886,6 @@ class iterTest(MayBeDiskTest, TestCase):
         #print "nl ->", nl
         self.assert_(cl == nl, "iter not working correctily")
 
-    @coredumps
     def test03(self):
         """Testing btable.iter() with outcols"""
         N = 10
@@ -905,7 +897,6 @@ class iterTest(MayBeDiskTest, TestCase):
         #print "nl ->", nl
         self.assert_(cl == nl, "iter not working correctily")
 
-    @coredumps
     def test04(self):
         """Testing btable.iter() with start,stop,step and outcols"""
         N = 10
@@ -917,7 +908,6 @@ class iterTest(MayBeDiskTest, TestCase):
         #print "nl ->", nl
         self.assert_(cl == nl, "iter not working correctily")
 
-    @coredumps
     def test05(self):
         """Testing btable.iter() with start, stop, step and limit"""
         N = 10
@@ -929,7 +919,6 @@ class iterTest(MayBeDiskTest, TestCase):
         #print "nl ->", nl
         self.assert_(cl == nl, "iter not working correctily")
 
-    @coredumps
     def test06(self):
         """Testing btable.iter() with start, stop, step and skip"""
         N = 10
@@ -941,7 +930,6 @@ class iterTest(MayBeDiskTest, TestCase):
         #print "nl ->", nl
         self.assert_(cl == nl, "iter not working correctily")
 
-    @coredumps
     def test07(self):
         """Testing btable.iter() with start, stop, step and limit, skip"""
         N = 10
@@ -959,7 +947,6 @@ class iterDiskTest(iterTest, TestCase):
 
 class iterchunksTest(TestCase):
 
-    @coredumps
     def test00(self):
         """Testing `iterchunks` method with no blen, no start, no stop"""
         N = int(1e4)
@@ -972,7 +959,6 @@ class iterchunksTest(TestCase):
         self.assert_(l == N)
         self.assert_(s == (N - 1) * (N / 2))  # as per Gauss summation formula
 
-    @coredumps
     def test01(self):
         """Testing `iterchunks` method with no start, no stop"""
         N, blen = int(1e4), 100
@@ -986,7 +972,6 @@ class iterchunksTest(TestCase):
         self.assert_(l == N)
         self.assert_(s == (N - 1) * (N / 2))  # as per Gauss summation formula
 
-    @coredumps
     def test02(self):
         """Testing `iterchunks` method with no stop"""
         N, blen = int(1e4), 100
@@ -999,7 +984,6 @@ class iterchunksTest(TestCase):
         self.assert_(l == (N - (blen - 1)))
         self.assert_(s == (np.arange(blen-1, N, dtype='f8')*2).sum())
 
-    @coredumps
     def test03(self):
         """Testing `iterchunks` method with all parameters set"""
         N, blen = int(1e4), 100
@@ -1019,3 +1003,7 @@ class iterchunksTest(TestCase):
 ## tab-width: 4
 ## fill-column: 72
 ## End:
+
+if __name__ == '__main__':
+    #fancy_indexing_getitemTest('test00').debug()
+    unittest.main(verbosity=2)
