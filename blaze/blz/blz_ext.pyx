@@ -949,10 +949,8 @@ cdef class barray:
       raise ValueError, "`bparams` param must be an instance of `bparams` class"
 
     # Convert input to an appropriate type
-    if type(dtype) is str:
-      dtype = np.dtype(dtype)
-    if isinstance(dtype, np.dtype):
-      dtype = ndt.type(dtype)
+    if dtype is not None:
+        dtype = ndt.type(dtype)
 
     # avoid bad performance with another barray, as in utils it would
     # construct the temp ndarray using a slow iterator.
@@ -962,12 +960,14 @@ cdef class barray:
     if isinstance(array, barray):
       array = array[:]
 
+    # If it's a numpy array, view it as dynd
+    if isinstance(array, np.ndarray):
+        array = nd.view(array)
+
     # If no base dtype is provided, use the dtype from the array.
     if dtype is None:
       if isinstance(array, nd.array):
         dtype = nd.dtype_of(array)   # dynd array
-      elif isinstance(array, np.ndarray):
-        dtype = ndt.type(array.dtype)  # numpy array
 
     # Build a new array with the possible new dtype
     array_ = utils.to_ndarray(array, dtype)
