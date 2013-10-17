@@ -701,27 +701,29 @@ class btable(object):
         start, stop, step = slice(start, stop, step).indices(self.len)
 
         # Get iterators for selected columns
-        icols, dtypes = [], []
+        icols, dtypes, names = [], [], []
         for name in outcols:
             if name == "nrow__":
                 istop = None
                 if limit is not None:
                     istop = limit + skip
                 icols.append(islice(xrange(start, stop, step), skip, istop))
-                dtypes.append((name, np.int_))
+                names.append(name)
+                dtypes.append(ndt.int64)
             else:
                 col = self.cols[name]
                 icols.append(
                     col.iter(start, stop, step, limit=limit, skip=skip))
-                dtypes.append((name, col.dtype))
-        dtype = np.dtype(dtypes)
+                names.append(name)
+                dtypes.append(col.dtype)
+        dtype = ndt.make_cstruct(dtypes, names)
         return self._iter(icols, dtype)
 
     def _iter(self, icols, dtype):
         """Return a list of `icols` iterators with `dtype` names."""
 
         icols = tuple(icols)
-        namedt = namedtuple('row', dtype.names)
+        namedt = namedtuple('row', nd.as_py(dtype.field_names))
         iterable = imap(namedt, *icols)
         return iterable
 
@@ -785,7 +787,7 @@ class btable(object):
         # List of integers (case of fancy indexing), or list of column names
         elif type(key) is list:
             if len(key) == 0:
-                return np.empty(0, self.dtype)
+                return nd.empty(0, self.dtype)
             strlist = [type(v) for v in key] == [str for v in key]
             # Range of column names
             if strlist:
@@ -805,7 +807,7 @@ class btable(object):
                 return self._where(key)
             elif np.issubsctype(key, np.int_):
                 # An integer array
-                return np.array([self[i] for i in key], dtype=self.dtype)
+                return nd.array([self[i] for i in key], dtype=self.dtype)
             else:
                 raise IndexError(
                       "arrays used as indices must be integer (or boolean)")

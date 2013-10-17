@@ -633,8 +633,8 @@ class copyTest(MayBeDiskTest, TestCase):
         b = np.arange(N, N+10, dtype='f8')*2.
         t2.append((a, b))
         ra = np.fromiter(((i, i*2.) for i in xrange(N+10)), dtype='i4,f8')
-        self.assert_(len(t) == N, "copy() does not work correctly")
-        self.assert_(len(t2) == N+10, "copy() does not work correctly")
+        self.assertEqual(len(t), N)
+        self.assertEqual(len(t2), N+10)
         assert_array_equal(t2[:], ra, "btable values are not correct")
 
     def test01(self):
@@ -858,88 +858,88 @@ class iterTest(MayBeDiskTest, TestCase):
         N = 10
         ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
         t = blz.btable(ra, chunklen=4, rootdir=self.rootdir)
-        cl = [r.f1 for r in t]
+        cl = [nd.as_py(r.f1) for r in t]
         nl = [r['f1'] for r in ra]
         #print "cl ->", cl
         #print "nl ->", nl
-        self.assert_(cl == nl, "iter not working correctily")
+        self.assertEqual(cl, nl)
 
     def test01(self):
         """Testing btable.iter() without params"""
         N = 10
         ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
         t = blz.btable(ra, chunklen=4, rootdir=self.rootdir)
-        cl = [r.f1 for r in t.iter()]
+        cl = [ns.as_py(r.f1) for r in t.iter()]
         nl = [r['f1'] for r in ra]
         #print "cl ->", cl
         #print "nl ->", nl
-        self.assert_(cl == nl, "iter not working correctily")
+        self.assertEqual(cl, nl)
 
     def test02(self):
         """Testing btable.iter() with start,stop,step"""
         N = 10
         ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
         t = blz.btable(ra, chunklen=4, rootdir=self.rootdir)
-        cl = [r.f1 for r in t.iter(1,9,3)]
+        cl = [nd.as_py(r.f1) for r in t.iter(1,9,3)]
         nl = [r['f1'] for r in ra[1:9:3]]
         #print "cl ->", cl
         #print "nl ->", nl
-        self.assert_(cl == nl, "iter not working correctily")
+        self.assertEqual(cl, nl)
 
     def test03(self):
         """Testing btable.iter() with outcols"""
         N = 10
         ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
         t = blz.btable(ra, chunklen=4, rootdir=self.rootdir)
-        cl = [tuple(r) for r in t.iter(outcols='f2, nrow__, f0')]
+        cl = [tuple(nd.as_py(r)) for r in t.iter(outcols='f2, nrow__, f0')]
         nl = [(r['f2'], i, r['f0']) for i, r in enumerate(ra)]
         #print "cl ->", cl
         #print "nl ->", nl
-        self.assert_(cl == nl, "iter not working correctily")
+        self.assertEqual(cl, nl)
 
     def test04(self):
         """Testing btable.iter() with start,stop,step and outcols"""
         N = 10
         ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
         t = blz.btable(ra, chunklen=4, rootdir=self.rootdir)
-        cl = [r for r in t.iter(1,9,3, 'f2, nrow__ f0')]
+        cl = [tuple(nd.as_py(r)) for r in t.iter(1,9,3, 'f2, nrow__ f0')]
         nl = [(r['f2'], r['f0'], r['f0']) for r in ra[1:9:3]]
         #print "cl ->", cl
         #print "nl ->", nl
-        self.assert_(cl == nl, "iter not working correctily")
+        self.assertEqual(cl, nl)
 
     def test05(self):
         """Testing btable.iter() with start, stop, step and limit"""
         N = 10
         ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
         t = blz.btable(ra, chunklen=4, rootdir=self.rootdir)
-        cl = [r.f1 for r in t.iter(1,9,2, limit=3)]
+        cl = [nd.as_py(r.f1) for r in t.iter(1,9,2, limit=3)]
         nl = [r['f1'] for r in ra[1:9:2][:3]]
         #print "cl ->", cl
         #print "nl ->", nl
-        self.assert_(cl == nl, "iter not working correctily")
+        self.assertEqual(cl, nl)
 
     def test06(self):
         """Testing btable.iter() with start, stop, step and skip"""
         N = 10
         ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
         t = blz.btable(ra, chunklen=4, rootdir=self.rootdir)
-        cl = [r.f1 for r in t.iter(1,9,2, skip=3)]
+        cl = [nd.as_py(r.f1) for r in t.iter(1,9,2, skip=3)]
         nl = [r['f1'] for r in ra[1:9:2][3:]]
         #print "cl ->", cl
         #print "nl ->", nl
-        self.assert_(cl == nl, "iter not working correctily")
+        self.assertEqual(cl, nl)
 
     def test07(self):
         """Testing btable.iter() with start, stop, step and limit, skip"""
         N = 10
         ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
         t = blz.btable(ra, chunklen=4, rootdir=self.rootdir)
-        cl = [r.f1 for r in t.iter(1,9,2, limit=2, skip=1)]
+        cl = [nd.as_py(r.f1) for r in t.iter(1,9,2, limit=2, skip=1)]
         nl = [r['f1'] for r in ra[1:9:2][1:3]]
         #print "cl ->", cl
         #print "nl ->", nl
-        self.assert_(cl == nl, "iter not working correctily")
+        self.assertEqual(cl, nl)
 
 class iterDiskTest(iterTest, TestCase):
     disk = True
@@ -955,9 +955,9 @@ class iterchunksTest(TestCase):
         l, s = 0, 0
         for block in blz.iterblocks(t):
             l += len(block)
-            s += block['f0'].sum()
-        self.assert_(l == N)
-        self.assert_(s == (N - 1) * (N / 2))  # as per Gauss summation formula
+            s += np.sum(block.f0)
+        self.assertEqual(l, N)
+        self.assertEqual(s, (N - 1) * (N / 2))  # as per Gauss summation formula
 
     def test01(self):
         """Testing `iterchunks` method with no start, no stop"""
@@ -968,7 +968,7 @@ class iterchunksTest(TestCase):
         for block in blz.iterblocks(t, blen):
             self.assert_(len(block) == blen)
             l += len(block)
-            s += block['f0'].sum()
+            s += np.sum(block['f0'])
         self.assert_(l == N)
         self.assert_(s == (N - 1) * (N / 2))  # as per Gauss summation formula
 
@@ -980,7 +980,7 @@ class iterchunksTest(TestCase):
         l, s = 0, 0.
         for block in blz.iterblocks(t, blen, blen-1):
             l += len(block)
-            s += block['f1'].sum()
+            s += np.sum(block['f1'])
         self.assert_(l == (N - (blen - 1)))
         self.assert_(s == (np.arange(blen-1, N, dtype='f8')*2).sum())
 
@@ -992,7 +992,7 @@ class iterchunksTest(TestCase):
         l, s = 0, 0
         for block in blz.iterblocks(t, blen, blen-1, 3*blen+2):
             l += len(block)
-            s += block['f2'].sum()
+            s += np.sum(block['f2'])
         self.assert_(l == 2*blen + 3)
         self.assert_(s == (np.arange(blen-1, 3*blen+2)*3).sum())
 
@@ -1005,5 +1005,5 @@ class iterchunksTest(TestCase):
 ## End:
 
 if __name__ == '__main__':
-    #fancy_indexing_getitemTest('test00').debug()
+    #iterchunksTest('test00').debug()
     unittest.main(verbosity=2)

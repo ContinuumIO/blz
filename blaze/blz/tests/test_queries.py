@@ -40,7 +40,7 @@ class with_listTest:
         blist1 = [nd.as_py(r) for r in b.where(a)]
         self.assertEqual(blist1, list(range(30,40)))
         blist2 = list(b)
-        self.assert_(blist == blist2, "where() not working correctly")
+        self.assertEqual(blist, blist2)
 
     def test01b(self):
         """Testing where() with a multidimensional array"""
@@ -56,7 +56,7 @@ class with_listTest:
         blist1 = [nd.as_py(r) for r in b.iter(3,10)]
         self.assertEqual(blist1, list(range(3,10)))
         blist2 = list(b)
-        self.assert_(blist == blist2, "iter() not working correctly")
+        self.assertEqual(blist, blist2)
 
 
 class small_with_listTest(with_listTest, TestCase):
@@ -77,8 +77,8 @@ class wherechunksTest(TestCase):
         for block in blz.whereblocks(t, 'f1 < f2'):
             l += len(block)
             s += block['f0'].sum()
-        self.assert_(l == N - 1)
-        self.assert_(s == (N - 1) * (N / 2))  # Gauss summation formula
+        self.assertEqual(l, N - 1)
+        self.assertEqual(s, (N - 1) * (N / 2))  # Gauss summation formula
 
     def test01(self):
         """Testing `wherechunks` method with a `blen`"""
@@ -102,11 +102,11 @@ class wherechunksTest(TestCase):
         t = blz.btable(ra)
         l, s = 0, 0
         for block in blz.whereblocks(t, 'f1 < f2', outfields=('f1','f2')):
-            self.assert_(block.dtype.names == ('f1','f2'))
+            self.assertEqual(block.dtype.names, ('f1','f2'))
             l += len(block)
             s += block['f1'].sum()
-        self.assert_(l == N - 1)
-        self.assert_(s == (N - 1) * (N / 2))  # Gauss summation formula
+        self.assertEqual(l, N - 1)
+        self.assertEqual(s, (N - 1) * (N / 2))  # Gauss summation formula
 
     def test03(self):
         """Testing `wherechunks` method with a `outfields` with 1 field"""
@@ -115,11 +115,11 @@ class wherechunksTest(TestCase):
         t = blz.btable(ra)
         l, s = 0, 0
         for block in blz.whereblocks(t, 'f1 < f2', outfields=('f1',)):
-            self.assert_(block.dtype.names == ('f1',))
+            self.assertEqual(block.dtype.names, ('f1',))
             l += len(block)
             s += block['f1'].sum()
-        self.assert_(l == N - 1)
-        self.assert_(s == (N - 1) * (N / 2))  # Gauss summation formula
+        self.assertEqual(l, N - 1)
+        self.assertEqual(s, (N - 1) * (N / 2))  # Gauss summation formula
 
     def test04(self):
         """Testing `wherechunks` method with a `limit` parameter"""
@@ -130,8 +130,8 @@ class wherechunksTest(TestCase):
         for block in blz.whereblocks(t, 'f1 < f2', limit=M):
             l += len(block)
             s += block['f0'].sum()
-        self.assert_(l == M)
-        self.assert_(s == M * ((M + 1) / 2))  # Gauss summation formula
+        self.assertEqual(l, M)
+        self.assertEqual(s, M * ((M + 1) / 2))  # Gauss summation formula
 
     def test05(self):
         """Testing `wherechunks` method with a `limit` parameter"""
@@ -142,8 +142,8 @@ class wherechunksTest(TestCase):
         for block in blz.whereblocks(t, 'f1 < f2', limit=M):
             l += len(block)
             s += block['f0'].sum()
-        self.assert_(l == M)
-        self.assert_(s == M * ((M + 1) / 2))  # Gauss summation formula
+        self.assertEqual(l, M)
+        self.assertEqual(s, M * ((M + 1) / 2))  # Gauss summation formula
 
     def test06(self):
         """Testing `wherechunks` method with a `skip` parameter"""
@@ -154,8 +154,8 @@ class wherechunksTest(TestCase):
         for block in blz.whereblocks(t, 'f1 < f2', skip=N-M):
             l += len(block)
             s += block['f0'].sum()
-        self.assert_(l == M - 1)
-        self.assert_(s == np.arange(N-M+1, N).sum())
+        self.assertEqual(l, M - 1)
+        self.assertEqual(s, np.arange(N-M+1, N).sum())
 
     def test07(self):
         """Testing `wherechunks` method with a `limit`, `skip` parameter"""
@@ -166,8 +166,8 @@ class wherechunksTest(TestCase):
         for block in blz.whereblocks(t, 'f1 < f2', limit=N-M-2, skip=M):
             l += len(block)
             s += block['f0'].sum()
-        self.assert_(l == N - M - 2)
-        self.assert_(s == np.arange(M+1, N-1).sum())
+        self.assertEqual(l, N - M - 2)
+        self.assertEqual(s, np.arange(M+1, N-1).sum())
 
 
 ## Local Variables:

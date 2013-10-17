@@ -23,6 +23,12 @@ from .btable import btable
 from .bparams import bparams
 from ..py2help import xrange, _inttypes
 
+def np_dtype(dt):
+    if isinstance(dt, ndt.type):
+        return dt.as_numpy()
+    else:
+        return np.dtype(dt)
+
 _inttypes += (np.integer,)
 
 def open(rootdir, mode='a'):
@@ -112,7 +118,9 @@ def fromiter(iterable, dtype, count, **kwargs):
 
     # First, create the container
     expectedlen = kwargs.pop("expectedlen", expected)
-    dtype = np.dtype(dtype)
+    if isinstance(dtype, ndt.type):
+        dtype = dtype.as_numpy()
+    dtype = np_dtype(dtype)
     if dtype.kind == "V":
         # A btable
         obj = btable(np.array([], dtype=dtype),
@@ -182,7 +190,7 @@ def fill(shape, dflt=None, dtype=np.float, **kwargs):
 
     """
 
-    dtype = np.dtype(dtype)
+    dtype = ndt.type(dtype)
     if type(shape) in _inttypes + (float,):
         shape = (int(shape),)
     else:
@@ -190,12 +198,12 @@ def fill(shape, dflt=None, dtype=np.float, **kwargs):
         if len(shape) > 1:
             # Multidimensional shape.
             # The atom will have shape[1:] dims (+ the dtype dims).
-            dtype = np.dtype((dtype.base, shape[1:]+dtype.shape))
+            dtype = ndt.make_fixed_dim((shape[1:]+dtype.shape), dtype.dtype)
     length = shape[0]
 
     # Create the container
     expectedlen = kwargs.pop("expectedlen", length)
-    if dtype.kind == "V" and dtype.shape == ():
+    if dtype.kind == "struct" and dtype.shape == ():
         raise ValueError("fill does not support btables objects")
     obj = barray([], dtype=dtype, dflt=dflt, expectedlen=expectedlen,
                  **kwargs)
@@ -203,10 +211,11 @@ def fill(shape, dflt=None, dtype=np.float, **kwargs):
 
     # Then fill it
     # We need an array for the defaults so as to keep the atom info
-    dflt = np.array(obj.dflt, dtype=dtype)
+    dflt = nd.array(obj.dflt, dtype=dtype)
     # Making strides=(0,) below is a trick to create the array fast and
     # without memory consumption
-    chunk = np.ndarray(length, dtype=dtype, buffer=dflt, strides=(0,))
+    # TODO: Enable zero-stride trick in dynd
+    chunk = nd.full(length, dtype, value=dflt)
     obj.append(chunk)
     obj.flush()
     return obj
@@ -238,7 +247,7 @@ def zeros(shape, dtype=np.float, **kwargs):
     fill, ones
 
     """
-    dtype = np.dtype(dtype)
+    dtype = np_dtype(dtype)
     return fill(shape=shape, dflt=np.zeros((), dtype), dtype=dtype, **kwargs)
 
 
@@ -268,7 +277,7 @@ def ones(shape, dtype=np.float, **kwargs):
     fill, zeros
 
     """
-    dtype = np.dtype(dtype)
+    dtype = np_dtype(dtype)
     return fill(shape=shape, dflt=np.ones((), dtype), dtype=dtype, **kwargs)
 
 
@@ -326,8 +335,8 @@ def arange(start=None, stop=None, step=None, dtype=None, **kwargs):
     # Guess the dtype
     if dtype is None:
         if type(stop) in _inttypes:
-            dtype = np.dtype(np.int_)
-    dtype = np.dtype(dtype)
+            dtype = np_dtype(np.int_)
+    dtype = np_dtype(dtype)
     stop = int(stop)
 
     # Create the container
@@ -398,17 +407,17 @@ def iterblocks(bobj, blen=None, start=0, stop=None):
         # (it is important that columns are contiguous)
         cbufs = {}
         for name in bobj.names:
-            cbufs[name] = np.empty(blen, dtype=bobj[name].dtype)
+            cbufs[name] = nd.empty(blen, bobj[name].dtype)
         for i in xrange(start, stop, blen):
-            buf = np.empty(blen, dtype=bobj.dtype)
+            buf = nd.empty(blen, bobj.dtype)
             # Populate the column buffers and assign to the final buffer
             for name in bobj.names:
                 bobj[name]._getrange(i, blen, cbufs[name])
-                buf[name][:] = cbufs[name]
+                getattr(buf, name)[:] = cbufs[name]
             if i + blen > stop:
                 buf = buf[:stop - i]
             yield buf
-    else:
+    elif isinstance(bobj, barray):
         # A barray object
         if blen is None:
             blen = bobj.chunklen
@@ -418,7 +427,9 @@ def iterblocks(bobj, blen=None, start=0, stop=None):
             if i + blen > stop:
                 buf = buf[:stop - i]
             yield buf
-
+    else:
+        raise TypeError(('blz.iterblocks() requires either a ' +
+                        'btable or barray, not %r') % type(bobj))
 
 def whereblocks(table, expression, blen=None, outfields=None, limit=None,
                 skip=0):
@@ -473,14 +484,14 @@ def whereblocks(table, expression, blen=None, outfields=None, limit=None,
         except IndexError:
             raise ValueError("Some names in `outfields` are not real fields")
 
-    buf = np.empty(blen, dtype=dtype)
+    buf = nd.empty(blen, dtype)
     nrow = 0
     for row in table.where(expression, outfields, limit, skip):
         buf[nrow] = row
         nrow += 1
         if nrow == blen:
             yield buf
-            buf = np.empty(blen, dtype=dtype)
+            buf = nd.empty(blen, dtype)
             nrow = 0
     yield buf[:nrow]
 

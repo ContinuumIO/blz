@@ -268,7 +268,7 @@ cdef class chunk:
     self.atom = atom
     self.atomsize = atom.data_size
     dtype_ = atom.dtype
-    self.typekind = ord(kinds[dtype_.kind])
+    self.typekind = ord(kinds[dtype_.value_type.kind])
 
     if self.typekind == ord('B'):
       itemsize = 1
@@ -898,6 +898,9 @@ cdef class barray:
       raise ValueError("mode should be 'r', 'w' or 'a'")
     self._mode = mode
 
+    if dtype is not None:
+        dtype = ndt.type(dtype)
+
     if array is not None:
       self.create_barray(array, bparams, dtype, dflt,
                          expectedlen, chunklen, rootdir, mode)
@@ -920,10 +923,6 @@ cdef class barray:
   def set_default(self, dtype, dflt):
     _dflt = nd.empty(dtype)
     if dflt is not None:
-      if not isinstance(dflt, nd.array) and dflt.shape == ():
-        # Convert zero-dim numpy array into an scalar so as to avoid a
-        # segfault (see https://github.com/ContinuumIO/dynd-python/issues/25)
-        dflt = dflt[()]
       _dflt[()] = dflt
     else:
       # Provide sensible defaults here
@@ -1043,7 +1042,6 @@ cdef class barray:
   def open_barray(self, shape, bparams, dtype, dflt,
                   expectedlen, cbytes, chunklen):
     """Open an existing array."""
-    cdef npdefs.ndarray lastchunkarr
     cdef object array_, _dflt
     cdef blz_int_t calen
 
@@ -1055,11 +1053,11 @@ cdef class barray:
       # than `self.dtype` in that `self._dtype` dimensions are borrowed
       # from `self.shape`.  `self.dtype` will always be scalar (NumPy
       # convention).
-      self._dtype = dtype = np.dtype((dtype.base, shape[1:]))
+      self._dtype = dtype = ndt.make_fixed_dim(shape[1:], dtype.dtype)
 
     self._bparams = bparams
-    self.atomsize = dtype.itemsize
-    self.itemsize = dtype.base.itemsize
+    self.atomsize = dtype.data_size
+    self.itemsize = dtype.dtype.data_size
     self._chunklen = chunklen
     self._chunksize = chunklen * self.atomsize
     self._dflt = dflt
@@ -1067,7 +1065,7 @@ cdef class barray:
 
     # Book memory for last chunk (uncompressed)
     # Use np.zeros here because they compress better
-    lastchunkarr = nd.zeros("%d, %s" % (chunklen, dtype), access='rw')
+    lastchunkarr = nd.zeros(chunklen, dtype, access='rw')
     self.lastchunk = <char *><Py_uintptr_t>_lowlevel.data_address_of(lastchunkarr)
     self.lastchunkarr = lastchunkarr
 
@@ -1190,7 +1188,7 @@ cdef class barray:
     storagef = os.path.join(metadir, STORAGE_FILE)
     with open(storagef, 'rb') as storagefh:
       data = json.loads(storagefh.read().decode('ascii'))
-    dtype_ = np.dtype(data["dtype"])
+    dtype_ = ndt.type(data["dtype"])
     chunklen = data["chunklen"]
     bparams = blz.bparams(
       clevel = data["bparams"]["clevel"],
@@ -1666,8 +1664,8 @@ cdef class barray:
       else:
         arr = arr[key[1:]]
       # Force a copy in case returned array is not contiguous
-      if not arr.flags.contiguous:
-        arr = arr.copy()
+      if not nd.is_c_contiguous(arr):
+        arr = nd.array(arr)
       return arr
     # List of integers (case of fancy indexing)
     elif isinstance(key, list):
