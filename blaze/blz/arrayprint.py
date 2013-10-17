@@ -17,6 +17,7 @@ __docformat__ = 'restructuredtext'
 
 import sys
 import numpy as np
+from dynd import nd, ndt
 from numpy.core import numerictypes as _nt
 from numpy import maximum, minimum, absolute, not_equal, isnan, isinf
 from numpy.core.multiarray import format_longfloat
@@ -440,6 +441,11 @@ def array2string(a, max_line_width=None, precision=None,
     '[0x0L 0x1L 0x2L]'
 
     """
+
+    # Convert to numpy for now
+    a = a[:]
+    if isinstance(a, nd.array):
+        a = nd.as_numpy(a)
 
     if a.shape == ():
         x = a.item()
