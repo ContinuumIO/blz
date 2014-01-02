@@ -76,15 +76,14 @@ of use.
 Resources
 ---------
 
-Visit the main carray site repository at:
+Visit the main BLZ site repository at:
 http://github.com/ContinuumIO/blz
 
 Home of Blosc compressor:
 http://www.blosc.org
 
 User's mail list:
-blz@googlegroups.com
-http://groups.google.com/group/blz
+blaze-dev@continuum.io
 
 License
 -------
