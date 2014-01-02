@@ -12,8 +12,8 @@ from ..py2help import skip
 import numpy as np
 from numpy.testing import assert_array_equal, assert_array_almost_equal
 
-from blaze import blz
-from .common import MayBeDiskTest
+import blz
+from blz.tests.common import MayBeDiskTest
 
 
 class largeBarrayTest(MayBeDiskTest, TestCase):
@@ -81,11 +81,5 @@ class largeBarrayTest(MayBeDiskTest, TestCase):
 
         self.assertEqual(cn.sum(), 10)
 
-## Local Variables:
-## mode: python
-## coding: utf-8
-## py-indent-offset: 4
-## tab-with: 4
-## fill-column: 66
-## End:
-
+if __name__ == '__main__':
+    unittest.main(verbosity=2)

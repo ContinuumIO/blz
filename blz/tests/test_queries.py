@@ -1,12 +1,13 @@
 from __future__ import absolute_import
 
 import sys
+import unittest
 from unittest import TestCase
 
 import numpy as np
 from numpy.testing import assert_array_equal, assert_array_almost_equal
 
-from blaze import blz
+import blz
 
 if sys.version_info >= (3, 0):
     xrange = range
@@ -168,9 +169,5 @@ class wherechunksTest(TestCase):
         self.assert_(s == np.arange(M+1, N-1).sum())
 
 
-## Local Variables:
-## mode: python
-## py-indent-offset: 4
-## tab-width: 4
-## fill-column: 72
-## End:
+if __name__ == '__main__':
+    unittest.main(verbosity=2)

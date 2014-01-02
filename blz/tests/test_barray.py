@@ -5,14 +5,15 @@ from __future__ import absolute_import
 import sys
 import struct
 import os, os.path
+import unittest
 from unittest import TestCase
 
 import numpy as np
 from numpy.testing import assert_array_equal, assert_array_almost_equal
 
-import blaze.blz as blz
-from blaze.blz.blz_ext import chunk
-from .common import MayBeDiskTest
+import blz
+from blz.blz_ext import chunk
+from blz.tests.common import MayBeDiskTest
 
 is_64bit = (struct.calcsize("P") == 8)
 
@@ -1383,10 +1384,5 @@ class iterchunksTest(TestCase):
         self.assert_(s == np.arange(blen-1, 3*blen+2).sum())
 
 
-## Local Variables:
-## mode: python
-## coding: utf-8
-## python-indent: 4
-## tab-width: 4
-## fill-column: 66
-## End:
+if __name__ == '__main__':
+    unittest.main(verbosity=2)

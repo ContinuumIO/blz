@@ -9,8 +9,8 @@
 
 import sys
 import numpy as np
-import blaze.blz as blz
-from blaze.blz import utils, attrs, array2string
+import blz
+from blz import utils, attrs, array2string
 import os, os.path
 import struct
 import shutil

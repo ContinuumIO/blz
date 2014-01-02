@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 ########################################################################
 #
-# multidimension tests for blaze.blz.
-# based on barray tests, adapted to blaze and nosetest
+# multidimensional tests for barrays
 #
 ########################################################################
 
@@ -13,8 +12,8 @@ import struct
 
 import numpy as np
 from numpy.testing import assert_array_equal, assert_array_almost_equal
-from blaze import blz
-from .common import MayBeDiskTest
+import blz
+from blz.tests.common import MayBeDiskTest
 import unittest
 
 class constructorTest(MayBeDiskTest, unittest.TestCase):
@@ -745,10 +744,5 @@ class barrayConstructorDimensionOpenTest(barrayConstructorDimensionTest,
     open = True
 
 
-
-## Local Variables:
-## mode: python
-## py-indent-offset: 4
-## tab-width: 4
-## fill-column: 72
-## End:
+if __name__ == '__main__':
+    unittest.main(verbosity=2)

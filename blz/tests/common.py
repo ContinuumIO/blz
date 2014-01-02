@@ -3,7 +3,6 @@ import tempfile
 import os, os.path
 import glob
 import shutil
-from blaze import blz
 import numpy as np
 
 # Global variables for the tests
@@ -30,5 +29,3 @@ class MayBeDiskTest():
             # Remove every directory starting with rootdir
             for dir_ in glob.glob(self.rootdir+'*'):
                 shutil.rmtree(dir_)
-
-

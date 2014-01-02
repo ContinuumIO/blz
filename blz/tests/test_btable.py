@@ -11,12 +11,14 @@ from __future__ import absolute_import
 import sys
 
 import numpy as np
-from numpy.testing import assert_equal, assert_array_equal, assert_array_almost_equal
+from numpy.testing import (
+    assert_equal, assert_array_equal, assert_array_almost_equal)
+import unittest
 from unittest import TestCase
 
 
-from blaze import blz
-from .common import MayBeDiskTest
+import blz
+from blz.tests.common import MayBeDiskTest
 
 if sys.version_info >= (3, 0):
     xrange = range
@@ -988,10 +990,5 @@ class iterchunksTest(TestCase):
         self.assert_(l == 2*blen + 3)
         self.assert_(s == (np.arange(blen-1, 3*blen+2)*3).sum())
 
-
-## Local Variables:
-## mode: python
-## py-indent-offset: 4
-## tab-width: 4
-## fill-column: 72
-## End:
+if __name__ == '__main__':
+    unittest.main(verbosity=2)

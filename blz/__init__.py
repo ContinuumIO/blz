@@ -16,6 +16,7 @@ from .bfuncs import (
     open, zeros, ones, fill, arange, fromiter, iterblocks, whereblocks)
 from .bparams import bparams
 from .version import __version__
+from .tests import test, print_versions
 
 def detect_number_of_cores():
     """

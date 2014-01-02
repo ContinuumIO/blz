@@ -13,10 +13,11 @@ import sys
 import numpy as np
 from numpy.testing import (
     assert_equal, assert_array_equal, assert_array_almost_equal)
+import unittest
 from unittest import TestCase
 
-from blaze import blz
-from .common import MayBeDiskTest
+import blz
+from blz.tests.common import MayBeDiskTest
 
 if sys.version_info >= (3, 0):
     xrange = range
@@ -125,3 +126,5 @@ class createTest(MayBeDiskTest, TestCase):
         assert_array_equal(vt[3:-4:3], ra[3:-4:3],
                            "vtable values are not correct")
 
+if __name__ == '__main__':
+    unittest.main(verbosity=2)

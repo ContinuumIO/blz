@@ -7,8 +7,8 @@ import sys
 
 import numpy as np
 from numpy.testing import assert_array_equal, assert_array_almost_equal
-from blaze import blz
-from blaze.blz.tests import common
+import blz
+from blz.tests import common
 
 class basicTest(common.MayBeDiskTest):
 
@@ -138,10 +138,3 @@ class btableDiskTest(basicTest, unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main(verbosity=2)
-
-## Local Variables:
-## mode: python
-## py-indent-offset: 4
-## tab-width: 4
-## fill-column: 72
-## End:
