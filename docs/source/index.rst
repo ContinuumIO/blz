@@ -11,6 +11,13 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
+   intro
+   install
+   tutorial
+   #reference
+   #opt-tips
+   blz-defaults
+   persistent-format.rst
 
 
 Indices and tables
