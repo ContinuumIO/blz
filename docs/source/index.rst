@@ -14,7 +14,7 @@ Contents:
    intro
    install
    tutorial
-   #reference
+   reference
    #opt-tips
    blz-defaults
    persistent-format.rst
