@@ -12,6 +12,7 @@ from __future__ import absolute_import
 
 import sys, math
 import numpy as np
+from . import numexpr_here
 from .blz_ext import barray
 
 if sys.version_info >= (3, 0):
@@ -22,16 +23,10 @@ else:
     def dict_viewkeys(d):
         return d.iterkeys()
 
-min_numexpr_version = '2.1'  # the minimum version of Numexpr needed
-numexpr_here = False
-try:
+
+if numexpr_here:
     import numexpr
-except ImportError:
-    pass
-else:
-    if numexpr.__version__ >= min_numexpr_version:
-        numexpr_here = True
-        from numexpr.expressions import functions as numexpr_functions
+    from numexpr.expressions import functions as numexpr_functions
 
 
 class Defaults(object):

@@ -2437,7 +2437,6 @@ cdef class barray:
 
 ## Local Variables:
 ## mode: python
-## py-indent-offset: 2
 ## tab-width: 2
 ## fill-column: 78
 ## End:

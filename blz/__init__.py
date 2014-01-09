@@ -4,6 +4,16 @@
 
 from __future__ import absolute_import
 
+min_numexpr_version = '2.2'  # the minimum version of Numexpr needed
+numexpr_here = False
+try:
+    import numexpr
+except ImportError:
+    pass
+else:
+    if numexpr.__version__ >= min_numexpr_version:
+        numexpr_here = True
+
 # Print array functions (copied from NumPy)
 from .arrayprint import (
     array2string, set_printoptions, get_printoptions)
@@ -17,6 +27,7 @@ from .bfuncs import (
 from .bparams import bparams
 from .version import __version__
 from .tests import test, print_versions
+
 
 def detect_number_of_cores():
     """

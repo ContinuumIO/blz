@@ -756,7 +756,7 @@ class btable(object):
         ----------
         key : string, int, tuple, list
             The corresponding btable column name will be returned.  If not a
-            column name, it will be interpret as a boolean expression
+            column name, it will be interpreted as a boolean expression
             (computed via `btable.eval`) and the rows where these values are
             true will be returned as a NumPy structured array.  If `key` is an
             integer, slice or list then the typical NumPy indexing operation
@@ -856,7 +856,7 @@ class btable(object):
         ----------
         key : string
             The corresponding btable column name will be set to `value`.  If
-            not a column name, it will be interpret as a boolean expression
+            not a column name, it will be interpreted as a boolean expression
             (computed via `btable.eval`) and the rows where these values are
             true will be set to `value`.
 
