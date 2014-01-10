@@ -93,10 +93,12 @@ not, then the default is 'python'.
 
 """
 
+# Assign function `eval` to a variable because we are overriding it
+_eval = eval
 
-def evaluate(expression, vm=None, out_flavor=None, user_dict={}, **kwargs):
+def eval(expression, vm=None, out_flavor=None, user_dict={}, **kwargs):
     """
-    evaluate(expression, vm=None, out_flavor=None, user_dict=None, **kwargs)
+    eval(expression, vm=None, out_flavor=None, user_dict=None, **kwargs)
 
     Evaluate an `expression` and return the result.
 
@@ -163,7 +165,7 @@ def evaluate(expression, vm=None, out_flavor=None, user_dict={}, **kwargs):
     if typesize == 0 or vlen == 0:
         # All scalars or zero-length objects
         if vm == "python":
-            return eval(expression, vars)
+            return _eval(expression, vars)
         else:
             return numexpr.evaluate(expression, local_dict=vars)
 
@@ -280,7 +282,7 @@ def _eval_blocks(expression, vars, vlen, typesize, vm, out_flavor,
 
         # Perform the evaluation for this block
         if vm == "python":
-            res_block = eval(expression, vars_)
+            res_block = _eval(expression, vars_)
         else:
             res_block = numexpr.evaluate(expression, local_dict=vars_)
 

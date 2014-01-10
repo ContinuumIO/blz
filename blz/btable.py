@@ -18,7 +18,7 @@ import shutil
 
 from .blz_ext import barray
 from .bparams import bparams
-from .chunked_eval import evaluate
+from .chunked_eval import eval as blz_eval
 from .py2help import _inttypes, _strtypes, imap, xrange
 
 # BLZ utilities
@@ -921,7 +921,7 @@ class btable(object):
         # Get the desired frame depth
         depth = kwargs.pop('depth', 3)
         # Call top-level eval with cols as user_dict
-        return evaluate(expression, user_dict=self.cols, depth=depth, **kwargs)
+        return blz_eval(expression, user_dict=self.cols, depth=depth, **kwargs)
 
     def flush(self):
         """Flush data in internal buffers to disk.

@@ -22,6 +22,7 @@ from .blz_ext import (
     barray, _blosc_set_nthreads, blosc_version, _blosc_init, _blosc_destroy)
 from .btable import btable
 from .vtable import vtable
+from .chunked_eval import eval
 from .bfuncs import (
     open, zeros, ones, fill, arange, fromiter, iterblocks, whereblocks)
 from .bparams import bparams
