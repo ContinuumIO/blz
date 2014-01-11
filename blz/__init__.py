@@ -19,7 +19,8 @@ from .arrayprint import (
     array2string, set_printoptions, get_printoptions)
 
 from .blz_ext import (
-    barray, _blosc_set_nthreads, blosc_version, _blosc_init, _blosc_destroy)
+    barray, _blosc_set_nthreads as blosc_set_nthreads,
+    blosc_version, _blosc_init, _blosc_destroy)
 from .btable import btable
 from .vtable import vtable
 from .chunked_eval import eval, defaults
@@ -63,6 +64,6 @@ def detect_number_of_cores():
 # Initialization code for the Blosc library
 _blosc_init()
 ncores = detect_number_of_cores()
-_blosc_set_nthreads(ncores)
+blosc_set_nthreads(ncores)
 import atexit
 atexit.register(_blosc_destroy)
