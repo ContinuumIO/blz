@@ -36,8 +36,8 @@ Requisites
 
 - Python >= 2.6
 - NumPy >= 1.7
-- numexpr >= 2.2
 - Cython >= 0.19
+- numexpr >= 2.2 (optional, if not present, plain NumPy will be used)
 - Blosc >= 1.3.0 (optional, if not present, a minimal Blosc will be used)
 
 Building

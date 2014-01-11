@@ -24,7 +24,7 @@ from .btable import btable
 from .vtable import vtable
 from .chunked_eval import eval
 from .bfuncs import (
-    open, zeros, ones, fill, arange, fromiter, iterblocks, whereblocks)
+    open, zeros, ones, fill, arange, fromiter, iterblocks, whereblocks, walk)
 from .bparams import bparams
 from .version import __version__
 from .tests import test, print_versions
