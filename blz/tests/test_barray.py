@@ -13,7 +13,7 @@ from numpy.testing import assert_array_equal, assert_array_almost_equal
 
 import blz
 from blz.blz_ext import chunk
-from blz.tests.common import MayBeDiskTest
+from blz.tests.common import MayBeDiskTest, heavy
 
 is_64bit = (struct.calcsize("P") == 8)
 
@@ -508,7 +508,7 @@ class miscTest(MayBeDiskTest, TestCase):
         self.assert_(sys.getsizeof(b) > b.nbytes,
                      "barray compressed too much??")
 
-class miscDiskTest(miscTest):
+class miscDiskTest(miscTest, TestCase):
     disk = True
 
 
@@ -1382,6 +1382,573 @@ class iterchunksTest(TestCase):
             s += block.sum()
         self.assert_(l == 2*blen + 3)
         self.assert_(s == np.arange(blen-1, 3*blen+2).sum())
+
+
+class evalTest(MayBeDiskTest):
+
+    vm = "python"
+
+    def setUp(self):
+        self.prev_vm = blz.defaults.eval_vm
+        blz.defaults.eval_vm = self.vm
+        MayBeDiskTest.setUp(self)
+
+    def tearDown(self):
+        blz.defaults.eval_vm = self.prev_vm
+        MayBeDiskTest.tearDown(self)
+
+    def test00(self):
+        """Testing eval() with only scalars and constants"""
+        a = 3
+        cr = blz.eval("2 * a", rootdir=self.rootdir)
+        #print "blz.eval ->", cr
+        self.assert_(cr == 6, "eval does not work correctly")
+
+    def test01(self):
+        """Testing eval() with only barrays"""
+        a, b = np.arange(self.N), np.arange(1, self.N+1)
+        if self.rootdir:
+            dirc, dird = self.rootdir+'.c', self.rootdir+'.d'
+        else:
+            dirc, dird = None, None
+        c = blz.barray(a, rootdir=dirc)
+        d = blz.barray(b, rootdir=dird)
+        cr = blz.eval("c * d")
+        nr = a * b
+        #print "blz.eval ->", cr
+        #print "numpy   ->", nr
+        assert_array_equal(cr[:], nr, "eval does not work correctly")
+
+    def test02(self):
+        """Testing eval() with only ndarrays"""
+        a, b = np.arange(self.N), np.arange(1, self.N+1)
+        cr = blz.eval("a * b", rootdir=self.rootdir)
+        nr = a * b
+        #print "blz.eval ->", cr
+        #print "numpy   ->", nr
+        assert_array_equal(cr[:], nr, "eval does not work correctly")
+
+    def test03(self):
+        """Testing eval() with a mix of barrays and ndarrays"""
+        a, b = np.arange(self.N), np.arange(1, self.N+1)
+        if self.rootdir:
+            dirc, dird = self.rootdir+'.c', self.rootdir+'.d'
+        else:
+            dirc, dird = None, None
+        c = blz.barray(a, rootdir=dirc)
+        d = blz.barray(b, rootdir=dird)
+        cr = blz.eval("a * d")
+        nr = a * b
+        #print "blz.eval ->", cr
+        #print "numpy   ->", nr
+        assert_array_equal(cr[:], nr, "eval does not work correctly")
+
+    def test04(self):
+        """Testing eval() with a mix of barray, ndarray and scalars"""
+        a, b = np.arange(self.N), np.arange(1, self.N+1)
+        if self.rootdir:
+            dirc, dird = self.rootdir+'.c', self.rootdir+'.d'
+        else:
+            dirc, dird = None, None
+        c = blz.barray(a, rootdir=dirc)
+        d = blz.barray(b, rootdir=dird)
+        cr = blz.eval("a + 2 * d - 3")
+        nr = a + 2 * b - 3
+        #print "blz.eval ->", cr
+        #print "numpy   ->", nr
+        assert_array_equal(cr[:], nr, "eval does not work correctly")
+
+    def test05(self):
+        """Testing eval() with a mix of barray, ndarray and scalars"""
+        a, b = np.arange(self.N), np.arange(1, self.N+1)
+        c, d = blz.barray(a, rootdir=self.rootdir), b
+        cr = blz.eval("a + 2 * d - 3")
+        nr = a + 2 * b - 3
+        #print "blz.eval ->", cr
+        #print "numpy   ->", nr
+        assert_array_equal(cr[:], nr, "eval does not work correctly")
+
+    def test06(self):
+        """Testing eval() with only scalars and arrays"""
+        a, b = np.arange(self.N), np.arange(1, self.N+1)
+        c, d = blz.barray(a, rootdir=self.rootdir), b
+        cr = blz.eval("d - 3")
+        nr = b - 3
+        #print "blz.eval ->", cr
+        #print "numpy   ->", nr
+        assert_array_equal(cr[:], nr, "eval does not work correctly")
+
+    def test07(self):
+        """Testing eval() via expression on __getitem__"""
+        a, b = np.arange(self.N), np.arange(1, self.N+1)
+        c, d = blz.barray(a, rootdir=self.rootdir), b
+        cr = c["a + 2 * d - 3 > 0"]
+        nr = a[(a + 2 * b - 3) > 0]
+        #print "ca[expr] ->", cr
+        #print "numpy   ->", nr
+        assert_array_equal(cr[:], nr, "barray[expr] does not work correctly")
+
+    def test08(self):
+        """Testing eval() via expression with lists (raise ValueError)"""
+        a, b = range(int(self.N)), range(int(self.N))
+        self.assertRaises(ValueError, blz.eval, "a*3", depth=3,
+                          rootdir=self.rootdir)
+        self.assertRaises(ValueError, blz.eval, "b*3", depth=3,
+                          rootdir=self.rootdir)
+
+    def test09(self):
+        """Testing eval() via expression on __setitem__ (I)"""
+        a, b = np.arange(self.N), np.arange(1, self.N+1)
+        c, d = blz.barray(a, rootdir=self.rootdir), b
+        c["a + 2 * d - 3 > 0"] = 3
+        a[(a + 2 * b - 3) > 0] = 3
+        #print "barray ->", c
+        #print "numpy  ->", a
+        assert_array_equal(c[:], a, "barray[expr] = v does not work correctly")
+
+    def test10(self):
+        """Testing eval() via expression on __setitem__ (II)"""
+        a, b = np.arange(self.N), np.arange(1, self.N+1)
+        c, d = blz.barray(a, rootdir=self.rootdir), b
+        c["a + 2 * d - 3 > 1000"] = 0
+        a[(a + 2 * b - 3) > 1000] = 0
+        #print "barray ->", c
+        #print "numpy  ->", a
+        assert_array_equal(c[:], a, "barray[expr] = v does not work correctly")
+
+    def test11(self):
+        """Testing eval() with functions like `np.sin()`"""
+        a, b = np.arange(self.N), np.arange(1, self.N+1)
+        c, d = blz.barray(a, rootdir=self.rootdir), blz.barray(b)
+        if self.vm == "python":
+            cr = blz.eval("np.sin(c) + 2 * np.log(d) - 3")
+        else:
+            cr = blz.eval("sin(c) + 2 * log(d) - 3")
+        nr = np.sin(a) + 2 * np.log(b) - 3
+        #print "blz.eval ->", cr
+        #print "numpy   ->", nr
+        assert_array_equal(cr[:], nr, "eval does not work correctly")
+
+    def test12(self):
+        """Testing eval() with `out_flavor` == 'numpy'"""
+        a, b = np.arange(self.N), np.arange(1, self.N+1)
+        c, d = blz.barray(a), blz.barray(b, rootdir=self.rootdir)
+        cr = blz.eval("c + 2 * d - 3", out_flavor='numpy')
+        nr = a + 2 * b - 3
+        #print "blz.eval ->", cr, type(cr)
+        #print "numpy   ->", nr
+        self.assert_(type(cr) == np.ndarray)
+        assert_array_equal(cr, nr, "eval does not work correctly")
+
+class evalSmall(evalTest, TestCase):
+    N = 10
+
+class evalDiskSmall(evalTest, TestCase):
+    N = 10
+    disk = True
+
+class evalBig(evalTest, TestCase):
+    N = 1e4
+
+class evalDiskBig(evalTest, TestCase):
+    N = 1e4
+    disk = True
+
+class evalSmallNE(evalTest, TestCase):
+    N = 10
+    vm = "numexpr"
+
+class evalDiskSmallNE(evalTest, TestCase):
+    N = 10
+    vm = "numexpr"
+    disk = True
+
+class evalBigNE(evalTest, TestCase):
+    N = 1e4
+    vm = "numexpr"
+
+class evalDiskBigNE(evalTest, TestCase):
+    N = 1e4
+    vm = "numexpr"
+    disk = True
+
+
+class computeMethodsTest(unittest.TestCase):
+
+    def test00(self):
+        """Testing sum()."""
+        a = np.arange(1e5)
+        sa = a.sum()
+        ac = blz.barray(a)
+        sac = ac.sum()
+        #print "numpy sum-->", sa
+        #print "barray sum-->", sac
+        self.assert_(sa.dtype == sac.dtype, "sum() is not working correctly.")
+        self.assert_(sa == sac, "sum() is not working correctly.")
+
+    def test01(self):
+        """Testing sum() with dtype."""
+        a = np.arange(1e5)
+        sa = a.sum(dtype='i8')
+        ac = blz.barray(a)
+        sac = ac.sum(dtype='i8')
+        #print "numpy sum-->", sa
+        #print "barray sum-->", sac
+        self.assert_(sa.dtype == sac.dtype, "sum() is not working correctly.")
+        self.assert_(sa == sac, "sum() is not working correctly.")
+
+    def test02(self):
+        """Testing sum() with strings (TypeError)."""
+        ac = blz.zeros(10, 'S3')
+        self.assertRaises(TypeError, ac.sum)
+
+
+class arangeTest(object):
+
+    def test00(self):
+        """Testing arange() with only a `stop`."""
+        a = np.arange(self.N)
+        ac = blz.arange(self.N)
+        self.assert_(np.all(a == ac))
+
+    def test01(self):
+        """Testing arange() with a `start` and `stop`."""
+        a = np.arange(3, self.N)
+        ac = blz.arange(3, self.N)
+        self.assert_(np.all(a == ac))
+
+    def test02(self):
+        """Testing arange() with a `start`, `stop` and `step`."""
+        a = np.arange(3, self.N, 4)
+        ac = blz.arange(3, self.N, 4)
+        self.assert_(np.all(a == ac))
+
+    def test03(self):
+        """Testing arange() with a `dtype`."""
+        a = np.arange(self.N, dtype="i1")
+        ac = blz.arange(self.N, dtype="i1")
+        self.assert_(np.all(a == ac))
+
+class arange_smallTest(arangeTest, TestCase):
+    N = 10
+
+class arange_bigTest(arangeTest, TestCase):
+    N = 1e4
+
+
+class constructorTest(MayBeDiskTest):
+
+    def test00(self):
+        """Testing barray constructor with an int32 `dtype`."""
+        a = np.arange(self.N)
+        ac = blz.barray(a, dtype='i4', rootdir=self.rootdir)
+        self.assert_(ac.dtype == np.dtype('i4'))
+        a = a.astype('i4')
+        self.assert_(a.dtype == ac.dtype)
+        self.assert_(np.all(a == ac[:]))
+
+    def test01a(self):
+        """Testing zeros() constructor."""
+        a = np.zeros(self.N)
+        ac = blz.zeros(self.N, rootdir=self.rootdir)
+        self.assert_(a.dtype == ac.dtype)
+        self.assert_(np.all(a == ac[:]))
+
+    def test01b(self):
+        """Testing zeros() constructor, with a `dtype`."""
+        a = np.zeros(self.N, dtype='i4')
+        ac = blz.zeros(self.N, dtype='i4', rootdir=self.rootdir)
+        #print "dtypes-->", a.dtype, ac.dtype
+        self.assert_(a.dtype == ac.dtype)
+        self.assert_(np.all(a == ac[:]))
+
+    def test01c(self):
+        """Testing zeros() constructor, with a string type."""
+        a = np.zeros(self.N, dtype='S5')
+        ac = blz.zeros(self.N, dtype='S5', rootdir=self.rootdir)
+        #print "ac-->", `ac`
+        self.assert_(a.dtype == ac.dtype)
+        self.assert_(np.all(a == ac[:]))
+
+    def test02a(self):
+        """Testing ones() constructor."""
+        a = np.ones(self.N)
+        ac = blz.ones(self.N, rootdir=self.rootdir)
+        self.assert_(a.dtype == ac.dtype)
+        self.assert_(np.all(a == ac[:]))
+
+    def test02b(self):
+        """Testing ones() constructor, with a `dtype`."""
+        a = np.ones(self.N, dtype='i4')
+        ac = blz.ones(self.N, dtype='i4', rootdir=self.rootdir)
+        self.assert_(a.dtype == ac.dtype)
+        self.assert_(np.all(a == ac[:]))
+
+    def test02c(self):
+        """Testing ones() constructor, with a string type"""
+        a = np.ones(self.N, dtype='S3')
+        ac = blz.ones(self.N, dtype='S3', rootdir=self.rootdir)
+        #print "a-->", a, ac
+        self.assert_(a.dtype == ac.dtype)
+        self.assert_(np.all(a == ac[:]))
+
+    def test03a(self):
+        """Testing fill() constructor."""
+        a = np.ones(self.N)
+        ac = blz.fill(self.N, 1, rootdir=self.rootdir)
+        self.assert_(a.dtype == ac.dtype)
+        self.assert_(np.all(a == ac[:]))
+
+    def test03b(self):
+        """Testing fill() constructor, with a `dtype`."""
+        a = np.ones(self.N, dtype='i4')*3
+        ac = blz.fill(self.N, 3, dtype='i4', rootdir=self.rootdir)
+        self.assert_(a.dtype == ac.dtype)
+        self.assert_(np.all(a == ac[:]))
+
+    def test03c(self):
+        """Testing fill() constructor, with a string type"""
+        a = np.ones(self.N, dtype='S3')
+        ac = blz.fill(self.N, "1", dtype='S3', rootdir=self.rootdir)
+        #print "a-->", a, ac
+        self.assert_(a.dtype == ac.dtype)
+        self.assert_(np.all(a == ac[:]))
+
+
+class constructorSmallTest(constructorTest, TestCase):
+    N = 10
+
+class constructorSmallDiskTest(constructorTest, TestCase):
+    N = 10
+    disk = True
+
+class constructorBigTest(constructorTest, TestCase):
+    N = 50000
+
+class constructorBigDiskTest(constructorTest, TestCase):
+    N = 50000
+    disk = True
+
+
+class dtypesTest(TestCase):
+
+    def test00(self):
+        """Testing barray constructor with a float32 `dtype`."""
+        a = np.arange(10)
+        ac = blz.barray(a, dtype='f4')
+        self.assert_(ac.dtype == np.dtype('f4'))
+        a = a.astype('f4')
+        self.assert_(a.dtype == ac.dtype)
+        self.assert_(np.all(a == ac))
+
+    def test01(self):
+        """Testing barray constructor with a `dtype` with an empty input."""
+        a = np.array([], dtype='i4')
+        ac = blz.barray([], dtype='f4')
+        self.assert_(ac.dtype == np.dtype('f4'))
+        a = a.astype('f4')
+        self.assert_(a.dtype == ac.dtype)
+        self.assert_(np.all(a == ac))
+
+    def test02(self):
+        """Testing barray constructor with a plain compound `dtype`."""
+        dtype = np.dtype("f4,f8")
+        a = np.ones(30000, dtype=dtype)
+        ac = blz.barray(a, dtype=dtype)
+        self.assert_(ac.dtype == dtype)
+        self.assert_(a.dtype == ac.dtype)
+        #print "ac-->", `ac`
+        assert_array_equal(a, ac[:], "Arrays are not equal")
+
+    def test03(self):
+        """Testing barray constructor with a nested compound `dtype`."""
+        dtype = np.dtype([('f1', [('f1', 'i2'), ('f2', 'i4')])])
+        a = np.ones(3000, dtype=dtype)
+        ac = blz.barray(a, dtype=dtype)
+        self.assert_(ac.dtype == dtype)
+        self.assert_(a.dtype == ac.dtype)
+        #print "ac-->", `ac`
+        assert_array_equal(a, ac[:], "Arrays are not equal")
+
+    def test04(self):
+        """Testing barray constructor with a string `dtype`."""
+        a = np.array(["ale", "e", "aco"], dtype="S4")
+        ac = blz.barray(a, dtype='S4')
+        self.assert_(ac.dtype == np.dtype('S4'))
+        self.assert_(a.dtype == ac.dtype)
+        #print "ac-->", `ac`
+        assert_array_equal(a, ac, "Arrays are not equal")
+
+    def test05(self):
+        """Testing barray constructor with a unicode `dtype`."""
+        a = np.array([u"aŀle", u"eñe", u"açò"], dtype="U4")
+        ac = blz.barray(a, dtype='U4')
+        self.assert_(ac.dtype == np.dtype('U4'))
+        self.assert_(a.dtype == ac.dtype)
+        #print "ac-->", `ac`
+        assert_array_equal(a, ac, "Arrays are not equal")
+
+    def test06(self):
+        """Testing barray constructor with an object `dtype`."""
+        dtype = np.dtype("object")
+        a = np.array(["ale", "e", "aco"], dtype=dtype)
+        ac = blz.barray(a, dtype='object')
+        self.assert_(ac.dtype == np.dtype('object'))
+        self.assert_(a.dtype == ac.dtype)
+        assert_array_equal(a, ac, "Arrays are not equal")
+
+
+@unittest.skipUnless(is_64bit and heavy,
+                     "too heavy for this configuration")
+class largeBarrayTest(MayBeDiskTest, TestCase):
+
+    disk = True
+
+    def test00(self):
+        """Creating an extremely large barray (> 2**32) in memory."""
+
+        cn = blz.zeros(5e9, dtype="i1")
+        self.assert_(len(cn) == int(5e9))
+
+        # Now check some accesses
+        cn[1] = 1
+        self.assert_(cn[1] == 1)
+        cn[int(2e9)] = 2
+        self.assert_(cn[int(2e9)] == 2)
+        cn[long(3e9)] = 3
+        self.assert_(cn[long(3e9)] == 3)
+        cn[-1] = 4
+        self.assert_(cn[-1] == 4)
+
+        self.assert_(cn.sum() == 10)
+
+    def test01(self):
+        """Creating an extremely large barray (> 2**32) on disk."""
+
+        cn = blz.zeros(5e9, dtype="i1", rootdir=self.rootdir)
+        self.assert_(len(cn) == int(5e9))
+
+        # Now check some accesses
+        cn[1] = 1
+        self.assert_(cn[1] == 1)
+        cn[int(2e9)] = 2
+        self.assert_(cn[int(2e9)] == 2)
+        cn[long(3e9)] = 3
+        self.assert_(cn[long(3e9)] == 3)
+        cn[-1] = 4
+        self.assert_(cn[-1] == 4)
+
+        self.assert_(cn.sum() == 10)
+
+    def test02(self):
+        """Opening an extremely large barray (> 2**32) on disk."""
+
+        # Create the array on-disk
+        cn = blz.zeros(5e9, dtype="i1", rootdir=self.rootdir)
+        self.assert_(len(cn) == int(5e9))
+        # Reopen it from disk
+        cn = blz.barray(rootdir=self.rootdir)
+        self.assert_(len(cn) == int(5e9))
+
+        # Now check some accesses
+        cn[1] = 1
+        self.assert_(cn[1] == 1)
+        cn[int(2e9)] = 2
+        self.assert_(cn[int(2e9)] == 2)
+        cn[long(3e9)] = 3
+        self.assert_(cn[long(3e9)] == 3)
+        cn[-1] = 4
+        self.assert_(cn[-1] == 4)
+
+        self.assert_(cn.sum() == 10)
+
+
+class persistenceTest(MayBeDiskTest):
+
+    disk = True
+
+    def test01a(self):
+        """Creating a barray in "r" mode."""
+
+        N = 10000
+        self.assertRaises(RuntimeError, blz.zeros,
+                          N, dtype="i1", rootdir=self.rootdir, mode='r')
+
+    def test01b(self):
+        """Creating a barray in "w" mode."""
+
+        N = 50000
+        cn = blz.zeros(N, dtype="i1", rootdir=self.rootdir)
+        self.assert_(len(cn) == N)
+
+        cn = blz.zeros(N-2, dtype="i1", rootdir=self.rootdir, mode='w')
+        self.assert_(len(cn) == N-2)
+
+        # Now check some accesses (no errors should be raised)
+        cn.append([1,1])
+        self.assert_(len(cn) == N)
+        cn[1] = 2
+        self.assert_(cn[1] == 2)
+
+    def test01c(self):
+        """Creating a barray in "a" mode."""
+
+        N = 30003
+        cn = blz.zeros(N, dtype="i1", rootdir=self.rootdir)
+        self.assert_(len(cn) == N)
+
+        self.assertRaises(RuntimeError, blz.zeros,
+                          N-2, dtype="i1", rootdir=self.rootdir, mode='a')
+
+    def test02a(self):
+        """Opening a barray in "r" mode."""
+
+        N = 10001
+        cn = blz.zeros(N, dtype="i1", rootdir=self.rootdir)
+        self.assert_(len(cn) == N)
+
+        cn = blz.barray(rootdir=self.rootdir, mode='r')
+        self.assert_(len(cn) == N)
+
+        # Now check some accesses
+        self.assertRaises(RuntimeError, cn.__setitem__, 1, 1)
+        self.assertRaises(RuntimeError, cn.append, 1)
+
+    def test02b(self):
+        """Opening a barray in "w" mode."""
+
+        N = 100001
+        cn = blz.zeros(N, dtype="i1", rootdir=self.rootdir)
+        self.assert_(len(cn) == N)
+
+        cn = blz.barray(rootdir=self.rootdir, mode='w')
+        self.assert_(len(cn) == 0)
+
+        # Now check some accesses (no errors should be raised)
+        cn.append([1,1])
+        self.assert_(len(cn) == 2)
+        cn[1] = 2
+        self.assert_(cn[1] == 2)
+
+    def test02c(self):
+        """Opening a barray in "a" mode."""
+
+        N = 1000-1
+        cn = blz.zeros(N, dtype="i1", rootdir=self.rootdir)
+        self.assert_(len(cn) == N)
+
+        cn = blz.barray(rootdir=self.rootdir, mode='a')
+        self.assert_(len(cn) == N)
+
+        # Now check some accesses (no errors should be raised)
+        cn.append([1,1])
+        self.assert_(len(cn) == N+2)
+        cn[1] = 2
+        self.assert_(cn[1] == 2)
+        cn[N+1] = 3
+        self.assert_(cn[N+1] == 3)
+
+
 
 
 if __name__ == '__main__':

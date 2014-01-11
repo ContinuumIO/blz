@@ -1976,6 +1976,17 @@ cdef class barray:
       else:
         raise IndexError, \
               "arrays used as indices must be of integer (or boolean) type"
+    # An boolean expression (case of fancy indexing)
+    elif type(key) is str:
+      # Evaluate
+      result = blz.eval(key)
+      if result.dtype.type != np.bool_:
+        raise IndexError, "only boolean expressions supported"
+      if len(result) != self.len:
+        raise IndexError, "boolean expression outcome must match len(self)"
+      # Call __setitem__ again
+      self[result] = value
+      return
     # All the rest not implemented
     else:
       raise NotImplementedError, "key not supported: %s" % repr(key)
