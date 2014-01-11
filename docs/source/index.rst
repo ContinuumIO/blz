@@ -15,7 +15,7 @@ Contents:
    install
    tutorial
    reference
-   #opt-tips
+   opt-tips
    blz-defaults
    persistent-format.rst
 
