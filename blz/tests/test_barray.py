@@ -6,14 +6,15 @@ import sys
 import struct
 import os, os.path
 import unittest
-from unittest import TestCase
+from unittest import TestCase, skipUnless
 
 import numpy as np
 from numpy.testing import assert_array_equal, assert_array_almost_equal
 
 import blz
 from blz.blz_ext import chunk
-from blz.tests.common import MayBeDiskTest, heavy
+from blz.tests import common
+from blz.tests.common import MayBeDiskTest
 
 is_64bit = (struct.calcsize("P") == 8)
 
@@ -1798,8 +1799,7 @@ class dtypesTest(TestCase):
         assert_array_equal(a, ac, "Arrays are not equal")
 
 
-@unittest.skipUnless(is_64bit and heavy,
-                     "too heavy for this configuration")
+@skipUnless(is_64bit and common.heavy, "not 64bit or not --heavy")
 class largeBarrayTest(MayBeDiskTest, TestCase):
 
     disk = True

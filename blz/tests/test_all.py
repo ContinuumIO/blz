@@ -15,7 +15,7 @@ import unittest
 
 import numpy
 import blz
-import common
+from blz.tests import common
 
 
 # Recommended minimum versions

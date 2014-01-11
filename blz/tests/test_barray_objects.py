@@ -12,8 +12,7 @@ Notes on object handling:
 
 """
 
-from unittest import TestCase
-from numpy.testing.decorators import skipif, knownfailureif
+from unittest import TestCase, skipIf
 
 import numpy as np
 from blaze import blz
@@ -100,7 +99,7 @@ class ObjectBarrayTest(MayBeDiskTest, TestCase):
         src_data[:] = [(i, 's'*i) for i in range(10)]
         self.assertRaises(TypeError, blz.barray, src_data)
 
-    @skipif(True, 'Currently the other option is implemented')
+    @skipIf(True, 'Currently the other option is implemented')
     def test_barray_record_inferred_opt2(self):
         """Testing barray handling of inferred record dtypes
         containing objects.  When there is no explicit dtype in the
@@ -127,8 +126,6 @@ class ObjectBarrayDiskTest(ObjectBarrayTest):
 ## Local Variables:
 ## mode: python
 ## coding: utf-8
-## py-indent-offset: 4
-## tab-with: 4
 ## fill-column: 66
 ## End:
 
