@@ -483,6 +483,7 @@ class resize_largeDiskTest(resizeTest, TestCase):
     N = 10000
     disk = True
 
+
 class miscTest(MayBeDiskTest, TestCase):
 
     def test00(self):
@@ -1949,6 +1950,41 @@ class persistenceTest(MayBeDiskTest):
         self.assert_(cn[N+1] == 3)
 
 
+class bloscCompressorsTest(MayBeDiskTest, TestCase):
+
+    disk = True
+
+    def test00(self):
+        """Testing all available compressors in big arrays (memory)"""
+        a = np.arange(2e5)
+        cnames = blz.blosc_compressor_list()
+        if common.verbose:
+            print "Checking compressors:", cnames
+        #print "\nsize b uncompressed-->", a.size * a.dtype.itemsize
+        for cname in cnames:
+            b = blz.barray(a, bparams=blz.bparams(clevel=9, cname=cname))
+            #print "size b compressed  -->", b.cbytes, "with '%s'"%cname
+            self.assert_(sys.getsizeof(b) < b.nbytes,
+                         "barray does not seem to compress at all")
+            assert_array_equal(a, b[:], "Arrays are not equal")
+
+
+    def test01(self):
+        """Testing all available compressors in big arrays (disk)"""
+        a = np.arange(2e5)
+        cnames = blz.blosc_compressor_list()
+        if common.verbose:
+            print "Checking compressors:", cnames
+        #print "\nsize b uncompressed-->", a.size * a.dtype.itemsize
+        for cname in cnames:
+            b = blz.barray(a, rootdir=self.rootdir,
+                           bparams=blz.bparams(clevel=9, cname=cname))
+            #print "size b compressed  -->", b.cbytes, "with '%s'"%cname
+            self.assert_(sys.getsizeof(b) < b.nbytes,
+                         "barray does not seem to compress at all")
+            assert_array_equal(a, b[:], "Arrays are not equal")
+            # Remove the array on disk before trying with the next one
+            common.remove_tree(self.rootdir)
 
 
 if __name__ == '__main__':

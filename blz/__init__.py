@@ -19,8 +19,10 @@ from .arrayprint import (
     array2string, set_printoptions, get_printoptions)
 
 from .blz_ext import (
-    barray, _blosc_set_nthreads as blosc_set_nthreads,
-    blosc_version, _blosc_init, _blosc_destroy)
+    barray, blosc_version, blosc_compressor_list,
+     _blosc_set_nthreads as blosc_set_nthreads,
+    _blosc_init, _blosc_destroy,
+     )
 from .btable import btable
 from .vtable import vtable
 from .chunked_eval import eval, defaults

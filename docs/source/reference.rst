@@ -25,7 +25,7 @@ First level variables
 Top level classes
 ===================
 
-.. py:class:: bparams(clevel=5, shuffle=True)
+.. py:class:: bparams(clevel=5, shuffle=True, cname="blosclz")
 
     Class to host parameters for compression and other filters.
 
@@ -34,6 +34,8 @@ Top level classes
         The compression level.
       shuffle : bool
         Whether the shuffle filter is active or not.
+      cname : string ('blosclz', 'lz4', 'lz4hc', 'snappy', 'zlib', others?)
+        Select the compressor to use inside Blosc.
 
     Notes:
       The shuffle filter may be automatically disable in case it is
@@ -300,12 +302,23 @@ Utility functions
 
 .. py:function:: blosc_version()
 
-    Return the version of the Blosc library.
+    Returns the version of the Blosc library.
 
+
+.. py:function:: blosc_compressor_list()
+
+    Returns a list of compressors available in the Blosc build.
+
+    Parameters:
+      None
+
+    Returns:
+      out : list
+        The list of names.
 
 .. py:function:: detect_number_of_cores()
 
-    Return the number of cores on a system.
+    Returns the number of cores on a system.
 
 
 .. py:function:: set_nthreads(nthreads)

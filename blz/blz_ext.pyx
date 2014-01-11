@@ -78,6 +78,7 @@ cdef extern from "blosc.h":
   void blosc_destroy()
   void blosc_get_versions(char *version_str, char *version_date)
   int blosc_set_nthreads(int nthreads)
+  int blosc_set_compressor(const char* compname)
   int blosc_compress(int clevel, int doshuffle, size_t typesize,
                      size_t nbytes, void *src, void *dest,
                      size_t destsize) nogil
@@ -89,6 +90,7 @@ cdef extern from "blosc.h":
   void blosc_cbuffer_metainfo(void *cbuffer, size_t *typesize, int *flags)
   void blosc_cbuffer_versions(void *cbuffer, int *version, int *versionlz)
   void blosc_set_blocksize(size_t blocksize)
+  char* blosc_list_compressors()
 
 
 #----------------------------------------------------------------------------
@@ -102,6 +104,23 @@ import_array()
 #-------------------------------------------------------------
 
 # Some utilities
+def blosc_compressor_list():
+  """
+  blosc_compressor_list()
+
+  Returns a list of compressors available in the Blosc build.
+
+  Parameters
+  ----------
+  None
+
+  Returns
+  -------
+  out : list
+      The list of names.
+  """
+  return blosc_list_compressors().split(',')
+
 def _blosc_set_nthreads(nthreads):
   """
   _blosc_set_nthreads(nthreads)
@@ -117,7 +136,6 @@ def _blosc_set_nthreads(nthreads):
   -------
   out : int
       The previous setting for the number of threads.
-
   """
   return blosc_set_nthreads(nthreads)
 
@@ -316,7 +334,7 @@ cdef class chunk:
     self.cdbytes = cbytes
     self.blocksize = blocksize
 
-  cdef compress_arrdata(self, ndarray array, int itemsize, 
+  cdef compress_arrdata(self, ndarray array, int itemsize,
                         object bparams, object _memory):
     """Compress data in `array` and put it in ``self.data``"""
     cdef size_t nbytes, cbytes, blocksize, footprint
@@ -367,13 +385,17 @@ cdef class chunk:
 
   cdef compress_data(self, char *data, size_t itemsize, size_t nbytes,
                      object bparams):
-    """Compress data with `caparms` and return metadata."""
+    """Compress data with `bparams` and return metadata."""
     cdef size_t nbytes_, cbytes, blocksize
     cdef int clevel, shuffle
     cdef char *dest
 
     clevel = bparams.clevel
     shuffle = bparams.shuffle
+    cname = bparams.cname
+    if blosc_set_compressor(cname) < 0:
+      raise ValueError(
+        "Compressor '%s' is not available in this build" % cname)
     dest = <char *>malloc(nbytes+BLOSC_MAX_OVERHEAD)
     with nogil:
       cbytes = blosc_compress(clevel, shuffle, itemsize, nbytes,
