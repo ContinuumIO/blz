@@ -38,13 +38,14 @@ Requisites
 - NumPy >= 1.7
 - numexpr >= 2.2
 - Cython >= 0.19
+- Blosc >= 1.3.0 (optional, if not present, a minimal Blosc will be used)
 
 Building
 --------
 
 Assuming that you have the requisites and a C compiler installed, do:
 
-$ python setup.py build_ext --inplace
+$ python setup.py build_ext --inplace [--lflags=-lblosc]
 
 Testing
 -------

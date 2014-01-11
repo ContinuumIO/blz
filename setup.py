@@ -119,9 +119,11 @@ open('blz/version.py', 'w').write('__version__ = "%s"\n' % VERSION)
 # Global variables
 CFLAGS = os.environ.get('CFLAGS', '').split()
 LFLAGS = os.environ.get('LFLAGS', '').split()
+inc_dirs = []
 lib_dirs = []
 libs = []
-inc_dirs = ['blosc']
+sources = ["blz/blz_ext.pyx"]
+depends = []
 # Include NumPy header dirs
 from numpy.distutils.misc_util import get_numpy_include_dirs
 inc_dirs.extend(get_numpy_include_dirs())
@@ -143,6 +145,12 @@ if os.name == 'posix':
 
 # Add some macros here for debugging purposes, if needed
 def_macros = []
+
+print "LFLAGS=", LFLAGS
+if "-lblosc" not in LFLAGS:
+    inc_dirs += ['blosc']
+    sources += [ "blosc/blosc.c", "blosc/blosclz.c", "blosc/shuffle.c" ]
+    depends += [ "blosc/blosc.h", "blosc/blosclz.h", "blosc/shuffle.h" ]
 
 
 classifiers = """\
@@ -183,11 +191,8 @@ compressor that is optimized for binary data.
         Extension( "blz.blz_ext",
                    include_dirs=inc_dirs,
                    define_macros=def_macros,
-                   sources = [ "blz/blz_ext.pyx",
-                               "blosc/blosc.c", "blosc/blosclz.c",
-                               "blosc/shuffle.c" ],
-                   depends = [ "blosc/blosc.h", "blosc/blosclz.h",
-                               "blosc/shuffle.h" ],
+                   sources=sources,
+                   depends=depends,
                    library_dirs=lib_dirs,
                    libraries=libs,
                    extra_link_args=LFLAGS,
