@@ -43,9 +43,22 @@ Requisites
 Building
 --------
 
-Assuming that you have the requisites and a C compiler installed, do:
+Assuming that you have the requisites and a C compiler installed, do::
 
-$ python setup.py build_ext --inplace [--lflags=-lblosc]
+    $ python setup.py build_ext --inplace
+
+In case you have Blosc installed as an external library (and disregard
+the included Blosc sources) you can link with it in a couple of ways.
+
+Using an environment variable::
+
+    $ BLOSC_DIR=/usr/local     (or "set BLOSC_DIR=\blosc" on Win)
+    $ export BLOSC_DIR         (not needed on Win)
+    $ python setup.py build_ext --inplace
+
+Using a flag::
+
+    $ python setup.py build_ext --inplace --blosc=/usr/local
 
 Testing
 -------

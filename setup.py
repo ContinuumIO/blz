@@ -119,25 +119,42 @@ open('blz/version.py', 'w').write('__version__ = "%s"\n' % VERSION)
 # Global variables
 CFLAGS = os.environ.get('CFLAGS', '').split()
 LFLAGS = os.environ.get('LFLAGS', '').split()
+# Allow setting the Blosc dir if installed in the system
+BLOSC_DIR = os.environ.get('BLOSC_DIR', '')
+
+# Sources & libraries
 inc_dirs = []
 lib_dirs = []
 libs = []
 sources = ["blz/blz_ext.pyx"]
 depends = []
+
 # Include NumPy header dirs
 from numpy.distutils.misc_util import get_numpy_include_dirs
-inc_dirs.extend(get_numpy_include_dirs())
+inc_dirs += get_numpy_include_dirs()
 optional_libs = []
 
-# Handle --lflags=[FLAGS] --cflags=[FLAGS]
+# Handle --blosc=[PATH] --lflags=[FLAGS] --cflags=[FLAGS]
 args = sys.argv[:]
 for arg in args:
+    if arg.find('--blosc=') == 0:
+        BLOSC_DIR = os.path.expanduser(arg.split('=')[1])
+        sys.argv.remove(arg)
     if arg.find('--lflags=') == 0:
         LFLAGS = arg.split('=')[1].split()
         sys.argv.remove(arg)
-    elif arg.find('--cflags=') == 0:
+    if arg.find('--cflags=') == 0:
         CFLAGS = arg.split('=')[1].split()
         sys.argv.remove(arg)
+
+if not BLOSC_DIR:
+    inc_dirs += [ "blosc" ]
+    sources += [ "blosc/blosc.c", "blosc/blosclz.c", "blosc/shuffle.c" ]
+    depends += [ "blosc/blosc.h" ]
+else:
+    inc_dirs += [os.path.join(BLOSC_DIR, "include")]
+    lib_dirs += [os.path.join(BLOSC_DIR, "lib")]
+    libs += [ "blosc" ]
 
 # Add -msse2 flag for optimizing shuffle in include Blosc
 if os.name == 'posix':
@@ -145,12 +162,6 @@ if os.name == 'posix':
 
 # Add some macros here for debugging purposes, if needed
 def_macros = []
-
-print "LFLAGS=", LFLAGS
-if "-lblosc" not in LFLAGS:
-    inc_dirs += ['blosc']
-    sources += [ "blosc/blosc.c", "blosc/blosclz.c", "blosc/shuffle.c" ]
-    depends += [ "blosc/blosc.h", "blosc/blosclz.h", "blosc/shuffle.h" ]
 
 
 classifiers = """\
