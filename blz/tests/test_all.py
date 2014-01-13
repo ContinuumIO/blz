@@ -22,7 +22,9 @@ from blz.tests import common
 min_numpy_version = "1.7"
 
 def suite():
-    return unittest.TestLoader().discover('.', pattern = "test_*.py")
+    this_dir = os.path.dirname(__file__)
+    return unittest.TestLoader().discover(
+        start_dir=this_dir, pattern = "test_*.py")
 
 
 def print_versions():
