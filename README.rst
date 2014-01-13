@@ -68,7 +68,7 @@ running:
 
 $ PYTHONPATH=.   (or "set PYTHONPATH=." on Windows)
 $ export PYTHONPATH    (not needed on Windows)
-$ python blz/tests/test_all.py
+$ python -c"import blz; blz.test()"  # add `heavy=True` if desired
 
 Installing
 ----------
