@@ -11,7 +11,7 @@ import sys
 import struct
 
 import numpy as np
-from numpy.testing import assert_array_equal, assert_array_almost_equal
+from numpy.testing import assert_array_equal, assert_allclose
 import blz
 from blz.tests.common import MayBeDiskTest
 import unittest

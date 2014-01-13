@@ -1,4 +1,12 @@
 # -*- coding: utf-8 -*-
+########################################################################
+#
+#       License: BSD
+#       Created: Aug 17, 2012
+#       Author:  Francesc Alted - francesc@continuum.io
+#
+########################################################################
+
 
 from __future__ import absolute_import
 
@@ -6,7 +14,7 @@ import unittest
 import sys
 
 import numpy as np
-from numpy.testing import assert_array_equal, assert_array_almost_equal
+from numpy.testing import assert_array_equal, assert_allclose
 import blz
 from blz.tests import common
 

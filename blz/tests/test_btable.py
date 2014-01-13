@@ -12,7 +12,7 @@ import sys
 
 import numpy as np
 from numpy.testing import (
-    assert_equal, assert_array_equal, assert_array_almost_equal)
+    assert_equal, assert_array_equal, assert_allclose)
 import unittest
 from unittest import TestCase
 

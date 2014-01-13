@@ -9,7 +9,7 @@ import unittest
 from unittest import TestCase, skipUnless
 
 import numpy as np
-from numpy.testing import assert_array_equal, assert_array_almost_equal
+from numpy.testing import assert_array_equal, assert_allclose
 
 import blz
 from blz.blz_ext import chunk
@@ -1529,7 +1529,7 @@ class evalTest(MayBeDiskTest):
         nr = np.sin(a) + 2 * np.log(b) - 3
         #print "blz.eval ->", cr
         #print "numpy   ->", nr
-        assert_array_equal(cr[:], nr, "eval does not work correctly")
+        assert_allclose(cr[:], nr, err_msg="eval does not work correctly")
 
     def test12(self):
         """Testing eval() with `out_flavor` == 'numpy'"""
@@ -1540,7 +1540,7 @@ class evalTest(MayBeDiskTest):
         #print "blz.eval ->", cr, type(cr)
         #print "numpy   ->", nr
         self.assert_(type(cr) == np.ndarray)
-        assert_array_equal(cr, nr, "eval does not work correctly")
+        assert_allclose(cr, nr, err_msg="eval does not work correctly")
 
 class evalSmall(evalTest, TestCase):
     N = 10
