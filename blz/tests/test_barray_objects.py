@@ -15,8 +15,8 @@ Notes on object handling:
 from unittest import TestCase, skipIf
 
 import numpy as np
-from blaze import blz
-from .common import MayBeDiskTest
+import blz
+from blz.tests.common import MayBeDiskTest
 
 class ObjectBarrayTest(MayBeDiskTest, TestCase):
     def test_barray_1d_source(self):
