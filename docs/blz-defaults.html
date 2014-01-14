@@ -1,0 +1,145 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Defaults for BLZ operation &mdash; BLZ 0.6.dev documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.6.dev',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="BLZ 0.6.dev documentation" href="index.html" />
+    <link rel="next" title="Persistent format for BLZ" href="persistent-format.html" />
+    <link rel="prev" title="Optimization tips" href="opt-tips.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="persistent-format.html" title="Persistent format for BLZ"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="opt-tips.html" title="Optimization tips"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">BLZ 0.6.dev documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="defaults-for-blz-operation">
+<span id="blz-defaults"></span><h1>Defaults for BLZ operation<a class="headerlink" href="#defaults-for-blz-operation" title="Permalink to this headline">¶</a></h1>
+<p>You can tailor the behaviour of BLZ by changing the values of
+certain some special top level variables whose defaults are listed
+here.  You can change these values in two ways:</p>
+<ul class="simple">
+<li>In your program: the changes will be temporary.</li>
+<li>In the <tt class="docutils literal"><span class="pre">defaults.py</span></tt> module of the BLZ package: the changes
+will be persistent.</li>
+</ul>
+<div class="section" id="list-of-default-values">
+<h2>List of default values<a class="headerlink" href="#list-of-default-values" title="Permalink to this headline">¶</a></h2>
+<dl class="attribute">
+<dt id="eval_out_flavor">
+<tt class="descname">eval_out_flavor</tt><a class="headerlink" href="#eval_out_flavor" title="Permalink to this definition">¶</a></dt>
+<dd><p>The flavor for the output object in <a class="reference internal" href="reference.html#eval" title="eval"><tt class="xref py py-func docutils literal"><span class="pre">eval()</span></tt></a>.  It can be
+&#8216;blz&#8217; or &#8216;numpy&#8217;.  Default is &#8216;blz&#8217;.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="eval_vm">
+<tt class="descname">eval_vm</tt><a class="headerlink" href="#eval_vm" title="Permalink to this definition">¶</a></dt>
+<dd><p>The flavor for the output object in <a class="reference internal" href="reference.html#eval" title="eval"><tt class="xref py py-func docutils literal"><span class="pre">eval()</span></tt></a>.  It can be
+&#8216;blz&#8217; or &#8216;numpy&#8217;.  Default is &#8216;numexpr&#8217;, if installed.  If not,
+then the default is &#8216;python&#8217;.</p>
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Defaults for BLZ operation</a><ul>
+<li><a class="reference internal" href="#list-of-default-values">List of default values</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="opt-tips.html"
+                        title="previous chapter">Optimization tips</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="persistent-format.html"
+                        title="next chapter">Persistent format for BLZ</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/blz-defaults.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="persistent-format.html" title="Persistent format for BLZ"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="opt-tips.html" title="Optimization tips"
+             >previous</a> |</li>
+        <li><a href="index.html">BLZ 0.6.dev documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2012-2014, Continuum Analytics.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,1341 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Library Reference &mdash; BLZ 0.6.dev documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.6.dev',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="BLZ 0.6.dev documentation" href="index.html" />
+    <link rel="next" title="Optimization tips" href="opt-tips.html" />
+    <link rel="prev" title="Tutorials" href="tutorial.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="opt-tips.html" title="Optimization tips"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="tutorial.html" title="Tutorials"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">BLZ 0.6.dev documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="library-reference">
+<h1>Library Reference<a class="headerlink" href="#library-reference" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="first-level-variables">
+<h2>First level variables<a class="headerlink" href="#first-level-variables" title="Permalink to this headline">¶</a></h2>
+<dl class="attribute">
+<dt id="__version__">
+<tt class="descname">__version__</tt><a class="headerlink" href="#__version__" title="Permalink to this definition">¶</a></dt>
+<dd><p>The version of the BLZ package.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="min_numexpr_version">
+<tt class="descname">min_numexpr_version</tt><a class="headerlink" href="#min_numexpr_version" title="Permalink to this definition">¶</a></dt>
+<dd><p>The minimum version of numexpr needed (numexpr is optional).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ncores">
+<tt class="descname">ncores</tt><a class="headerlink" href="#ncores" title="Permalink to this definition">¶</a></dt>
+<dd><p>The number of cores detected.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="numexpr_here">
+<tt class="descname">numexpr_here</tt><a class="headerlink" href="#numexpr_here" title="Permalink to this definition">¶</a></dt>
+<dd><p>Whether minimum version of numexpr has been detected.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="top-level-classes">
+<h2>Top level classes<a class="headerlink" href="#top-level-classes" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="bparams">
+<em class="property">class </em><tt class="descname">bparams</tt><big>(</big><em>clevel=5</em>, <em>shuffle=True</em>, <em>cname=&quot;blosclz&quot;</em><big>)</big><a class="headerlink" href="#bparams" title="Permalink to this definition">¶</a></dt>
+<dd><p>Class to host parameters for compression and other filters.</p>
+<dl class="docutils">
+<dt>Parameters:</dt>
+<dd><dl class="first last docutils">
+<dt>clevel <span class="classifier-delimiter">:</span> <span class="classifier">int (0 &lt;= clevel &lt; 10)</span></dt>
+<dd>The compression level.</dd>
+<dt>shuffle <span class="classifier-delimiter">:</span> <span class="classifier">bool</span></dt>
+<dd>Whether the shuffle filter is active or not.</dd>
+<dt>cname <span class="classifier-delimiter">:</span> <span class="classifier">string (&#8216;blosclz&#8217;, &#8216;lz4&#8217;, &#8216;lz4hc&#8217;, &#8216;snappy&#8217;, &#8216;zlib&#8217;, others?)</span></dt>
+<dd>Select the compressor to use inside Blosc.</dd>
+</dl>
+</dd>
+<dt>Notes:</dt>
+<dd>The shuffle filter may be automatically disable in case it is
+non-sense to use it (e.g. itemsize == 1).</dd>
+</dl>
+</dd></dl>
+
+<p>Also, see the <a class="reference internal" href="#barray" title="barray"><tt class="xref py py-class docutils literal"><span class="pre">barray</span></tt></a> and <a class="reference internal" href="#btable" title="btable"><tt class="xref py py-class docutils literal"><span class="pre">btable</span></tt></a> classes below.</p>
+</div>
+<div class="section" id="top-level-functions">
+<span id="top-level-constructors"></span><h2>Top level functions<a class="headerlink" href="#top-level-functions" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="array2string">
+<tt class="descname">array2string</tt><big>(</big><em>a</em>, <em>max_line_width=None</em>, <em>precision=None</em>, <em>suppress_small=None</em>, <em>separator=' '</em>, <em>prefix=&quot;&quot;</em>, <em>style=repr</em>, <em>formatter=None</em><big>)</big><a class="headerlink" href="#array2string" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a string representation of a barray/btable object.</p>
+<p>This is the same function than in NumPy.  Please refer to NumPy
+documentation for more info.</p>
+<dl class="docutils">
+<dt>See Also:</dt>
+<dd><a class="reference internal" href="#set_printoptions" title="set_printoptions"><tt class="xref py py-func docutils literal"><span class="pre">set_printoptions()</span></tt></a>, <a class="reference internal" href="#get_printoptions" title="get_printoptions"><tt class="xref py py-func docutils literal"><span class="pre">get_printoptions()</span></tt></a></dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="arange">
+<tt class="descname">arange</tt><big>(</big><span class="optional">[</span><em>start</em><span class="optional">]</span>, <em>stop</em><span class="optional">[</span>, <em>step</em><span class="optional">]</span>, <em>dtype=None</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#arange" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return evenly spaced values within a given interval.</p>
+<p>Values are generated within the half-open interval <tt class="docutils literal"><span class="pre">[start,</span>
+<span class="pre">stop)</span></tt> (in other words, the interval including <cite>start</cite> but
+excluding <cite>stop</cite>).  For integer arguments the function is
+equivalent to the Python built-in <a class="reference external" href="http://docs.python.org/lib/built-in-funcs.html">range</a> function, but
+returns a barray rather than a list.</p>
+<dl class="docutils">
+<dt>Parameters:</dt>
+<dd><dl class="first last docutils">
+<dt>start <span class="classifier-delimiter">:</span> <span class="classifier">number, optional</span></dt>
+<dd>Start of interval.  The interval includes this value.  The
+default start value is 0.</dd>
+<dt>stop <span class="classifier-delimiter">:</span> <span class="classifier">number</span></dt>
+<dd>End of interval.  The interval does not include this value.</dd>
+<dt>step <span class="classifier-delimiter">:</span> <span class="classifier">number, optional</span></dt>
+<dd>Spacing between values.  For any output <cite>out</cite>, this is the
+distance between two adjacent values, <tt class="docutils literal"><span class="pre">out[i+1]</span> <span class="pre">-</span> <span class="pre">out[i]</span></tt>.
+The default step size is 1.  If <cite>step</cite> is specified, <cite>start</cite>
+must also be given.</dd>
+<dt>dtype <span class="classifier-delimiter">:</span> <span class="classifier">dtype</span></dt>
+<dd>The type of the output array.  If <cite>dtype</cite> is not given, infer
+the data type from the other input arguments.</dd>
+<dt>kwargs <span class="classifier-delimiter">:</span> <span class="classifier">list of parameters or dictionary</span></dt>
+<dd>Any parameter supported by the barray constructor.</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd><dl class="first last docutils">
+<dt>out <span class="classifier-delimiter">:</span> <span class="classifier">barray</span></dt>
+<dd><p class="first">Array of evenly spaced values.</p>
+<p class="last">For floating point arguments, the length of the result is
+<tt class="docutils literal"><span class="pre">ceil((stop</span> <span class="pre">-</span> <span class="pre">start)/step)</span></tt>.  Because of floating point
+overflow, this rule may result in the last element of <cite>out</cite>
+being greater than <cite>stop</cite>.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="eval">
+<tt class="descname">eval</tt><big>(</big><em>expression</em>, <em>vm=None</em>, <em>out_flavor=None</em>, <em>user_dict=None</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#eval" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluate an <cite>expression</cite> and return the result.</p>
+<dl class="docutils">
+<dt>Parameters:</dt>
+<dd><dl class="first last docutils">
+<dt>expression <span class="classifier-delimiter">:</span> <span class="classifier">string</span></dt>
+<dd>A string forming an expression, like &#8216;2*a+3*b&#8217;. The values for
+&#8216;a&#8217; and &#8216;b&#8217; are variable names to be taken from the calling
+function&#8217;s frame.  These variables may be scalars, barrays or
+NumPy arrays.</dd>
+<dt>vm <span class="classifier-delimiter">:</span> <span class="classifier">string</span></dt>
+<dd>The virtual machine to be used in computations.  It can be
+&#8216;numexpr&#8217; or &#8216;python&#8217;.  The default is to use &#8216;numexpr&#8217; if it
+is installed.</dd>
+<dt>out_flavor <span class="classifier-delimiter">:</span> <span class="classifier">string</span></dt>
+<dd>The flavor for the <cite>out</cite> object.  It can be &#8216;barray&#8217; or
+&#8216;numpy&#8217;.</dd>
+<dt>user_dict <span class="classifier-delimiter">:</span> <span class="classifier">dict</span></dt>
+<dd>An user-provided dictionary where the variables in expression
+can be found by name.</dd>
+<dt>kwargs <span class="classifier-delimiter">:</span> <span class="classifier">list of parameters or dictionary</span></dt>
+<dd>Any parameter supported by the barray constructor.</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd><dl class="first last docutils">
+<dt>out <span class="classifier-delimiter">:</span> <span class="classifier">barray object</span></dt>
+<dd>The outcome of the expression.  You can tailor the
+properties of this barray by passing additional arguments
+supported by barray constructor in <cite>kwargs</cite>.</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="fill">
+<tt class="descname">fill</tt><big>(</big><em>shape</em>, <em>dflt=None</em>, <em>dtype=float</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#fill" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a new barray object of given shape and type, filled with
+<cite>dflt</cite>.</p>
+<dl class="docutils">
+<dt>Parameters:</dt>
+<dd><dl class="first last docutils">
+<dt>shape <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>Shape of the new array, e.g., <tt class="docutils literal"><span class="pre">(2,3)</span></tt>.</dd>
+<dt>dflt <span class="classifier-delimiter">:</span> <span class="classifier">Python or NumPy scalar</span></dt>
+<dd>The value to be used during the filling process.  If None,
+values are filled with zeros.  Also, the resulting barray will
+have this value as its <cite>dflt</cite> value.</dd>
+<dt>dtype <span class="classifier-delimiter">:</span> <span class="classifier">data-type, optional</span></dt>
+<dd>The desired data-type for the array, e.g., <cite>numpy.int8</cite>.
+Default is <cite>numpy.float64</cite>.</dd>
+<dt>kwargs <span class="classifier-delimiter">:</span> <span class="classifier">list of parameters or dictionary</span></dt>
+<dd>Any parameter supported by the barray constructor.</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd><dl class="first last docutils">
+<dt>out <span class="classifier-delimiter">:</span> <span class="classifier">barray</span></dt>
+<dd>Array filled with <cite>dflt</cite> values with the given shape and dtype.</dd>
+</dl>
+</dd>
+<dt>See Also:</dt>
+<dd><a class="reference internal" href="#zeros" title="zeros"><tt class="xref py py-func docutils literal"><span class="pre">zeros()</span></tt></a>, <a class="reference internal" href="#ones" title="ones"><tt class="xref py py-func docutils literal"><span class="pre">ones()</span></tt></a></dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="fromiter">
+<tt class="descname">fromiter</tt><big>(</big><em>iterable</em>, <em>dtype</em>, <em>count</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#fromiter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a barray/btable from an <cite>iterable</cite> object.</p>
+<dl class="docutils">
+<dt>Parameters:</dt>
+<dd><dl class="first last docutils">
+<dt>iterable <span class="classifier-delimiter">:</span> <span class="classifier">iterable object</span></dt>
+<dd>An iterable object providing data for the barray.</dd>
+<dt>dtype <span class="classifier-delimiter">:</span> <span class="classifier">numpy.dtype instance</span></dt>
+<dd>Specifies the type of the outcome object.</dd>
+<dt>count <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>The number of items to read from iterable. If set to -1, means
+that the iterable will be used until exhaustion (not
+recommended, see note below).</dd>
+<dt>kwargs <span class="classifier-delimiter">:</span> <span class="classifier">list of parameters or dictionary</span></dt>
+<dd>Any parameter supported by the barray/btable constructors.</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd>out : a barray/btable object</dd>
+<dt>Notes:</dt>
+<dd>Please specify <cite>count</cite> to both improve performance and to save
+memory.  It allows <cite>fromiter</cite> to avoid looping the iterable
+twice (which is slooow).  It avoids memory leaks to happen too
+(which can be important for large iterables).</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="ones">
+<tt class="descname">ones</tt><big>(</big><em>shape</em>, <em>dtype=float</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#ones" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a new barray object of given shape and type, filled with
+ones.</p>
+<dl class="docutils">
+<dt>Parameters:</dt>
+<dd><dl class="first last docutils">
+<dt>shape <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>Shape of the new array, e.g., <tt class="docutils literal"><span class="pre">(2,3)</span></tt>.</dd>
+<dt>dtype <span class="classifier-delimiter">:</span> <span class="classifier">data-type, optional</span></dt>
+<dd>The desired data-type for the array, e.g., <cite>numpy.int8</cite>.
+Default is <cite>numpy.float64</cite>.</dd>
+<dt>kwargs <span class="classifier-delimiter">:</span> <span class="classifier">list of parameters or dictionary</span></dt>
+<dd>Any parameter supported by the barray constructor.</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd><dl class="first last docutils">
+<dt>out <span class="classifier-delimiter">:</span> <span class="classifier">barray</span></dt>
+<dd>Array of ones with the given shape and dtype.</dd>
+</dl>
+</dd>
+<dt>See Also:</dt>
+<dd><a class="reference internal" href="#fill" title="fill"><tt class="xref py py-func docutils literal"><span class="pre">fill()</span></tt></a>, <a class="reference internal" href="#ones" title="ones"><tt class="xref py py-func docutils literal"><span class="pre">ones()</span></tt></a></dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="get_printoptions">
+<tt class="descname">get_printoptions</tt><big>(</big><big>)</big><a class="headerlink" href="#get_printoptions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the current print options.</p>
+<p>This is the same function than in NumPy.  For more info, please
+refer to the NumPy documentation.</p>
+<dl class="docutils">
+<dt>See Also:</dt>
+<dd><a class="reference internal" href="#array2string" title="array2string"><tt class="xref py py-func docutils literal"><span class="pre">array2string()</span></tt></a>, <a class="reference internal" href="#set_printoptions" title="set_printoptions"><tt class="xref py py-func docutils literal"><span class="pre">set_printoptions()</span></tt></a></dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="open">
+<tt class="descname">open</tt><big>(</big><em>rootdir</em>, <em>mode='a'</em><big>)</big><a class="headerlink" href="#open" title="Permalink to this definition">¶</a></dt>
+<dd><p>Open a disk-based barray/btable.</p>
+<dl class="docutils">
+<dt>Parameters:</dt>
+<dd><dl class="first last docutils">
+<dt>rootdir <span class="classifier-delimiter">:</span> <span class="classifier">pathname (string)</span></dt>
+<dd>The directory hosting the barray/btable object.</dd>
+<dt>mode <span class="classifier-delimiter">:</span> <span class="classifier">the open mode (string)</span></dt>
+<dd><p class="first">Specifies the mode in which the object is opened.  The
+supported values are:</p>
+<blockquote class="last">
+<div><ul class="simple">
+<li>&#8216;r&#8217; for read-only</li>
+<li>&#8216;w&#8217; for emptying the previous underlying data</li>
+<li>&#8216;a&#8217; for allowing read/write on top of existing data</li>
+</ul>
+</div></blockquote>
+</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd>out : a barray/btable object or None (if not objects are found)</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="set_printoptions">
+<tt class="descname">set_printoptions</tt><big>(</big><em>precision=None</em>, <em>threshold=None</em>, <em>edgeitems=None</em>, <em>linewidth=None</em>, <em>suppress=None</em>, <em>nanstr=None</em>, <em>infstr=None</em>, <em>formatter=None</em><big>)</big><a class="headerlink" href="#set_printoptions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set printing options.</p>
+<p>These options determine the way floating point numbers in barray
+objects are displayed.  This is the same function than in NumPy.
+For more info, please refer to the NumPy documentation.</p>
+<dl class="docutils">
+<dt>See Also:</dt>
+<dd><a class="reference internal" href="#array2string" title="array2string"><tt class="xref py py-func docutils literal"><span class="pre">array2string()</span></tt></a>, <a class="reference internal" href="#get_printoptions" title="get_printoptions"><tt class="xref py py-func docutils literal"><span class="pre">get_printoptions()</span></tt></a></dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="zeros">
+<tt class="descname">zeros</tt><big>(</big><em>shape</em>, <em>dtype=float</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#zeros" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a new barray object of given shape and type, filled with
+zeros.</p>
+<dl class="docutils">
+<dt>Parameters:</dt>
+<dd><dl class="first last docutils">
+<dt>shape <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>Shape of the new array, e.g., <tt class="docutils literal"><span class="pre">(2,3)</span></tt>.</dd>
+<dt>dtype <span class="classifier-delimiter">:</span> <span class="classifier">data-type, optional</span></dt>
+<dd>The desired data-type for the array, e.g., <cite>numpy.int8</cite>.
+Default is <cite>numpy.float64</cite>.</dd>
+<dt>kwargs <span class="classifier-delimiter">:</span> <span class="classifier">list of parameters or dictionary</span></dt>
+<dd>Any parameter supported by the barray constructor.</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd><dl class="first last docutils">
+<dt>out <span class="classifier-delimiter">:</span> <span class="classifier">barray</span></dt>
+<dd>Array of zeros with the given shape and dtype.</dd>
+</dl>
+</dd>
+<dt>See Also:</dt>
+<dd><a class="reference internal" href="#fill" title="fill"><tt class="xref py py-func docutils literal"><span class="pre">fill()</span></tt></a>, <a class="reference internal" href="#zeros" title="zeros"><tt class="xref py py-func docutils literal"><span class="pre">zeros()</span></tt></a></dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="walk">
+<tt class="descname">walk</tt><big>(</big><em>dir</em>, <em>classname=None</em>, <em>mode='a'</em><big>)</big><a class="headerlink" href="#walk" title="Permalink to this definition">¶</a></dt>
+<dd><p>Recursively iterate over barray/btable objects hanging from <cite>dir</cite>.</p>
+<dl class="docutils">
+<dt>Parameters:</dt>
+<dd><dl class="first last docutils">
+<dt>dir <span class="classifier-delimiter">:</span> <span class="classifier">string</span></dt>
+<dd>The directory from which the listing starts.</dd>
+<dt>classname <span class="classifier-delimiter">:</span> <span class="classifier">string</span></dt>
+<dd>If specified, only object of this class are returned.  The
+values supported are &#8216;barray&#8217; and &#8216;btable&#8217;.</dd>
+<dt>mode <span class="classifier-delimiter">:</span> <span class="classifier">string</span></dt>
+<dd>The mode in which the object should be opened.</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd><dl class="first last docutils">
+<dt>out <span class="classifier-delimiter">:</span> <span class="classifier">iterator</span></dt>
+<dd>Iterator over the objects found.</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="utility-functions">
+<h2>Utility functions<a class="headerlink" href="#utility-functions" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="blosc_set_nthreads">
+<tt class="descname">blosc_set_nthreads</tt><big>(</big><em>nthreads</em><big>)</big><a class="headerlink" href="#blosc_set_nthreads" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets the number of threads that Blosc can use.</p>
+<dl class="docutils">
+<dt>Parameters:</dt>
+<dd><dl class="first last docutils">
+<dt>nthreads <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>The desired number of threads to use.</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd><dl class="first last docutils">
+<dt>out <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>The previous setting for the number of threads.</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="blosc_version">
+<tt class="descname">blosc_version</tt><big>(</big><big>)</big><a class="headerlink" href="#blosc_version" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the version of the Blosc library.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="blosc_compressor_list">
+<tt class="descname">blosc_compressor_list</tt><big>(</big><big>)</big><a class="headerlink" href="#blosc_compressor_list" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a list of compressors available in the Blosc build.</p>
+<dl class="docutils">
+<dt>Parameters:</dt>
+<dd>None</dd>
+<dt>Returns:</dt>
+<dd><dl class="first last docutils">
+<dt>out <span class="classifier-delimiter">:</span> <span class="classifier">list</span></dt>
+<dd>The list of names.</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="detect_number_of_cores">
+<tt class="descname">detect_number_of_cores</tt><big>(</big><big>)</big><a class="headerlink" href="#detect_number_of_cores" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the number of cores on a system.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="set_nthreads">
+<tt class="descname">set_nthreads</tt><big>(</big><em>nthreads</em><big>)</big><a class="headerlink" href="#set_nthreads" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets the number of threads to be used during BLZ operation.</p>
+<p>This affects to both Blosc and Numexpr (if available).</p>
+<dl class="docutils">
+<dt>Parameters:</dt>
+<dd><dl class="first last docutils">
+<dt>nthreads <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>The number of threads to be used during BLZ operation.</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd><dl class="first last docutils">
+<dt>out <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>The previous setting for the number of threads.</dd>
+</dl>
+</dd>
+<dt>See Also:</dt>
+<dd><a class="reference internal" href="#blosc_set_nthreads" title="blosc_set_nthreads"><tt class="xref py py-func docutils literal"><span class="pre">blosc_set_nthreads()</span></tt></a></dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="test">
+<tt class="descname">test</tt><big>(</big><em>verbose=False</em>, <em>heavy=False</em><big>)</big><a class="headerlink" href="#test" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run all the tests in the test suite.</p>
+<p>If <cite>verbose</cite> is set, the test suite will emit messages with full
+verbosity (not recommended unless you are looking into a certain
+problem).</p>
+<p>If <cite>heavy</cite> is set, the test suite will be run in <em>heavy</em> mode (you
+should be careful with this because it can take a lot of time and
+resources from your computer).</p>
+</dd></dl>
+
+</div>
+<div class="section" id="the-barray-class">
+<h2>The barray class<a class="headerlink" href="#the-barray-class" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="barray">
+<em class="property">class </em><tt class="descname">barray</tt><big>(</big><em>array</em>, <em>bparams=None</em>, <em>dtype=None</em>, <em>dflt=None</em>, <em>expectedlen=None</em>, <em>chunklen=None</em>, <em>rootdir=None</em>, <em>mode='a'</em><big>)</big><a class="headerlink" href="#barray" title="Permalink to this definition">¶</a></dt>
+<dd><p>A compressed and enlargeable in-memory data container.</p>
+<p><cite>barray</cite> exposes a series of methods for dealing with the compressed
+container in a NumPy-like way.</p>
+<dl class="docutils">
+<dt>Parameters:</dt>
+<dd><dl class="first last docutils">
+<dt>array <span class="classifier-delimiter">:</span> <span class="classifier">a NumPy-like object</span></dt>
+<dd>This is taken as the input to create the barray.  It can be any
+Python object that can be converted into a NumPy object.  The
+data type of the resulting barray will be the same as this NumPy
+object.</dd>
+<dt>bparams <span class="classifier-delimiter">:</span> <span class="classifier">instance of the <cite>bparams</cite> class, optional</span></dt>
+<dd>Parameters to the internal Blosc compressor.</dd>
+<dt>dtype <span class="classifier-delimiter">:</span> <span class="classifier">NumPy dtype</span></dt>
+<dd>Force this <cite>dtype</cite> for the barray (rather than the <cite>array</cite> one).</dd>
+<dt>dflt <span class="classifier-delimiter">:</span> <span class="classifier">Python or NumPy scalar</span></dt>
+<dd>The value to be used when enlarging the barray.  If None, the
+default is filling with zeros.</dd>
+<dt>expectedlen <span class="classifier-delimiter">:</span> <span class="classifier">int, optional</span></dt>
+<dd>A guess on the expected length of this barray.  This will serve
+to decide the best <cite>chunklen</cite> used for compression and memory
+I/O purposes.</dd>
+<dt>chunklen <span class="classifier-delimiter">:</span> <span class="classifier">int, optional</span></dt>
+<dd>The number of items that fits on a chunk.  By specifying it you
+can explicitly set the chunk size used for compression and
+memory I/O.  Only use it if you know what are you doing.</dd>
+</dl>
+</dd>
+<dt>rootdir <span class="classifier-delimiter">:</span> <span class="classifier">str, optional</span></dt>
+<dd>The directory where all the data and metadata will be stored.
+If specified, then the barray object will be disk-based
+(i.e. all chunks will live on-disk, not in memory) and
+persistent (i.e. it can be restored in other session, e.g. via
+the <cite>open()</cite> top level function).</dd>
+<dt>mode <span class="classifier-delimiter">:</span> <span class="classifier">str, optional</span></dt>
+<dd><p class="first">The mode that a <em>persistent</em> barray should be created/opened.
+The values can be:</p>
+<blockquote class="last">
+<div><ul class="simple">
+<li>&#8216;r&#8217; for read-only</li>
+<li>&#8216;w&#8217; for read/write.  During barray creation, the <cite>rootdir</cite>
+will be removed if it exists.  During barray opening, the
+barray will be resized to 0.</li>
+<li>&#8216;a&#8217; for append (possible data inside <cite>rootdir</cite> will not be removed).</li>
+</ul>
+</div></blockquote>
+</dd>
+</dl>
+</dd></dl>
+
+<div class="section" id="barray-attributes">
+<span id="id1"></span><h3>barray attributes<a class="headerlink" href="#barray-attributes" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><dl class="attribute">
+<dt id="attrs">
+<tt class="descname">attrs</tt><a class="headerlink" href="#attrs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Accessor for attributes in barray objects.</p>
+<p>This class behaves very similarly to a dictionary, and attributes
+can be appended in the typical way:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">attrs</span><span class="p">[</span><span class="s">&#39;myattr&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+</pre></div>
+</div>
+<p>And can be retrieved similarly:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">value</span> <span class="o">=</span> <span class="n">attrs</span><span class="p">[</span><span class="s">&#39;myattr&#39;</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>Attributes can be removed with:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">del</span> <span class="n">attrs</span><span class="p">[</span><span class="s">&#39;myattr&#39;</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>This class also honors the <cite>__iter__</cite> and <cite>__len__</cite> special
+functions.  Moreover, a <cite>getall()</cite> method returns all the
+attributes as a dictionary.</p>
+<p>CAVEAT: The values should be able to be serialized with JSON for
+persistence.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="cbytes">
+<tt class="descname">cbytes</tt><a class="headerlink" href="#cbytes" title="Permalink to this definition">¶</a></dt>
+<dd><p>The compressed size of this object (in bytes).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="chunklen">
+<tt class="descname">chunklen</tt><a class="headerlink" href="#chunklen" title="Permalink to this definition">¶</a></dt>
+<dd><p>The number of items that fits into a chunk.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<tt class="descname">bparams</tt></dt>
+<dd><p>The compression parameters for this object.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dflt">
+<tt class="descname">dflt</tt><a class="headerlink" href="#dflt" title="Permalink to this definition">¶</a></dt>
+<dd><p>The value to be used when enlarging the barray.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dtype">
+<tt class="descname">dtype</tt><a class="headerlink" href="#dtype" title="Permalink to this definition">¶</a></dt>
+<dd><p>The NumPy dtype for this object.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="len">
+<tt class="descname">len</tt><a class="headerlink" href="#len" title="Permalink to this definition">¶</a></dt>
+<dd><p>The length of this object.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="nbytes">
+<tt class="descname">nbytes</tt><a class="headerlink" href="#nbytes" title="Permalink to this definition">¶</a></dt>
+<dd><p>The original (uncompressed) size of this object (in bytes).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ndim">
+<tt class="descname">ndim</tt><a class="headerlink" href="#ndim" title="Permalink to this definition">¶</a></dt>
+<dd><p>The number of dimensions of this object (in bytes).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="shape">
+<tt class="descname">shape</tt><a class="headerlink" href="#shape" title="Permalink to this definition">¶</a></dt>
+<dd><p>The shape of this object.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="size">
+<tt class="descname">size</tt><a class="headerlink" href="#size" title="Permalink to this definition">¶</a></dt>
+<dd><p>The size of this object.</p>
+</dd></dl>
+
+</div></blockquote>
+</div>
+<div class="section" id="barray-methods">
+<h3>barray methods<a class="headerlink" href="#barray-methods" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><dl class="method">
+<dt id="append">
+<tt class="descname">append</tt><big>(</big><em>array</em><big>)</big><a class="headerlink" href="#append" title="Permalink to this definition">¶</a></dt>
+<dd><p>Append a numpy <cite>array</cite> to this instance.</p>
+<dl class="docutils">
+<dt>Parameters:</dt>
+<dd><dl class="first last docutils">
+<dt>array <span class="classifier-delimiter">:</span> <span class="classifier">NumPy-like object</span></dt>
+<dd>The array to be appended.  Must be compatible with shape and
+type of the barray.</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="copy">
+<tt class="descname">copy</tt><big>(</big><em>**kwargs</em><big>)</big><a class="headerlink" href="#copy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a copy of this object.</p>
+<dl class="docutils">
+<dt>Parameters:</dt>
+<dd><dl class="first last docutils">
+<dt>kwargs <span class="classifier-delimiter">:</span> <span class="classifier">list of parameters or dictionary</span></dt>
+<dd>Any parameter supported by the barray constructor.</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd><dl class="first last docutils">
+<dt>out <span class="classifier-delimiter">:</span> <span class="classifier">barray object</span></dt>
+<dd>The copy of this object.</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="flush">
+<tt class="descname">flush</tt><big>(</big><big>)</big><a class="headerlink" href="#flush" title="Permalink to this definition">¶</a></dt>
+<dd><p>Flush data in internal buffers to disk.</p>
+<p>This call should typically be done after performing modifications
+(__settitem__(), append()) in persistence mode.  If you don&#8217;t do
+this, you risk loosing part of your modifications.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="iter">
+<tt class="descname">iter</tt><big>(</big><em>start=0</em>, <em>stop=None</em>, <em>step=1</em>, <em>limit=None</em>, <em>skip=0</em><big>)</big><a class="headerlink" href="#iter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Iterator with <cite>start</cite>, <cite>stop</cite> and <cite>step</cite> bounds.</p>
+<dl class="docutils">
+<dt>Parameters:</dt>
+<dd><dl class="first last docutils">
+<dt>start <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>The starting item.</dd>
+<dt>stop <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>The item after which the iterator stops.</dd>
+<dt>step <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>The number of items incremented during each iteration.  Cannot be
+negative.</dd>
+<dt>limit <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>A maximum number of elements to return.  The default is return
+everything.</dd>
+<dt>skip <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>An initial number of elements to skip.  The default is 0.</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd>out : iterator</dd>
+<dt>See Also:</dt>
+<dd><a class="reference internal" href="#where" title="where"><tt class="xref py py-meth docutils literal"><span class="pre">where()</span></tt></a>, <a class="reference internal" href="#wheretrue" title="wheretrue"><tt class="xref py py-meth docutils literal"><span class="pre">wheretrue()</span></tt></a></dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="reshape">
+<tt class="descname">reshape</tt><big>(</big><em>newshape</em><big>)</big><a class="headerlink" href="#reshape" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a new barray containing the same data with a new shape.</p>
+<dl class="docutils">
+<dt>Parameters:</dt>
+<dd><dl class="first last docutils">
+<dt>newshape <span class="classifier-delimiter">:</span> <span class="classifier">int or tuple of ints</span></dt>
+<dd>The new shape should be compatible with the original shape. If
+an integer, then the result will be a 1-D array of that
+length.  One shape dimension can be -1. In this case, the
+value is inferred from the length of the array and remaining
+dimensions.</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd><dl class="first last docutils">
+<dt>reshaped_array <span class="classifier-delimiter">:</span> <span class="classifier">barray</span></dt>
+<dd>A copy of the original barray.</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="resize">
+<tt class="descname">resize</tt><big>(</big><em>nitems</em><big>)</big><a class="headerlink" href="#resize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Resize the instance to have <cite>nitems</cite>.</p>
+<dl class="docutils">
+<dt>Parameters:</dt>
+<dd><dl class="first last docutils">
+<dt>nitems <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>The final length of the object.  If <cite>nitems</cite> is larger than
+the actual length, new items will appended using <cite>self.dflt</cite>
+as filling values.</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="sum">
+<tt class="descname">sum</tt><big>(</big><em>dtype=None</em><big>)</big><a class="headerlink" href="#sum" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the sum of the array elements.</p>
+<dl class="docutils">
+<dt>Parameters:</dt>
+<dd><dl class="first last docutils">
+<dt>dtype <span class="classifier-delimiter">:</span> <span class="classifier">NumPy dtype</span></dt>
+<dd>The desired type of the output.  If <tt class="docutils literal"><span class="pre">None</span></tt>, the dtype of
+<cite>self</cite> is used.  An exception is when <cite>self</cite> has an integer
+type with less precision than the default platform integer.
+In that case, the default platform integer is used instead
+(NumPy convention).</dd>
+</dl>
+</dd>
+<dt>Return value:</dt>
+<dd>out : NumPy scalar with <cite>dtype</cite></dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="trim">
+<tt class="descname">trim</tt><big>(</big><em>nitems</em><big>)</big><a class="headerlink" href="#trim" title="Permalink to this definition">¶</a></dt>
+<dd><p>Remove the trailing <cite>nitems</cite> from this instance.</p>
+<dl class="docutils">
+<dt>Parameters:</dt>
+<dd><dl class="first last docutils">
+<dt>nitems <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>The number of trailing items to be trimmed.</dd>
+</dl>
+</dd>
+<dt>See Also:</dt>
+<dd><a class="reference internal" href="#append" title="append"><tt class="xref py py-meth docutils literal"><span class="pre">append()</span></tt></a></dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="where">
+<tt class="descname">where</tt><big>(</big><em>boolarr</em>, <em>limit=None</em>, <em>skip=0</em><big>)</big><a class="headerlink" href="#where" title="Permalink to this definition">¶</a></dt>
+<dd><p>Iterator that returns values of this object where <cite>boolarr</cite> is
+true.</p>
+<p>This is currently only useful for boolean barrays that are
+unidimensional.</p>
+<dl class="docutils">
+<dt>Parameters:</dt>
+<dd><dl class="first last docutils">
+<dt>boolarr <span class="classifier-delimiter">:</span> <span class="classifier">a barray or NumPy array of boolean type</span></dt>
+<dd>The boolean values.</dd>
+<dt>limit <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>A maximum number of elements to return.  The default is return
+everything.</dd>
+<dt>skip <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>An initial number of elements to skip.  The default is 0.</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd>out : iterator</dd>
+<dt>See Also:</dt>
+<dd><a class="reference internal" href="#iter" title="iter"><tt class="xref py py-meth docutils literal"><span class="pre">iter()</span></tt></a>, <a class="reference internal" href="#wheretrue" title="wheretrue"><tt class="xref py py-meth docutils literal"><span class="pre">wheretrue()</span></tt></a></dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="wheretrue">
+<tt class="descname">wheretrue</tt><big>(</big><em>limit=None</em>, <em>skip=0</em><big>)</big><a class="headerlink" href="#wheretrue" title="Permalink to this definition">¶</a></dt>
+<dd><p>Iterator that returns indices where this object is true.</p>
+<p>This is currently only useful for boolean barrays that are
+unidimensional.</p>
+<dl class="docutils">
+<dt>Parameters:</dt>
+<dd><dl class="first last docutils">
+<dt>limit <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>A maximum number of elements to return.  The default is return
+everything.</dd>
+<dt>skip <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>An initial number of elements to skip.  The default is 0.</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd>out : iterator</dd>
+<dt>See Also:</dt>
+<dd><a class="reference internal" href="#iter" title="iter"><tt class="xref py py-meth docutils literal"><span class="pre">iter()</span></tt></a>, <a class="reference internal" href="#where" title="where"><tt class="xref py py-meth docutils literal"><span class="pre">where()</span></tt></a></dd>
+</dl>
+</dd></dl>
+
+</div></blockquote>
+</div>
+<div class="section" id="barray-special-methods">
+<h3>barray special methods<a class="headerlink" href="#barray-special-methods" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><dl class="method">
+<dt>
+<tt class="descname">__getitem__(key):</tt></dt>
+<dd><p>x.__getitem__(key) &lt;==&gt; x[key]</p>
+<p>Returns values based on <cite>key</cite>.  All the functionality of
+<tt class="docutils literal"><span class="pre">ndarray.__getitem__()</span></tt> is supported (including fancy indexing),
+plus a special support for expressions:</p>
+<dl class="docutils">
+<dt>Parameters:</dt>
+<dd><dl class="first last docutils">
+<dt>key <span class="classifier-delimiter">:</span> <span class="classifier">string</span></dt>
+<dd>It will be interpret as a boolean expression (computed via
+<cite>eval</cite>) and the elements where these values are true will be
+returned as a NumPy array.</dd>
+</dl>
+</dd>
+<dt>See Also:</dt>
+<dd>eval</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<tt class="descname">__setitem__(key, value):</tt></dt>
+<dd><p>x.__setitem__(key, value) &lt;==&gt; x[key] = value</p>
+<p>Sets values based on <cite>key</cite>.  All the functionality of
+<tt class="docutils literal"><span class="pre">ndarray.__setitem__()</span></tt> is supported (including fancy indexing),
+plus a special support for expressions:</p>
+<dl class="docutils">
+<dt>Parameters:</dt>
+<dd><dl class="first last docutils">
+<dt>key <span class="classifier-delimiter">:</span> <span class="classifier">string</span></dt>
+<dd>It will be interpret as a boolean expression (computed via
+<cite>eval</cite>) and the elements where these values are true will be
+set to <cite>value</cite>.</dd>
+</dl>
+</dd>
+<dt>See Also:</dt>
+<dd>eval</dd>
+</dl>
+</dd></dl>
+
+</div></blockquote>
+</div>
+</div>
+<div class="section" id="the-btable-class">
+<h2>The btable class<a class="headerlink" href="#the-btable-class" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="btable">
+<em class="property">class </em><tt class="descname">btable</tt><big>(</big><em>columns</em>, <em>names=None</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#btable" title="Permalink to this definition">¶</a></dt>
+<dd><p>This class represents a compressed, column-wise, in-memory table.</p>
+<p>Create a new btable from <cite>columns</cite> with optional <cite>names</cite>.</p>
+<dl class="docutils">
+<dt>Parameters:</dt>
+<dd><dl class="first last docutils">
+<dt>columns <span class="classifier-delimiter">:</span> <span class="classifier">tuple or list of column objects</span></dt>
+<dd>The list of column data to build the btable object.  This can
+also be a pure NumPy structured array.  A list of lists or
+tuples is valid too, as long as they can be converted into
+barray objects.</dd>
+<dt>names <span class="classifier-delimiter">:</span> <span class="classifier">list of strings or string</span></dt>
+<dd>The list of names for the columns.  Alternatively, it can be
+specified as a string such as &#8216;f0 f1&#8217; or &#8216;f0, f1&#8217;.  If not
+passed, the names will be chosen as &#8216;f0&#8217; for the top column,
+&#8216;f1&#8217; for the second and so on so forth (NumPy convention).</dd>
+<dt>kwargs <span class="classifier-delimiter">:</span> <span class="classifier">list of parameters or dictionary</span></dt>
+<dd>Allows to pass additional arguments supported by barray
+constructors in case new barrays need to be built.</dd>
+</dl>
+</dd>
+<dt>Notes:</dt>
+<dd>Columns passed as barrays are not be copied, so their settings
+will stay the same, even if you pass additional arguments
+(bparams, chunklen...).</dd>
+</dl>
+</dd></dl>
+
+<div class="section" id="btable-attributes">
+<h3>btable attributes<a class="headerlink" href="#btable-attributes" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><dl class="attribute">
+<dt>
+<tt class="descname">attrs</tt></dt>
+<dd><p>Accessor for attributes in btable objects.</p>
+<p>See <tt class="xref py py-attr docutils literal"><span class="pre">barray.attrs</span></tt> for a full description.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<tt class="descname">cbytes</tt></dt>
+<dd><p>The compressed size of this object (in bytes).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="cols">
+<tt class="descname">cols</tt><a class="headerlink" href="#cols" title="Permalink to this definition">¶</a></dt>
+<dd><p>The btable columns accessor.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<tt class="descname">bparams</tt></dt>
+<dd><p>The compression parameters for this object.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<tt class="descname">dtype</tt></dt>
+<dd><p>The NumPy dtype for this object.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<tt class="descname">len</tt></dt>
+<dd><p>The length of this object.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="names">
+<tt class="descname">names</tt><a class="headerlink" href="#names" title="Permalink to this definition">¶</a></dt>
+<dd><p>The names of the columns (list).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<tt class="descname">nbytes</tt></dt>
+<dd><p>The original (uncompressed) size of this object (in bytes).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<tt class="descname">ndim</tt></dt>
+<dd><p>The number of dimensions of this object (in bytes).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<tt class="descname">shape</tt></dt>
+<dd><p>The shape of this object.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<tt class="descname">size</tt></dt>
+<dd><p>The size of this object.</p>
+</dd></dl>
+
+</div></blockquote>
+</div>
+<div class="section" id="btable-methods">
+<h3>btable methods<a class="headerlink" href="#btable-methods" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><dl class="method">
+<dt id="addcol">
+<tt class="descname">addcol</tt><big>(</big><em>newcol</em>, <em>name=None</em>, <em>pos=None</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#addcol" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add a new <cite>newcol</cite> object as column.</p>
+<dl class="docutils">
+<dt>Parameters:</dt>
+<dd><dl class="first last docutils">
+<dt>newcol <span class="classifier-delimiter">:</span> <span class="classifier">barray, ndarray, list or tuple</span></dt>
+<dd>If a barray is passed, no conversion will be carried out.
+If conversion to a barray has to be done, <cite>kwargs</cite> will
+apply.</dd>
+<dt>name <span class="classifier-delimiter">:</span> <span class="classifier">string, optional</span></dt>
+<dd>The name for the new column.  If not passed, it will
+receive an automatic name.</dd>
+<dt>pos <span class="classifier-delimiter">:</span> <span class="classifier">int, optional</span></dt>
+<dd>The column position.  If not passed, it will be appended
+at the end.</dd>
+<dt>kwargs <span class="classifier-delimiter">:</span> <span class="classifier">list of parameters or dictionary</span></dt>
+<dd>Any parameter supported by the barray constructor.</dd>
+</dl>
+</dd>
+<dt>Notes:</dt>
+<dd>You should not specify both <cite>name</cite> and <cite>pos</cite> arguments,
+unless they are compatible.</dd>
+<dt>See Also:</dt>
+<dd><a class="reference internal" href="#delcol" title="delcol"><tt class="xref py py-func docutils literal"><span class="pre">delcol()</span></tt></a></dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<tt class="descname">append</tt><big>(</big><em>rows</em><big>)</big></dt>
+<dd><p>Append <cite>rows</cite> to this btable.</p>
+<dl class="docutils">
+<dt>Parameters:</dt>
+<dd><dl class="first last docutils">
+<dt>rows <span class="classifier-delimiter">:</span> <span class="classifier">list/tuple of scalar values, NumPy arrays or barrays</span></dt>
+<dd>It also can be a NumPy record, a NumPy recarray, or
+another btable.</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<tt class="descname">copy</tt><big>(</big><em>**kwargs</em><big>)</big></dt>
+<dd><p>Return a copy of this btable.</p>
+<dl class="docutils">
+<dt>Parameters:</dt>
+<dd><dl class="first last docutils">
+<dt>kwargs <span class="classifier-delimiter">:</span> <span class="classifier">list of parameters or dictionary</span></dt>
+<dd>Any parameter supported by the barray/btable constructor.</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd><dl class="first last docutils">
+<dt>out <span class="classifier-delimiter">:</span> <span class="classifier">btable object</span></dt>
+<dd>The copy of this btable.</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="delcol">
+<tt class="descname">delcol</tt><big>(</big><em>name=None</em>, <em>pos=None</em><big>)</big><a class="headerlink" href="#delcol" title="Permalink to this definition">¶</a></dt>
+<dd><p>Remove the column named <cite>name</cite> or in position <cite>pos</cite>.</p>
+<dl class="docutils">
+<dt>Parameters:</dt>
+<dd><dl class="first last docutils">
+<dt>name: string, optional</dt>
+<dd>The name of the column to remove.</dd>
+<dt>pos: int, optional</dt>
+<dd>The position of the column to remove.</dd>
+</dl>
+</dd>
+<dt>Notes:</dt>
+<dd>You must specify at least a <cite>name</cite> or a <cite>pos</cite>.  You should
+not specify both <cite>name</cite> and <cite>pos</cite> arguments, unless they
+are compatible.</dd>
+<dt>See Also:</dt>
+<dd><a class="reference internal" href="#addcol" title="addcol"><tt class="xref py py-func docutils literal"><span class="pre">addcol()</span></tt></a></dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<tt class="descname">eval</tt><big>(</big><em>expression</em>, <em>**kwargs</em><big>)</big></dt>
+<dd><p>Evaluate the <cite>expression</cite> on columns and return the result.</p>
+<dl class="docutils">
+<dt>Parameters:</dt>
+<dd><dl class="first last docutils">
+<dt>expression <span class="classifier-delimiter">:</span> <span class="classifier">string</span></dt>
+<dd>A string forming an expression, like &#8216;2*a+3*b&#8217;. The values
+for &#8216;a&#8217; and &#8216;b&#8217; are variable names to be taken from the
+calling function&#8217;s frame.  These variables may be column
+names in this table, scalars, barrays or NumPy arrays.</dd>
+<dt>kwargs <span class="classifier-delimiter">:</span> <span class="classifier">list of parameters or dictionary</span></dt>
+<dd>Any parameter supported by the <cite>eval()</cite> top level function.</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd><dl class="first last docutils">
+<dt>out <span class="classifier-delimiter">:</span> <span class="classifier">barray object</span></dt>
+<dd>The outcome of the expression.  You can tailor the
+properties of this barray by passing additional arguments
+supported by barray constructor in <cite>kwargs</cite>.</dd>
+</dl>
+</dd>
+<dt>See Also:</dt>
+<dd><a class="reference internal" href="#eval" title="eval"><tt class="xref py py-func docutils literal"><span class="pre">eval()</span></tt></a> (top level function)</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<tt class="descname">flush</tt><big>(</big><big>)</big></dt>
+<dd><p>Flush data in internal buffers to disk.</p>
+<p>This call should typically be done after performing modifications
+(__settitem__(), append()) in persistence mode.  If you don&#8217;t do
+this, you risk loosing part of your modifications.</p>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<tt class="descname">iter</tt><big>(</big><em>start=0</em>, <em>stop=None</em>, <em>step=1</em>, <em>outcols=None</em>, <em>limit=None</em>, <em>skip=0</em><big>)</big></dt>
+<dd><p>Iterator with <cite>start</cite>, <cite>stop</cite> and <cite>step</cite> bounds.</p>
+<dl class="docutils">
+<dt>Parameters:</dt>
+<dd><dl class="first last docutils">
+<dt>start <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>The starting item.</dd>
+<dt>stop <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>The item after which the iterator stops.</dd>
+<dt>step <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>The number of items incremented during each iteration.  Cannot be
+negative.</dd>
+<dt>outcols <span class="classifier-delimiter">:</span> <span class="classifier">list of strings or string</span></dt>
+<dd>The list of column names that you want to get back in results.
+Alternatively, it can be specified as a string such as &#8216;f0 f1&#8217;
+or &#8216;f0, f1&#8217;.  If None, all the columns are returned.  If the
+special name &#8216;<a href="#id2"><span class="problematic" id="id3">nrow__</span></a>&#8216; is present, the number of row will be
+included in output.</dd>
+<dt>limit <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>A maximum number of elements to return.  The default is return
+everything.</dd>
+<dt>skip <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>An initial number of elements to skip.  The default is 0.</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd>out : iterable</dd>
+<dt>See Also:</dt>
+<dd><tt class="xref py py-meth docutils literal"><span class="pre">btable.where()</span></tt></dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<tt class="descname">resize</tt><big>(</big><em>nitems</em><big>)</big></dt>
+<dd><p>Resize the instance to have <cite>nitems</cite>.</p>
+<dl class="docutils">
+<dt>Parameters:</dt>
+<dd><dl class="first last docutils">
+<dt>nitems <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>The final length of the instance.  If <cite>nitems</cite> is larger than the
+actual length, new items will appended using <cite>self.dflt</cite> as
+filling values.</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<tt class="descname">trim</tt><big>(</big><em>nitems</em><big>)</big></dt>
+<dd><p>Remove the trailing <cite>nitems</cite> from this instance.</p>
+<dl class="docutils">
+<dt>Parameters:</dt>
+<dd><dl class="first last docutils">
+<dt>nitems <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>The number of trailing items to be trimmed.</dd>
+</dl>
+</dd>
+<dt>See Also:</dt>
+<dd><tt class="xref py py-meth docutils literal"><span class="pre">btable.append()</span></tt></dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<tt class="descname">where</tt><big>(</big><em>expression</em>, <em>outcols=None</em>, <em>limit=None</em>, <em>skip=0</em><big>)</big></dt>
+<dd><p>Iterate over rows where <cite>expression</cite> is true.</p>
+<dl class="docutils">
+<dt>Parameters:</dt>
+<dd><dl class="first last docutils">
+<dt>expression <span class="classifier-delimiter">:</span> <span class="classifier">string or barray</span></dt>
+<dd>A boolean Numexpr expression or a boolean barray.</dd>
+<dt>outcols <span class="classifier-delimiter">:</span> <span class="classifier">list of strings or string</span></dt>
+<dd>The list of column names that you want to get back in results.
+Alternatively, it can be specified as a string such as &#8216;f0 f1&#8217;
+or &#8216;f0, f1&#8217;.  If None, all the columns are returned.  If the
+special name &#8216;<a href="#id2"><span class="problematic" id="id4">nrow__</span></a>&#8216; is present, the number of row will be
+included in output.</dd>
+<dt>limit <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>A maximum number of elements to return.  The default is return
+everything.</dd>
+<dt>skip <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>An initial number of elements to skip.  The default is 0.</dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd><dl class="first last docutils">
+<dt>out <span class="classifier-delimiter">:</span> <span class="classifier">iterable</span></dt>
+<dd>This iterable returns rows as NumPy structured types (i.e. they
+support being mapped either by position or by name).</dd>
+</dl>
+</dd>
+<dt>See Also:</dt>
+<dd><tt class="xref py py-meth docutils literal"><span class="pre">btable.iter()</span></tt></dd>
+</dl>
+</dd></dl>
+
+</div></blockquote>
+</div>
+<div class="section" id="btable-special-methods">
+<h3>btable special methods<a class="headerlink" href="#btable-special-methods" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><dl class="method">
+<dt>
+<tt class="descname">__getitem__(key):</tt></dt>
+<dd><p>x.__getitem__(y) &lt;==&gt; x[y]</p>
+<p>Returns values based on <cite>key</cite>.  All the functionality of
+<tt class="docutils literal"><span class="pre">ndarray.__getitem__()</span></tt> is supported (including fancy indexing),
+plus a special support for expressions:</p>
+<dl class="docutils">
+<dt>Parameters:</dt>
+<dd><dl class="first last docutils">
+<dt>key <span class="classifier-delimiter">:</span> <span class="classifier">string</span></dt>
+<dd>The corresponding btable column name will be returned.  If not
+a column name, it will be interpreted as a boolean expression
+(computed via <cite>btable.eval</cite>) and the rows where these values are
+true will be returned as a NumPy structured array.</dd>
+</dl>
+</dd>
+<dt>See Also:</dt>
+<dd><tt class="xref py py-meth docutils literal"><span class="pre">btable.eval()</span></tt></dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<tt class="descname">__setitem__(key, value):</tt></dt>
+<dd><p>x.__setitem__(key, value) &lt;==&gt; x[key] = value</p>
+<p>Sets values based on <cite>key</cite>.  All the functionality of
+<tt class="docutils literal"><span class="pre">ndarray.__setitem__()</span></tt> is supported (including fancy indexing),
+plus a special support for expressions:</p>
+<dl class="docutils">
+<dt>Parameters:</dt>
+<dd><dl class="first last docutils">
+<dt>key <span class="classifier-delimiter">:</span> <span class="classifier">string</span></dt>
+<dd>The corresponding btable column name will be set to <cite>value</cite>.
+If not a column name, it will be interpreted as a boolean
+expression (computed via <cite>btable.eval</cite>) and the rows where these
+values are true will be set to <cite>value</cite>.</dd>
+</dl>
+</dd>
+<dt>See Also:</dt>
+<dd><tt class="xref py py-meth docutils literal"><span class="pre">btable.eval()</span></tt></dd>
+</dl>
+</dd></dl>
+
+</div></blockquote>
+<p>## Local Variables:
+## fill-column: 72
+## End:</p>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Library Reference</a><ul>
+<li><a class="reference internal" href="#first-level-variables">First level variables</a></li>
+<li><a class="reference internal" href="#top-level-classes">Top level classes</a></li>
+<li><a class="reference internal" href="#top-level-functions">Top level functions</a></li>
+<li><a class="reference internal" href="#utility-functions">Utility functions</a></li>
+<li><a class="reference internal" href="#the-barray-class">The barray class</a><ul>
+<li><a class="reference internal" href="#barray-attributes">barray attributes</a></li>
+<li><a class="reference internal" href="#barray-methods">barray methods</a></li>
+<li><a class="reference internal" href="#barray-special-methods">barray special methods</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#the-btable-class">The btable class</a><ul>
+<li><a class="reference internal" href="#btable-attributes">btable attributes</a></li>
+<li><a class="reference internal" href="#btable-methods">btable methods</a></li>
+<li><a class="reference internal" href="#btable-special-methods">btable special methods</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="tutorial.html"
+                        title="previous chapter">Tutorials</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="opt-tips.html"
+                        title="next chapter">Optimization tips</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/reference.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="opt-tips.html" title="Optimization tips"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="tutorial.html" title="Tutorials"
+             >previous</a> |</li>
+        <li><a href="index.html">BLZ 0.6.dev documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2012-2014, Continuum Analytics.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.
+    </div>
+  </body>
+</html>

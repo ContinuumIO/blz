@@ -1,0 +1,943 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Tutorials &mdash; BLZ 0.6.dev documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.6.dev',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="BLZ 0.6.dev documentation" href="index.html" />
+    <link rel="next" title="Library Reference" href="reference.html" />
+    <link rel="prev" title="Installation" href="install.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="reference.html" title="Library Reference"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="install.html" title="Installation"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">BLZ 0.6.dev documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="tutorials">
+<h1>Tutorials<a class="headerlink" href="#tutorials" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="tutorial-on-barray-objects">
+<h2>Tutorial on barray objects<a class="headerlink" href="#tutorial-on-barray-objects" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="creating-barrays">
+<h3>Creating barrays<a class="headerlink" href="#creating-barrays" title="Permalink to this headline">¶</a></h3>
+<p>A barray can be created from any NumPy ndarray by using its <cite>barray</cite>
+constructor:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">blz</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span> <span class="o">=</span> <span class="n">blz</span><span class="o">.</span><span class="n">barray</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>                   <span class="c"># for in-memory storage</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">blz</span><span class="o">.</span><span class="n">barray</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">rootdir</span><span class="o">=</span><span class="s">&#39;mydir&#39;</span><span class="p">)</span>  <span class="c"># for on-disk storage</span>
+</pre></div>
+</div>
+<p>Or, you can also create it by using one of its multiple constructors
+(see <a class="reference internal" href="reference.html#top-level-constructors"><em>Top level functions</em></a> for the complete list):</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">blz</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="n">rootdir</span><span class="o">=</span><span class="s">&#39;mydir&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Please note that BLZ allows to create disk-based arrays by just
+specifying the <cite>rootdir</cite> parameter in all its constructors.
+Disk-based arrays fully support all the operations of in-memory
+counterparts, so depending on your needs, you may want to use one or
+another (or even a combination of both).</p>
+<p>Now, <cite>b</cite> is a barray object.  Just check this:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="nb">type</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+<span class="go">&lt;type &#39;blz.blz_ext.barray&#39;&gt;</span>
+</pre></div>
+</div>
+<p>You can have a peek at it by using its string form:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">b</span>
+<span class="go">[0, 1, 2... 7, 8, 9]</span>
+</pre></div>
+</div>
+<p>And get more info about uncompressed size (nbytes), compressed
+(cbytes) and the compression ratio (ratio = nbytes/cbytes), by using
+its representation form:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">b</span>   <span class="c"># &lt;==&gt; print repr(b)</span>
+<span class="go">barray((10,), int64)  nbytes: 80; cbytes: 4.00 KB; ratio: 0.02</span>
+<span class="go">  bparams := bparams(clevel=5, shuffle=True)</span>
+<span class="go">[0 1 2 3 4 5 6 7 8 9]</span>
+</pre></div>
+</div>
+<p>As you can see, the compressed size is much larger than the
+uncompressed one.  How this can be?  Well, it turns out that barray
+wears an I/O buffer for accelerating some internal operations.  So,
+for small arrays (typically those taking less than 1 MB), there is
+little point in using a barray.</p>
+<p>However, when creating barrays larger than 1 MB (its natural
+scenario), the size of the I/O buffer is generally negligible in
+comparison:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">b</span> <span class="o">=</span> <span class="n">blz</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mf">1e8</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span>
+<span class="go">barray((100000000,), float64)  nbytes: 762.94 MB; cbytes: 23.38 MB; ratio: 32.63</span>
+<span class="go">  bparams := bparams(clevel=5, shuffle=True)</span>
+<span class="go">[0.0, 1.0, 2.0, ..., 99999997.0, 99999998.0, 99999999.0]</span>
+</pre></div>
+</div>
+<p>The barray consumes less than 24 MB, while the original data would have
+taken more than 760 MB; that&#8217;s a huge gain.  You can always get a hint
+on how much space it takes your barray by using <cite>sys.getsizeof()</cite>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">sys</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sys</span><span class="o">.</span><span class="n">getsizeof</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+<span class="go">24520482</span>
+</pre></div>
+</div>
+<p>That moral here is that you can create very large arrays without the
+need to create a NumPy array first (that may not fit in memory).</p>
+<p>Finally, you can get a copy of your created barrays by using the
+<cite>copy()</cite> method:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">b</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span>
+<span class="go">barray((100000000,), float64)  nbytes: 762.94 MB; cbytes: 23.38 MB; ratio: 32.63</span>
+<span class="go">  bparams := bparams(clevel=5, shuffle=True)</span>
+<span class="go">[0.0, 1.0, 2.0, ..., 99999997.0, 99999998.0, 99999999.0]</span>
+</pre></div>
+</div>
+<p>and you can control parameters for the newly created copy:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">b</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">bparams</span><span class="o">=</span><span class="n">blz</span><span class="o">.</span><span class="n">bparams</span><span class="p">(</span><span class="n">clevel</span><span class="o">=</span><span class="mi">9</span><span class="p">))</span>
+<span class="go">barray((100000000,), float64)  nbytes: 762.94 MB; cbytes: 8.22 MB; ratio: 92.78</span>
+<span class="go">  bparams := bparams(clevel=9, shuffle=True)</span>
+<span class="go">[0.0, 1.0, 2.0, ..., 99999997.0, 99999998.0, 99999999.0]</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="enlarging-your-barray">
+<h3>Enlarging your barray<a class="headerlink" href="#enlarging-your-barray" title="Permalink to this headline">¶</a></h3>
+<p>One of the nicest features of barray objects is that they can be
+enlarged very efficiently.  This can be done via the <cite>barray.append()</cite>
+method.</p>
+<p>For example, if <cite>b</cite> is a barray with 10 million elements:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">b</span>
+<span class="go">barray((10000000,), float64)  nbytes: 80000000; cbytes: 2691722; ratio: 29.72</span>
+<span class="go">  bparams := bparams(clevel=5, shuffle=True)</span>
+<span class="go">[0.0, 1.0, 2.0... 9999997.0, 9999998.0, 9999999.0]</span>
+</pre></div>
+</div>
+<p>it can be enlarged by 10 elements with:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">b</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mf">10.</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span>
+<span class="go">barray((10000010,), float64)  nbytes: 80000080; cbytes: 2691722;  ratio: 29.72</span>
+<span class="go">  bparams := bparams(clevel=5, shuffle=True)</span>
+<span class="go">[0.0, 1.0, 2.0... 7.0, 8.0, 9.0]</span>
+</pre></div>
+</div>
+<p>Let&#8217;s check how fast appending can be:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mf">1e7</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span> <span class="o">=</span> <span class="n">blz</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mf">1e7</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="o">%</span><span class="n">time</span> <span class="n">b</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+<span class="go">CPU times: user 0.06 s, sys: 0.00 s, total: 0.06 s</span>
+<span class="go">Wall time: 0.06 s</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="o">%</span><span class="n">time</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">a</span><span class="p">,</span> <span class="n">a</span><span class="p">))</span>
+<span class="go">CPU times: user 0.08 s, sys: 0.04 s, total: 0.12 s</span>
+<span class="go">Wall time: 0.12 s  # 2x slower than BLZ</span>
+<span class="go">array([  0.00000000e+00,   1.00000000e+00,   2.00000000e+00, ...,</span>
+<span class="go">         9.99999700e+06,   9.99999800e+06,   9.99999900e+06])</span>
+</pre></div>
+</div>
+<p>This is specially true when appending small bits to large arrays:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">b</span> <span class="o">=</span> <span class="n">blz</span><span class="o">.</span><span class="n">barray</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="o">%</span><span class="n">timeit</span> <span class="n">b</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mf">1e1</span><span class="p">))</span>
+<span class="go">100000 loops, best of 3: 3.17 µs per loop</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="o">%</span><span class="n">timeit</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">a</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mf">1e1</span><span class="p">)))</span>
+<span class="go">10 loops, best of 3: 64 ms per loop  # 2000x slower than BLZ</span>
+</pre></div>
+</div>
+<p>You can also enlarge your arrays by using the <cite>resize()</cite> method:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">b</span> <span class="o">=</span> <span class="n">blz</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span><span class="o">.</span><span class="n">resize</span><span class="p">(</span><span class="mi">20</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span>
+<span class="go">barray((20,), int64)  nbytes: 160; cbytes: 4.00 KB; ratio: 0.04</span>
+<span class="go">  bparams := bparams(clevel=5, shuffle=True)</span>
+<span class="go">[0 1 2 3 4 5 6 7 8 9 0 0 0 0 0 0 0 0 0 0]</span>
+</pre></div>
+</div>
+<p>Note how the append values are filled with zeros.  This is because the
+default value for filling is 0.  But you can choose a different value
+too:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">b</span> <span class="o">=</span> <span class="n">blz</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="n">dflt</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span><span class="o">.</span><span class="n">resize</span><span class="p">(</span><span class="mi">20</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span>
+<span class="go">barray((20,), int64)  nbytes: 160; cbytes: 4.00 KB; ratio: 0.04</span>
+<span class="go">  bparams := bparams(clevel=5, shuffle=True)</span>
+<span class="go">[0 1 2 3 4 5 6 7 8 9 1 1 1 1 1 1 1 1 1 1]</span>
+</pre></div>
+</div>
+<p>Also, you can trim barrays:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">b</span> <span class="o">=</span> <span class="n">blz</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span><span class="o">.</span><span class="n">resize</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span>
+<span class="go">barray((5,), int64)  nbytes: 40; cbytes: 4.00 KB; ratio: 0.01</span>
+<span class="go">  bparams := bparams(clevel=5, shuffle=True)</span>
+<span class="go">[0 1 2 3 4]</span>
+</pre></div>
+</div>
+<p>You can even set the size to 0:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">b</span><span class="o">.</span><span class="n">resize</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">len</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+<span class="go">0</span>
+</pre></div>
+</div>
+<p>Definitely, resizing is one of the strongest points of BLZ
+objects, so do not be afraid to use that feature extensively.</p>
+</div>
+<div class="section" id="compression-level-and-shuffle-filter">
+<h3>Compression level and shuffle filter<a class="headerlink" href="#compression-level-and-shuffle-filter" title="Permalink to this headline">¶</a></h3>
+<p>BLZ uses Blosc as the internal compressor, and Blosc can be directed
+to use different compression levels and to use (or not) its internal
+shuffle filter.  The shuffle filter is a way to improve compression
+when using items that have type sizes &gt; 1 byte, although it might be
+counter-productive (very rarely) for some data distributions.</p>
+<p>By default barrays are compressed using Blosc with compression level 5
+with shuffle active.  But depending on you needs, you can use other
+compression levels too:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">blz</span><span class="o">.</span><span class="n">barray</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">blz</span><span class="o">.</span><span class="n">bparams</span><span class="p">(</span><span class="n">clevel</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
+<span class="go">barray((10000000,), float64)  nbytes: 76.29 MB; cbytes: 9.88 MB; ratio: 7.72</span>
+<span class="go">  bparams := bparams(clevel=1, shuffle=True)</span>
+<span class="go">[0.0, 1.0, 2.0, ..., 9999997.0, 9999998.0, 9999999.0]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">blz</span><span class="o">.</span><span class="n">barray</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">blz</span><span class="o">.</span><span class="n">bparams</span><span class="p">(</span><span class="n">clevel</span><span class="o">=</span><span class="mi">9</span><span class="p">))</span>
+<span class="go">barray((10000000,), float64)  nbytes: 76.29 MB; cbytes: 1.11 MB; ratio: 68.60</span>
+<span class="go">  bparams := bparams(clevel=9, shuffle=True)</span>
+<span class="go">[0.0, 1.0, 2.0, ..., 9999997.0, 9999998.0, 9999999.0]</span>
+</pre></div>
+</div>
+<p>Also, you can decide if you want to disable the shuffle filter that
+comes with Blosc:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">blz</span><span class="o">.</span><span class="n">barray</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">blz</span><span class="o">.</span><span class="n">bparams</span><span class="p">(</span><span class="n">shuffle</span><span class="o">=</span><span class="bp">False</span><span class="p">))</span>
+<span class="go">barray((10000000,), float64)  nbytes: 80000000; cbytes: 38203113; ratio: 2.09</span>
+<span class="go">  bparams := bparams(clevel=5, shuffle=False)</span>
+<span class="go">[0.0, 1.0, 2.0... 9999997.0, 9999998.0, 9999999.0]</span>
+</pre></div>
+</div>
+<p>but, as can be seen, the compression ratio is much worse in this case.
+In general it is recommend to let shuffle active (unless you are
+fine-tuning the performance for an specific size of a barray).</p>
+<p>See <a class="reference internal" href="opt-tips.html#opt-tips"><em>Optimization tips</em></a> chapter for info on how you can change other
+internal parameters like the size of the chunk.</p>
+</div>
+<div class="section" id="accessing-blz-objects-data">
+<h3>Accessing BLZ objects data<a class="headerlink" href="#accessing-blz-objects-data" title="Permalink to this headline">¶</a></h3>
+<p>The way to access BLZ data is very similar to the NumPy indexing
+scheme, and in fact, supports all the indexing methods supported by
+NumPy.</p>
+<p>Specifying an index or slice:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span> <span class="o">=</span> <span class="n">blz</span><span class="o">.</span><span class="n">barray</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="go">0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+<span class="go">9</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span><span class="p">[</span><span class="mi">2</span><span class="p">:</span><span class="mi">4</span><span class="p">]</span>
+<span class="go">array([2, 3])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span><span class="p">[::</span><span class="mi">2</span><span class="p">]</span>
+<span class="go">array([0, 2, 4, 6, 8])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span><span class="p">[</span><span class="mi">3</span><span class="p">:</span><span class="mi">9</span><span class="p">:</span><span class="mi">3</span><span class="p">]</span>
+<span class="go">array([3, 6])</span>
+</pre></div>
+</div>
+<p>Note that NumPy objects are returned as the result of an indexing
+operation.  This is on purpose because normally NumPy objects are more
+featured and flexible (specially if they are small).  In fact, a handy
+way to get a NumPy array out of a barray object is asking for the
+complete range:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">b</span><span class="p">[:]</span>
+<span class="go">array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9])</span>
+</pre></div>
+</div>
+<p>Fancy indexing is supported too.  For example, indexing with boolean
+arrays gives:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">barr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="bp">True</span><span class="p">]</span><span class="o">*</span><span class="mi">5</span><span class="o">+</span><span class="p">[</span><span class="bp">False</span><span class="p">]</span><span class="o">*</span><span class="mi">5</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span><span class="p">[</span><span class="n">barr</span><span class="p">]</span>
+<span class="go">array([0, 1, 2, 3, 4])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span><span class="p">[</span><span class="n">blz</span><span class="o">.</span><span class="n">barray</span><span class="p">(</span><span class="n">barr</span><span class="p">)]</span>
+<span class="go">array([0, 1, 2, 3, 4])</span>
+</pre></div>
+</div>
+<p>Or, with a list of indices:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">b</span><span class="p">[[</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="p">]]</span>
+<span class="go">array([2, 3, 0, 2])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span><span class="p">[</span><span class="n">blz</span><span class="o">.</span><span class="n">barray</span><span class="p">([</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="p">])]</span>
+<span class="go">array([2, 3, 0, 2])</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="querying-barrays">
+<h3>Querying barrays<a class="headerlink" href="#querying-barrays" title="Permalink to this headline">¶</a></h3>
+<p>barrays can be queried in different ways.  The most easy (yet
+powerful) way is by using its set of iterators:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mf">1e7</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span> <span class="o">=</span> <span class="n">blz</span><span class="o">.</span><span class="n">barray</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="o">%</span><span class="n">time</span> <span class="nb">sum</span><span class="p">(</span><span class="n">v</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">a</span> <span class="k">if</span> <span class="n">v</span> <span class="o">&lt;</span> <span class="mi">10</span><span class="p">)</span>
+<span class="go">CPU times: user 7.44 s, sys: 0.00 s, total: 7.45 s</span>
+<span class="go">Wall time: 7.57 s</span>
+<span class="go">45.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="o">%</span><span class="n">time</span> <span class="nb">sum</span><span class="p">(</span><span class="n">v</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">b</span> <span class="k">if</span> <span class="n">v</span> <span class="o">&lt;</span> <span class="mi">10</span><span class="p">)</span>
+<span class="go">CPU times: user 0.89 s, sys: 0.00 s, total: 0.90 s</span>
+<span class="go">Wall time: 0.93 s   # 8x faster than NumPy</span>
+<span class="go">45.0</span>
+</pre></div>
+</div>
+<p>The iterator also has support for looking into slices of the array:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="o">%</span><span class="n">time</span> <span class="nb">sum</span><span class="p">(</span><span class="n">v</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">b</span><span class="o">.</span><span class="n">iter</span><span class="p">(</span><span class="n">start</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">stop</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">step</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span> <span class="k">if</span> <span class="n">v</span> <span class="o">&lt;</span> <span class="mi">10</span><span class="p">)</span>
+<span class="go">CPU times: user 0.00 s, sys: 0.00 s, total: 0.00 s</span>
+<span class="go">Wall time: 0.00 s</span>
+<span class="go">15.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="o">%</span><span class="n">timeit</span> <span class="nb">sum</span><span class="p">(</span><span class="n">v</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">b</span><span class="o">.</span><span class="n">iter</span><span class="p">(</span><span class="n">start</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">stop</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">step</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span> <span class="k">if</span> <span class="n">v</span> <span class="o">&lt;</span> <span class="mi">10</span><span class="p">)</span>
+<span class="go">10000 loops, best of 3: 121 µs per loop</span>
+</pre></div>
+</div>
+<p>See that the time taken in this case is much shorter because the slice
+to do the lookup is much shorter too.</p>
+<p>Also, you can quickly retrieve the indices of a boolean barray that
+have a true value:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">barr</span> <span class="o">=</span> <span class="n">blz</span><span class="o">.</span><span class="n">eval</span><span class="p">(</span><span class="s">&quot;b&lt;10&quot;</span><span class="p">)</span>  <span class="c"># see &#39;Operating with barrays&#39; section below</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">barr</span><span class="o">.</span><span class="n">wheretrue</span><span class="p">()]</span>
+<span class="go">[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="o">%</span><span class="n">timeit</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">barr</span><span class="o">.</span><span class="n">wheretrue</span><span class="p">()]</span>
+<span class="go">1000 loops, best of 3: 1.06 ms per loop</span>
+</pre></div>
+</div>
+<p>And get the values where a boolean array is true:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">b</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">barr</span><span class="p">)]</span>
+<span class="go">[0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="o">%</span><span class="n">timeit</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">b</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">barr</span><span class="p">)]</span>
+<span class="go">1000 loops, best of 3: 1.59 ms per loop</span>
+</pre></div>
+</div>
+<p>Note how <cite>wheretrue</cite> and <cite>where</cite> iterators are really fast.  They are
+also very powerful.  For example, they support <cite>limit</cite> and <cite>skip</cite>
+parameters for limiting the number of elements returned and skipping
+the leading elements respectively:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">barr</span><span class="o">.</span><span class="n">wheretrue</span><span class="p">(</span><span class="n">limit</span><span class="o">=</span><span class="mi">5</span><span class="p">)]</span>
+<span class="go">[0, 1, 2, 3, 4]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">barr</span><span class="o">.</span><span class="n">wheretrue</span><span class="p">(</span><span class="n">skip</span><span class="o">=</span><span class="mi">3</span><span class="p">)]</span>
+<span class="go">[3, 4, 5, 6, 7, 8, 9]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">barr</span><span class="o">.</span><span class="n">wheretrue</span><span class="p">(</span><span class="n">limit</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">skip</span><span class="o">=</span><span class="mi">3</span><span class="p">)]</span>
+<span class="go">[3, 4, 5, 6, 7]</span>
+</pre></div>
+</div>
+<p>The advantage of the barray iterators is that you can use them in
+generator contexts and hence, you don&#8217;t need to waste memory for
+creating temporaries, which can be important when dealing with large
+arrays.</p>
+<p>We have seen that this iterator toolset is very fast, so try to
+express your problems in a way that you can use them extensively.</p>
+</div>
+<div class="section" id="modifying-barrays">
+<h3>Modifying barrays<a class="headerlink" href="#modifying-barrays" title="Permalink to this headline">¶</a></h3>
+<p>Although it is a somewhat slow operation, barrays can be modified too.
+You can do it by specifying scalar or slice indices:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span> <span class="o">=</span> <span class="n">blz</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mi">10</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">b</span>
+<span class="go">[ 0 10  2  3  4  5  6  7  8  9]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">4</span><span class="p">]</span> <span class="o">=</span> <span class="mi">10</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">b</span>
+<span class="go">[ 0 10 10 10  4  5  6  7  8  9]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span><span class="p">[</span><span class="mi">1</span><span class="p">::</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="mi">10</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">b</span>
+<span class="go">[ 0 10 10 10 10  5  6 10  8  9]</span>
+</pre></div>
+</div>
+<p>Modification by using fancy indexing is supported too:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">barr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="bp">True</span><span class="p">]</span><span class="o">*</span><span class="mi">5</span><span class="o">+</span><span class="p">[</span><span class="bp">False</span><span class="p">]</span><span class="o">*</span><span class="mi">5</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span><span class="p">[</span><span class="n">barr</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">5</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">b</span>
+<span class="go">[-5 -5 -5 -5 -5  5  6 10  8  9]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span><span class="p">[[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">1</span><span class="p">]]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">10</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">b</span>
+<span class="go">[ -5 -10 -10  -5 -10   5   6  10   8   9]</span>
+</pre></div>
+</div>
+<p>However, you must be aware that modifying a barray is expensive:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mf">1e7</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span> <span class="o">=</span> <span class="n">blz</span><span class="o">.</span><span class="n">barray</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="o">%</span><span class="n">timeit</span> <span class="n">a</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="mi">3</span>
+<span class="go">10000000 loops, best of 3: 101 ns per loop</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="o">%</span><span class="n">timeit</span> <span class="n">b</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="mi">3</span>
+<span class="go">10000 loops, best of 3: 161 µs per loop  # 1600x slower than NumPy</span>
+</pre></div>
+</div>
+<p>although modifying values in latest chunk is somewhat more cheaper:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="o">%</span><span class="n">timeit</span> <span class="n">a</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mi">3</span>
+<span class="go">10000000 loops, best of 3: 102 ns per loop</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="o">%</span><span class="n">timeit</span> <span class="n">b</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mi">3</span>
+<span class="go">10000 loops, best of 3: 42.9 µs per loop  # 420x slower than NumPy</span>
+</pre></div>
+</div>
+<p>In general, you should avoid modifications (if you can) when using
+barrays.</p>
+</div>
+<div class="section" id="multidimensional-barrays">
+<h3>Multidimensional barrays<a class="headerlink" href="#multidimensional-barrays" title="Permalink to this headline">¶</a></h3>
+<p>You can create multidimensional barrays too.  Look at this example:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">blz</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">))</span>
+<span class="go">barray((2, 3), float64)  nbytes: 48; cbytes: 3.98 KB; ratio: 0.01</span>
+<span class="go">  bparams := bparams(clevel=5, shuffle=True)</span>
+<span class="go">[[ 0.  0.  0.]</span>
+<span class="go"> [ 0.  0.  0.]]</span>
+</pre></div>
+</div>
+<p>So, you can access any element in any dimension:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+<span class="go">array([ 0.,  0.,  0.])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="p">[</span><span class="mi">1</span><span class="p">,::</span><span class="mi">2</span><span class="p">]</span>
+<span class="go">array([ 0., 0.])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span>
+<span class="go">0.0</span>
+</pre></div>
+</div>
+<p>As you see, multidimensional barrays support the same multidimensional
+indexes than its NumPy counterparts.</p>
+<p>Also, you can use the <cite>reshape()</cite> method to set your desired shape to
+an existing barray:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">b</span> <span class="o">=</span> <span class="n">blz</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">12</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="mi">3</span><span class="p">,</span><span class="mi">4</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span>
+<span class="go">barray((3,), (&#39;int64&#39;,(4,)))  nbytes: 96; cbytes: 4.00 KB; ratio: 0.02</span>
+<span class="go">  bparams := bparams(clevel=5, shuffle=True)</span>
+<span class="go">[[ 0  1  2  3]</span>
+<span class="go"> [ 4  5  6  7]</span>
+<span class="go"> [ 8  9 10 11]]</span>
+</pre></div>
+</div>
+<p>Iterators loop over the leading dimension:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="p">[</span><span class="n">r</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">b</span><span class="p">]</span>
+<span class="go">[array([0, 1, 2, 3]), array([4, 5, 6, 7]), array([ 8,  9, 10, 11])]</span>
+</pre></div>
+</div>
+<p>And you can select columns there by using another indirection level:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="p">[</span><span class="n">r</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">b</span><span class="p">]</span>
+<span class="go">[2, 6, 10]</span>
+</pre></div>
+</div>
+<p>Above, the third column has been selected.  Although for this case the
+indexing is easier:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">b</span><span class="p">[:,</span><span class="mi">2</span><span class="p">]</span>
+<span class="go">array([ 2,  6, 10])</span>
+</pre></div>
+</div>
+<p>the iterator approach typically consumes less memory resources.</p>
+</div>
+<div class="section" id="operating-with-barrays">
+<h3>Operating with barrays<a class="headerlink" href="#operating-with-barrays" title="Permalink to this headline">¶</a></h3>
+<p>Right now, you cannot operate with barrays directly (although that
+might be implemented in Blaze):</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">blz</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mf">1e7</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">+</span> <span class="n">x</span>
+<span class="go">TypeError: unsupported operand type(s) for +:</span>
+<span class="go">&#39;blz.blz_ext.barray&#39; and &#39;blz.blz_ext.barray&#39;</span>
+</pre></div>
+</div>
+<p>Rather, you should use the <cite>eval</cite> function:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">y</span> <span class="o">=</span> <span class="n">blz</span><span class="o">.</span><span class="n">eval</span><span class="p">(</span><span class="s">&quot;x + x&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">y</span>
+<span class="go">barray((10000000,), float64)  nbytes: 76.29 MB; cbytes: 2.64 MB; ratio: 28.88</span>
+<span class="go">  bparams := bparams(clevel=5, shuffle=True)</span>
+<span class="go">[0.0, 2.0, 4.0, ..., 19999994.0, 19999996.0, 19999998.0]</span>
+</pre></div>
+</div>
+<p>You can also compute arbitrarily complex expressions in one shot:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">y</span> <span class="o">=</span> <span class="n">blz</span><span class="o">.</span><span class="n">eval</span><span class="p">(</span><span class="s">&quot;.5*x**3 + 2.1*x**2&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">y</span>
+<span class="go">barray((10000000,), float64)  nbytes: 76.29 MB; cbytes: 38.00 MB; ratio: 2.01</span>
+<span class="go">  bparams := bparams(clevel=5, shuffle=True)</span>
+<span class="go">[0.0, 2.6, 12.4, ..., 4.9999976e+20, 4.9999991e+20, 5.0000006e+20]</span>
+</pre></div>
+</div>
+<p>Note how the output of <cite>eval()</cite> is also a barray object.  You can pass
+other parameters of the barray constructor too.  Let&#8217;s force maximum
+compression for the output:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">y</span> <span class="o">=</span> <span class="n">blz</span><span class="o">.</span><span class="n">eval</span><span class="p">(</span><span class="s">&quot;.5*x**3 + 2.1*x**2&quot;</span><span class="p">,</span> <span class="n">bparams</span><span class="o">=</span><span class="n">blz</span><span class="o">.</span><span class="n">bparams</span><span class="p">(</span><span class="mi">9</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">y</span>
+<span class="go">barray((10000000,), float64)  nbytes: 76.29 MB; cbytes: 35.66 MB; ratio: 2.14</span>
+<span class="go">  bparams := bparams(clevel=9, shuffle=True)</span>
+<span class="go">[0.0, 2.6, 12.4, ..., 4.9999976e+20, 4.9999991e+20, 5.0000006e+20]</span>
+</pre></div>
+</div>
+<p>By default, <cite>eval</cite> will use Numexpr virtual machine if it is installed
+and if not, it will default to use the Python one (via NumPy).  You
+can use the <cite>vm</cite> parameter to select the desired virtual machine
+(&#8220;numexpr&#8221; or &#8220;python&#8221;):</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="o">%</span><span class="n">timeit</span> <span class="n">blz</span><span class="o">.</span><span class="n">eval</span><span class="p">(</span><span class="s">&quot;.5*x**3 + 2.1*x**2&quot;</span><span class="p">,</span> <span class="n">vm</span><span class="o">=</span><span class="s">&quot;numexpr&quot;</span><span class="p">)</span>
+<span class="go">10 loops, best of 3: 303 ms per loop</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="o">%</span><span class="n">timeit</span> <span class="n">blz</span><span class="o">.</span><span class="n">eval</span><span class="p">(</span><span class="s">&quot;.5*x**3 + 2.1*x**2&quot;</span><span class="p">,</span> <span class="n">vm</span><span class="o">=</span><span class="s">&quot;python&quot;</span><span class="p">)</span>
+<span class="go">10 loops, best of 3: 1.9 s per loop</span>
+</pre></div>
+</div>
+<p>As can be seen, using the &#8220;numexpr&#8221; virtual machine is generally
+(much) faster, but there are situations that the &#8220;python&#8221; one is
+desirable because it offers much more functionality:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">blz</span><span class="o">.</span><span class="n">eval</span><span class="p">(</span><span class="s">&quot;diff(x)&quot;</span><span class="p">,</span> <span class="n">vm</span><span class="o">=</span><span class="s">&quot;numexpr&quot;</span><span class="p">)</span>
+<span class="go">NameError: variable name ``diff`` not found</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">blz</span><span class="o">.</span><span class="n">eval</span><span class="p">(</span><span class="s">&quot;np.diff(x)&quot;</span><span class="p">,</span> <span class="n">vm</span><span class="o">=</span><span class="s">&quot;python&quot;</span><span class="p">)</span>
+<span class="go">barray((9999389,), float64)  nbytes: 76.29 MB; cbytes: 814.25 KB; ratio: 95.94</span>
+<span class="go">  bparams := bparams(clevel=5, shuffle=True)</span>
+<span class="go">[1.0, 1.0, 1.0, ..., 1.0, 1.0, 1.0]</span>
+</pre></div>
+</div>
+<p>Finally, <cite>eval</cite> lets you select the type of the outcome to be a NumPy
+array by using the <cite>out_flavor</cite> argument:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">blz</span><span class="o">.</span><span class="n">eval</span><span class="p">(</span><span class="s">&quot;x**3&quot;</span><span class="p">,</span> <span class="n">out_flavor</span><span class="o">=</span><span class="s">&quot;numpy&quot;</span><span class="p">)</span>
+<span class="go">array([  0.00000000e+00,   1.00000000e+00,   8.00000000e+00, ...,</span>
+<span class="go">         9.99999100e+20,   9.99999400e+20,   9.99999700e+20])</span>
+</pre></div>
+</div>
+<p>For setting permanently your own defaults for the <cite>vm</cite> and
+<cite>out_flavors</cite>, see <a class="reference internal" href="blz-defaults.html#blz-defaults"><em>Defaults for BLZ operation</em></a> chapter.</p>
+</div>
+<div class="section" id="barray-metadata">
+<h3>barray metadata<a class="headerlink" href="#barray-metadata" title="Permalink to this headline">¶</a></h3>
+<p>barray implements several attributes, like <cite>dtype</cite>, <cite>shape</cite> and <cite>ndim</cite>
+that makes it to &#8216;quack&#8217; like a NumPy array:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mf">1e7</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span> <span class="o">=</span> <span class="n">blz</span><span class="o">.</span><span class="n">barray</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span><span class="o">.</span><span class="n">dtype</span>
+<span class="go">dtype(&#39;float64&#39;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span><span class="o">.</span><span class="n">shape</span>
+<span class="go">(10000000,)</span>
+</pre></div>
+</div>
+<p>In addition, it implements the <cite>cbytes</cite> attribute that tells how many
+bytes in memory (or on-disk) uses the barray object:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">b</span><span class="o">.</span><span class="n">cbytes</span>
+<span class="go">2691722</span>
+</pre></div>
+</div>
+<p>This figure is approximate and it is generally lower than the original
+(uncompressed) datasize can be accessed by using <cite>nbytes</cite> attribute:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">b</span><span class="o">.</span><span class="n">nbytes</span>
+<span class="go">80000000</span>
+</pre></div>
+</div>
+<p>which is the same than the equivalent NumPy array:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">size</span><span class="o">*</span><span class="n">a</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">itemsize</span>
+<span class="go">80000000</span>
+</pre></div>
+</div>
+<p>For knowing the compression level used and other optional filters, use
+the <cite>bparams</cite> read-only attribute:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">b</span><span class="o">.</span><span class="n">bparams</span>
+<span class="go">bparams(clevel=5, shuffle=True)</span>
+</pre></div>
+</div>
+<p>Also, you can check which the default value is (remember, used when
+<cite>resize</cite> -ing the barray):</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">b</span><span class="o">.</span><span class="n">dflt</span>
+<span class="go">0.0</span>
+</pre></div>
+</div>
+<p>You can access the <cite>chunklen</cite> (the length for each chunk) for this
+barray:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">b</span><span class="o">.</span><span class="n">chunklen</span>
+<span class="go">16384</span>
+</pre></div>
+</div>
+<p>For a complete list of public attributes of barray, see section on
+<a class="reference internal" href="reference.html#barray-attributes"><em>barray attributes</em></a>.</p>
+</div>
+<div class="section" id="barray-user-attrs">
+<span id="barray-attrs"></span><h3>barray user attrs<a class="headerlink" href="#barray-user-attrs" title="Permalink to this headline">¶</a></h3>
+<p>Besides the regular attributes like <cite>shape</cite>, <cite>dtype</cite> or <cite>chunklen</cite>,
+there is another set of attributes that can be added (and removed) by
+the user in another name space.  This space is accessible via the
+special <cite>attrs</cite> attribute:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">blz</span><span class="o">.</span><span class="n">barray</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">],</span> <span class="n">rootdir</span><span class="o">=</span><span class="s">&#39;mydata&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">attrs</span>
+<span class="go">*no attrs*</span>
+</pre></div>
+</div>
+<p>As you see, by default there are no attributes attached to <cite>attrs</cite>.
+Also, notice that the barray that we have created is persistent and
+stored on the &#8216;mydata&#8217; directory.  Let&#8217;s add one attribute here:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s">&#39;myattr&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">234</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">attrs</span>
+<span class="go">myattr : 234</span>
+</pre></div>
+</div>
+<p>So, we have attached the &#8216;myattr&#8217; attribute with the value 234.  Let&#8217;s
+add a couple of attributes more:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s">&#39;temp&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">23</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s">&#39;unit&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;Celsius&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">attrs</span>
+<span class="go">unit : &#39;Celsius&#39;</span>
+<span class="go">myattr : 234</span>
+<span class="go">temp : 23</span>
+</pre></div>
+</div>
+<p>good, we have three of them now.  You can attach as many as you want,
+and the only current limitation is that they have to be serializable
+via JSON.</p>
+<p>As the &#8216;a&#8217; barray is persistent, it can re-opened in other Python session:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="o">^</span><span class="n">D</span>
+<span class="go">$ python</span>
+<span class="go">Python 2.7.3rc2 (default, Apr 22 2012, 22:30:17)</span>
+<span class="go">[GCC 4.6.3] on linux2</span>
+<span class="go">Type &quot;help&quot;, &quot;copyright&quot;, &quot;credits&quot; or &quot;license&quot; for more information.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">blz</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">blz</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">rootdir</span><span class="o">=</span><span class="s">&quot;mydata&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span>                            <span class="c"># yeah, our data is back</span>
+<span class="go">barray((2,), int64)</span>
+<span class="go">  nbytes: 16; cbytes: 4.00 KB; ratio: 0.00</span>
+<span class="go">  bparams := bparams(clevel=5, shuffle=True)</span>
+<span class="go">  rootdir := &#39;mydata&#39;</span>
+<span class="go">[1 2]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">attrs</span>                      <span class="c"># and so is user attrs!</span>
+<span class="go">temp : 23</span>
+<span class="go">myattr : 234</span>
+<span class="go">unit : u&#39;Celsius&#39;</span>
+</pre></div>
+</div>
+<p>Now, let&#8217;s remove a couple of user attrs:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">del</span> <span class="n">a</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s">&#39;myattr&#39;</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">del</span> <span class="n">a</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s">&#39;unit&#39;</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">attrs</span>
+<span class="go">temp : 23</span>
+</pre></div>
+</div>
+<p>So, it is really easy to make use of this feature so as to complement
+your data with (potentially persistent) metadata of your choice.  Of
+course, the <cite>btable</cite> object also wears this capability.</p>
+</div>
+</div>
+<div class="section" id="tutorial-on-btable-objects">
+<h2>Tutorial on btable objects<a class="headerlink" href="#tutorial-on-btable-objects" title="Permalink to this headline">¶</a></h2>
+<p>The BLZ package comes with a handy object that arranges data by column
+(and not by row, as in NumPy&#8217;s structured arrays).  This allows for
+much better performance for walking tabular data by column and also
+for adding and deleting columns.</p>
+<div class="section" id="creating-a-btable">
+<h3>Creating a btable<a class="headerlink" href="#creating-a-btable" title="Permalink to this headline">¶</a></h3>
+<p>You can build btable objects in many different ways, but perhaps the
+easiest one is using the <cite>fromiter</cite> constructor:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">N</span> <span class="o">=</span> <span class="mi">100</span><span class="o">*</span><span class="mi">1000</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ct</span> <span class="o">=</span> <span class="n">blz</span><span class="o">.</span><span class="n">fromiter</span><span class="p">(((</span><span class="n">i</span><span class="p">,</span><span class="n">i</span><span class="o">*</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">N</span><span class="p">)),</span> <span class="n">dtype</span><span class="o">=</span><span class="s">&quot;i4,f8&quot;</span><span class="p">,</span> <span class="n">count</span><span class="o">=</span><span class="n">N</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ct</span>
+<span class="go">btable((100000,), |V12) nbytes: 1.14 MB; cbytes: 283.27 KB; ratio: 4.14</span>
+<span class="go">  bparams := bparams(clevel=5, shuffle=True)</span>
+<span class="go">[(0, 0.0), (1, 1.0), (2, 4.0), ...,</span>
+<span class="go"> (99997, 9999400009.0), (99998, 9999600004.0), (99999, 9999800001.0)]</span>
+</pre></div>
+</div>
+<p>You can also build an empty btable first and the append data:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">ct</span> <span class="o">=</span> <span class="n">blz</span><span class="o">.</span><span class="n">btable</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s">&quot;i4,f8&quot;</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">N</span><span class="p">):</span>
+<span class="go">...:    ct.append((i, i**2))</span>
+<span class="go">...:</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ct</span>
+<span class="go">btable((100000,), |V12) nbytes: 1.14 MB; cbytes: 355.48 KB; ratio: 3.30</span>
+<span class="go">  bparams := bparams(clevel=5, shuffle=True)</span>
+<span class="go">[(0, 0.0), (1, 1.0), (2, 4.0), ...,</span>
+<span class="go"> (99997, 9999400009.0), (99998, 9999600004.0), (99999, 9999800001.0)]</span>
+</pre></div>
+</div>
+<p>However, we can see how the latter approach does not compress as well.
+Why?  Well, BLZ has machinery for computing &#8216;optimal&#8217; chunksizes
+depending on the number of entries.  For the first case, BLZ can
+figure out the number of entries in final array, but not for the loop
+case.  You can solve this by passing the final length with the
+<cite>expectedlen</cite> argument to the btable constructor:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">ct</span> <span class="o">=</span> <span class="n">blz</span><span class="o">.</span><span class="n">btable</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s">&quot;i4,f8&quot;</span><span class="p">),</span> <span class="n">expectedlen</span><span class="o">=</span><span class="n">N</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">N</span><span class="p">):</span>
+<span class="go">...:    ct.append((i, i**2))</span>
+<span class="go">...:</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ct</span>
+<span class="go">btable((100000,), |V12) nbytes: 1.14 MB; cbytes: 283.27 KB; ratio: 4.14</span>
+<span class="go">  bparams := bparams(clevel=5, shuffle=True)</span>
+<span class="go">[(0, 0.0), (1, 1.0), (2, 4.0), ...,</span>
+<span class="go"> (99997, 9999400009.0), (99998, 9999600004.0), (99999, 9999800001.0)]</span>
+</pre></div>
+</div>
+<p>Okay, the compression ratio is the same now.</p>
+</div>
+<div class="section" id="accessing-and-setting-rows">
+<h3>Accessing and setting rows<a class="headerlink" href="#accessing-and-setting-rows" title="Permalink to this headline">¶</a></h3>
+<p>The btable object supports the most common indexing operations in
+NumPy:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">ct</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+<span class="go">(1, 1.0)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">type</span><span class="p">(</span><span class="n">ct</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+<span class="go">&lt;type &#39;numpy.void&#39;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ct</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">6</span><span class="p">]</span>
+<span class="go">array([(1, 1.0), (2, 4.0), (3, 9.0), (4, 16.0), (5, 25.0)],</span>
+<span class="go">      dtype=[(&#39;f0&#39;, &#39;&lt;i4&#39;), (&#39;f1&#39;, &#39;&lt;f8&#39;)])</span>
+</pre></div>
+</div>
+<p>The first thing to have in mind is that, similarly to <cite>barray</cite>
+objects, the result of an indexing operation is a native NumPy object
+(in the case above a scalar and a structured array).</p>
+<p>Fancy indexing is also supported:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">ct</span><span class="p">[[</span><span class="mi">1</span><span class="p">,</span><span class="mi">6</span><span class="p">,</span><span class="mi">13</span><span class="p">]]</span>
+<span class="go">array([(1, 1.0), (6, 36.0), (13, 169.0)],</span>
+<span class="go">      dtype=[(&#39;f0&#39;, &#39;&lt;i4&#39;), (&#39;f1&#39;, &#39;&lt;f8&#39;)])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ct</span><span class="p">[</span><span class="s">&quot;(f0&gt;0) &amp; (f1&lt;10)&quot;</span><span class="p">]</span>
+<span class="go">array([(1, 1.0), (2, 4.0), (3, 9.0)],</span>
+<span class="go">      dtype=[(&#39;f0&#39;, &#39;&lt;i4&#39;), (&#39;f1&#39;, &#39;&lt;f8&#39;)])</span>
+</pre></div>
+</div>
+<p>Note that conditions over columns are expressed as string expressions
+(in order to use Numexpr under the hood), and that the column names
+are understood correctly.</p>
+<p>Setting rows is also supported:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">ct</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ct</span>
+<span class="go">btable((100000,), |V12) nbytes: 1.14 MB; cbytes: 279.89 KB; ratio: 4.19</span>
+<span class="go">  bparams := bparams(clevel=5, shuffle=True)</span>
+<span class="go">[(0, 0.0), (0, 0.0), (2, 4.0), ...,</span>
+<span class="go"> (99997, 9999400009.0), (99998, 9999600004.0), (99999, 9999800001.0)]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ct</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">6</span><span class="p">]</span>
+<span class="go">array([(0, 0.0), (0, 0.0), (0, 0.0), (0, 0.0), (0, 0.0)],</span>
+<span class="go">      dtype=[(&#39;f0&#39;, &#39;&lt;i4&#39;), (&#39;f1&#39;, &#39;&lt;f8&#39;)])</span>
+</pre></div>
+</div>
+<p>And in combination with fancy indexing too:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">ct</span><span class="p">[[</span><span class="mi">1</span><span class="p">,</span><span class="mi">6</span><span class="p">,</span><span class="mi">13</span><span class="p">]]</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ct</span><span class="p">[[</span><span class="mi">1</span><span class="p">,</span><span class="mi">6</span><span class="p">,</span><span class="mi">13</span><span class="p">]]</span>
+<span class="go">array([(1, 1.0), (1, 1.0), (1, 1.0)],</span>
+<span class="go">      dtype=[(&#39;f0&#39;, &#39;&lt;i4&#39;), (&#39;f1&#39;, &#39;&lt;f8&#39;)])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ct</span><span class="p">[</span><span class="s">&quot;(f0&gt;=0) &amp; (f1&lt;10)&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ct</span><span class="p">[:</span><span class="mi">7</span><span class="p">]</span>
+<span class="go">array([(2, 2.0), (2, 2.0), (2, 2.0), (2, 2.0), (2, 2.0), (2, 2.0),</span>
+<span class="go">       (6, 36.0)],</span>
+<span class="go">      dtype=[(&#39;f0&#39;, &#39;&lt;i4&#39;), (&#39;f1&#39;, &#39;&lt;f8&#39;)])</span>
+</pre></div>
+</div>
+<p>As you may have noticed, fancy indexing in combination with conditions
+is a very powerful feature.</p>
+</div>
+<div class="section" id="adding-and-deleting-columns">
+<h3>Adding and deleting columns<a class="headerlink" href="#adding-and-deleting-columns" title="Permalink to this headline">¶</a></h3>
+<p>Adding and deleting columns is easy and, due to the column-wise data
+arrangement, very efficient.  Let&#8217;s add a new column on an existing
+btable:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">N</span> <span class="o">=</span> <span class="mi">100</span><span class="o">*</span><span class="mi">1000</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ct</span> <span class="o">=</span> <span class="n">blz</span><span class="o">.</span><span class="n">fromiter</span><span class="p">(((</span><span class="n">i</span><span class="p">,</span><span class="n">i</span><span class="o">*</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">N</span><span class="p">)),</span> <span class="n">dtype</span><span class="o">=</span><span class="s">&quot;i4,f8&quot;</span><span class="p">,</span> <span class="n">count</span><span class="o">=</span><span class="n">N</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">new_col</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">100</span><span class="o">*</span><span class="mi">1000</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ct</span><span class="o">.</span><span class="n">addcol</span><span class="p">(</span><span class="n">new_col</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ct</span>
+<span class="go">btable((100000,), |V20) nbytes: 1.91 MB; cbytes: 528.83 KB; ratio: 3.69</span>
+<span class="go">  bparams := bparams(clevel=5, shuffle=True)</span>
+<span class="go">[(0, 0.0, 0.0), (1, 1.0, 1.000010000100001e-05),</span>
+<span class="go"> (2, 4.0, 2.000020000200002e-05), ...,</span>
+<span class="go"> (99997, 9999400009.0, 0.99997999979999797),</span>
+<span class="go"> (99998, 9999600004.0, 0.99998999989999904), (99999, 9999800001.0, 1.0)]</span>
+</pre></div>
+</div>
+<p>Now, remove the already existing &#8216;f1&#8217; column:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">ct</span><span class="o">.</span><span class="n">delcol</span><span class="p">(</span><span class="s">&#39;f1&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ct</span>
+<span class="go">btable((100000,), |V12) nbytes: 1.14 MB; cbytes: 318.68 KB; ratio: 3.68</span>
+<span class="go">  bparams := bparams(clevel=5, shuffle=True)</span>
+<span class="go">[(0, 0.0), (1, 1.000010000100001e-05), (2, 2.000020000200002e-05), ...,</span>
+<span class="go"> (99997, 0.99997999979999797), (99998, 0.99998999989999904), (99999, 1.0)]</span>
+</pre></div>
+</div>
+<p>As said, adding and deleting columns is very cheap, so don&#8217;t be afraid
+of using them extensively.</p>
+</div>
+<div class="section" id="iterating-over-btable-data">
+<h3>Iterating over btable data<a class="headerlink" href="#iterating-over-btable-data" title="Permalink to this headline">¶</a></h3>
+<p>You can make use of the <cite>iter()</cite> method in order to easily iterate
+over the values of a btable.  <cite>iter()</cite> has support for start, stop and
+step parameters:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">N</span> <span class="o">=</span> <span class="mi">100</span><span class="o">*</span><span class="mi">1000</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span> <span class="o">=</span> <span class="n">blz</span><span class="o">.</span><span class="n">fromiter</span><span class="p">(((</span><span class="n">i</span><span class="p">,</span><span class="n">i</span><span class="o">*</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">N</span><span class="p">)),</span> <span class="n">dtype</span><span class="o">=</span><span class="s">&quot;i4,f8&quot;</span><span class="p">,</span> <span class="n">count</span><span class="o">=</span><span class="n">N</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">[</span><span class="n">row</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">ct</span><span class="o">.</span><span class="n">iter</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">10</span><span class="p">,</span><span class="mi">3</span><span class="p">)]</span>
+<span class="go">[row(f0=1, f1=1.0), row(f0=4, f1=16.0), row(f0=7, f1=49.0)]</span>
+</pre></div>
+</div>
+<p>Note how the data is returned as <cite>namedtuple</cite> objects of type
+<tt class="docutils literal"><span class="pre">row</span></tt>.  This allows you to iterate the fields more easily by using
+field names:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="p">[(</span><span class="n">f0</span><span class="p">,</span><span class="n">f1</span><span class="p">)</span> <span class="k">for</span> <span class="n">f0</span><span class="p">,</span><span class="n">f1</span> <span class="ow">in</span> <span class="n">ct</span><span class="o">.</span><span class="n">iter</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">10</span><span class="p">,</span><span class="mi">3</span><span class="p">)]</span>
+<span class="go">[(1, 1.0), (4, 16.0), (7, 49.0)]</span>
+</pre></div>
+</div>
+<p>You can also use the <tt class="docutils literal"><span class="pre">[:]</span></tt> accessor to get rid of the <tt class="docutils literal"><span class="pre">row</span></tt>
+namedtuple, and return just bare tuples:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="p">[</span><span class="n">row</span><span class="p">[:]</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">ct</span><span class="o">.</span><span class="n">iter</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">10</span><span class="p">,</span><span class="mi">3</span><span class="p">)]</span>
+<span class="go">[(1, 1.0), (4, 16.0), (7, 49.0)]</span>
+</pre></div>
+</div>
+<p>Also, you can select specific fields to be read via the <cite>outcols</cite>
+parameter:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="p">[</span><span class="n">row</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">ct</span><span class="o">.</span><span class="n">iter</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">10</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span> <span class="n">outcols</span><span class="o">=</span><span class="s">&#39;f0&#39;</span><span class="p">)]</span>
+<span class="go">[row(f0=1), row(f0=4), row(f0=7)]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">[(</span><span class="n">nr</span><span class="p">,</span><span class="n">f0</span><span class="p">)</span> <span class="k">for</span> <span class="n">nr</span><span class="p">,</span><span class="n">f0</span> <span class="ow">in</span> <span class="n">ct</span><span class="o">.</span><span class="n">iter</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">10</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span> <span class="n">outcols</span><span class="o">=</span><span class="s">&#39;nrow__,f0&#39;</span><span class="p">)]</span>
+<span class="go">[(1, 1), (4, 4), (7, 7)]</span>
+</pre></div>
+</div>
+<p>Please note the use of the special &#8216;<a href="#id1"><span class="problematic" id="id2">nrow__</span></a>&#8216; label for referring to
+the current row.</p>
+</div>
+<div class="section" id="iterating-over-the-output-of-conditions-along-columns">
+<h3>Iterating over the output of conditions along columns<a class="headerlink" href="#iterating-over-the-output-of-conditions-along-columns" title="Permalink to this headline">¶</a></h3>
+<p>One of the most powerful capabilities of the btable is the ability to
+iterate over the rows whose fields fulfill some conditions (without
+the need to put the results in a NumPy container, as described in the
+&#8220;Accessing and setting rows&#8221; section above).  This can be very useful
+for performing operations on very large btables without consuming lots
+of storage space.</p>
+<p>Here it is an example of use:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">N</span> <span class="o">=</span> <span class="mi">100</span><span class="o">*</span><span class="mi">1000</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span> <span class="o">=</span> <span class="n">blz</span><span class="o">.</span><span class="n">fromiter</span><span class="p">(((</span><span class="n">i</span><span class="p">,</span><span class="n">i</span><span class="o">*</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">N</span><span class="p">)),</span> <span class="n">dtype</span><span class="o">=</span><span class="s">&quot;i4,f8&quot;</span><span class="p">,</span> <span class="n">count</span><span class="o">=</span><span class="n">N</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">[</span><span class="n">row</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">ct</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="s">&quot;(f0&gt;0) &amp; (f1&lt;10)&quot;</span><span class="p">)]</span>
+<span class="go">[row(f0=1, f1=1.0), row(f0=2, f1=4.0), row(f0=3, f1=9.0)]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">sum</span><span class="p">([</span><span class="n">row</span><span class="o">.</span><span class="n">f1</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">ct</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="s">&quot;(f1&gt;10)&quot;</span><span class="p">)])</span>
+<span class="go">3.3333283333312755e+17</span>
+</pre></div>
+</div>
+<p>And by using the <cite>outcols</cite> parameter, you can specify the fields that
+you want to be returned:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="p">[</span><span class="n">row</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">ct</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="s">&quot;(f0&gt;0) &amp; (f1&lt;10)&quot;</span><span class="p">,</span> <span class="s">&quot;f1&quot;</span><span class="p">)]</span>
+<span class="go">[row(f1=1.0), row(f1=4.0), row(f1=9.0)]</span>
+</pre></div>
+</div>
+<p>You can even specify the row number fulfilling the condition:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="p">[(</span><span class="n">f1</span><span class="p">,</span><span class="n">nr</span><span class="p">)</span> <span class="k">for</span> <span class="n">f1</span><span class="p">,</span><span class="n">nr</span> <span class="ow">in</span> <span class="n">ct</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="s">&quot;(f0&gt;0) &amp; (f1&lt;10)&quot;</span><span class="p">,</span> <span class="s">&quot;f1,nrow__&quot;</span><span class="p">)]</span>
+<span class="go">[(1.0, 1), (4.0, 2), (9.0, 3)]</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="performing-operations-on-btable-columns">
+<h3>Performing operations on btable columns<a class="headerlink" href="#performing-operations-on-btable-columns" title="Permalink to this headline">¶</a></h3>
+<p>The btable object also wears an <cite>eval()</cite> method that is handy for
+carrying out operations among columns:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">ct</span><span class="o">.</span><span class="n">eval</span><span class="p">(</span><span class="s">&quot;cos((3+f0)/sqrt(2*f1))&quot;</span><span class="p">)</span>
+<span class="go">barray((1000000,), float64)  nbytes: 7.63 MB; cbytes: 2.23 MB; ratio: 3.42</span>
+<span class="go">  bparams := bparams(clevel=5, shuffle=True)</span>
+<span class="go">[nan, -0.951363128126, -0.195699435691, ...,</span>
+<span class="go"> 0.760243218982, 0.760243218983, 0.760243218984]</span>
+</pre></div>
+</div>
+<p>Here, one can see an exception in btable methods behaviour: the
+resulting output is a btable, and not a NumPy structured array.  This
+is so because the output of <cite>eval()</cite> is of the same length than the
+btable, and thus it can be pretty large, so compression maybe of help
+to reduce its storage needs.</p>
+<p>## Local Variables:
+## fill-column: 72
+## End:</p>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Tutorials</a><ul>
+<li><a class="reference internal" href="#tutorial-on-barray-objects">Tutorial on barray objects</a><ul>
+<li><a class="reference internal" href="#creating-barrays">Creating barrays</a></li>
+<li><a class="reference internal" href="#enlarging-your-barray">Enlarging your barray</a></li>
+<li><a class="reference internal" href="#compression-level-and-shuffle-filter">Compression level and shuffle filter</a></li>
+<li><a class="reference internal" href="#accessing-blz-objects-data">Accessing BLZ objects data</a></li>
+<li><a class="reference internal" href="#querying-barrays">Querying barrays</a></li>
+<li><a class="reference internal" href="#modifying-barrays">Modifying barrays</a></li>
+<li><a class="reference internal" href="#multidimensional-barrays">Multidimensional barrays</a></li>
+<li><a class="reference internal" href="#operating-with-barrays">Operating with barrays</a></li>
+<li><a class="reference internal" href="#barray-metadata">barray metadata</a></li>
+<li><a class="reference internal" href="#barray-user-attrs">barray user attrs</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#tutorial-on-btable-objects">Tutorial on btable objects</a><ul>
+<li><a class="reference internal" href="#creating-a-btable">Creating a btable</a></li>
+<li><a class="reference internal" href="#accessing-and-setting-rows">Accessing and setting rows</a></li>
+<li><a class="reference internal" href="#adding-and-deleting-columns">Adding and deleting columns</a></li>
+<li><a class="reference internal" href="#iterating-over-btable-data">Iterating over btable data</a></li>
+<li><a class="reference internal" href="#iterating-over-the-output-of-conditions-along-columns">Iterating over the output of conditions along columns</a></li>
+<li><a class="reference internal" href="#performing-operations-on-btable-columns">Performing operations on btable columns</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="install.html"
+                        title="previous chapter">Installation</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="reference.html"
+                        title="next chapter">Library Reference</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/tutorial.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="reference.html" title="Library Reference"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="install.html" title="Installation"
+             >previous</a> |</li>
+        <li><a href="index.html">BLZ 0.6.dev documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2012-2014, Continuum Analytics.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,164 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Optimization tips &mdash; BLZ 0.6.dev documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.6.dev',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="BLZ 0.6.dev documentation" href="index.html" />
+    <link rel="next" title="Defaults for BLZ operation" href="blz-defaults.html" />
+    <link rel="prev" title="Library Reference" href="reference.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="blz-defaults.html" title="Defaults for BLZ operation"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="reference.html" title="Library Reference"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">BLZ 0.6.dev documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="optimization-tips">
+<span id="opt-tips"></span><h1>Optimization tips<a class="headerlink" href="#optimization-tips" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="changing-explicitly-the-length-of-chunks">
+<h2>Changing explicitly the length of chunks<a class="headerlink" href="#changing-explicitly-the-length-of-chunks" title="Permalink to this headline">¶</a></h2>
+<p>You may want to use explicitly the <cite>chunklen</cite> parameter to fine-tune
+your compression levels:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mf">1e7</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">blz</span><span class="o">.</span><span class="n">barray</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+<span class="go">barray((10000000,), float64)  nbytes: 76.29 MB; cbytes: 2.57 MB; ratio: 29.72</span>
+<span class="go">  cparams := cparams(clevel=5, shuffle=True)</span>
+<span class="go">[0.0, 1.0, 2.0, ..., 9999997.0, 9999998.0, 9999999.0]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">blz</span><span class="o">.</span><span class="n">barray</span><span class="p">(</span><span class="n">a</span><span class="p">)</span><span class="o">.</span><span class="n">chunklen</span>
+<span class="go">16384   # 128 KB = 16384 * 8 is the default chunk size for this barray</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">blz</span><span class="o">.</span><span class="n">barray</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">chunklen</span><span class="o">=</span><span class="mi">512</span><span class="p">)</span>
+<span class="go">barray((10000000,), float64)  nbytes: 76.29 MB; cbytes: 10.20 MB; ratio: 7.48</span>
+<span class="go">  cparams := cparams(clevel=5, shuffle=True)</span>
+<span class="go">[0.0, 1.0, 2.0, ..., 9999997.0, 9999998.0, 9999999.0]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">blz</span><span class="o">.</span><span class="n">barray</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">chunklen</span><span class="o">=</span><span class="mi">8</span><span class="o">*</span><span class="mi">1024</span><span class="p">)</span>
+<span class="go">barray((10000000,), float64)  nbytes: 76.29 MB; cbytes: 1.50 MB; ratio: 50.88</span>
+<span class="go">  cparams := cparams(clevel=5, shuffle=True)</span>
+<span class="go">[0.0, 1.0, 2.0, ..., 9999997.0, 9999998.0, 9999999.0]</span>
+</pre></div>
+</div>
+<p>You see, the length of the chunk affects very much compression levels
+and the performance of I/O to barrays too.</p>
+<p>In general, however, it is safer (and quicker!) to use the
+<cite>expectedlen</cite> parameter (see next section).</p>
+</div>
+<div class="section" id="informing-about-the-length-of-your-barrays">
+<h2>Informing about the length of your barrays<a class="headerlink" href="#informing-about-the-length-of-your-barrays" title="Permalink to this headline">¶</a></h2>
+<p>If you are going to add a lot of rows to your barrays, be sure to use
+the <cite>expectedlen</cite> parameter in creating time to inform the constructor
+about the expected length of your final barray; this allows barray to
+fine-tune the length of its chunks more easily.  For example:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mf">1e7</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">blz</span><span class="o">.</span><span class="n">barray</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">expectedlen</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span><span class="o">.</span><span class="n">chunklen</span>
+<span class="go">512</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">blz</span><span class="o">.</span><span class="n">barray</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">expectedlen</span><span class="o">=</span><span class="mi">10</span><span class="o">*</span><span class="mi">1000</span><span class="p">)</span><span class="o">.</span><span class="n">chunklen</span>
+<span class="go">4096</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">blz</span><span class="o">.</span><span class="n">barray</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">expectedlen</span><span class="o">=</span><span class="mi">10</span><span class="o">*</span><span class="mi">1000</span><span class="o">*</span><span class="mi">1000</span><span class="p">)</span><span class="o">.</span><span class="n">chunklen</span>
+<span class="go">16384</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">blz</span><span class="o">.</span><span class="n">barray</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">expectedlen</span><span class="o">=</span><span class="mi">10</span><span class="o">*</span><span class="mi">1000</span><span class="o">*</span><span class="mi">1000</span><span class="o">*</span><span class="mi">1000</span><span class="p">)</span><span class="o">.</span><span class="n">chunklen</span>
+<span class="go">131072</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Optimization tips</a><ul>
+<li><a class="reference internal" href="#changing-explicitly-the-length-of-chunks">Changing explicitly the length of chunks</a></li>
+<li><a class="reference internal" href="#informing-about-the-length-of-your-barrays">Informing about the length of your barrays</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="reference.html"
+                        title="previous chapter">Library Reference</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="blz-defaults.html"
+                        title="next chapter">Defaults for BLZ operation</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/opt-tips.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="blz-defaults.html" title="Defaults for BLZ operation"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="reference.html" title="Library Reference"
+             >previous</a> |</li>
+        <li><a href="index.html">BLZ 0.6.dev documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2012-2014, Continuum Analytics.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.
+    </div>
+  </body>
+</html>
