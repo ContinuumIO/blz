@@ -119,7 +119,9 @@ def blosc_compressor_list():
   out : list
       The list of names.
   """
-  return blosc_list_compressors().split(',')
+  list_compr = blosc_list_compressors().decode()
+  clist = [s.encode() for s in list_compr.split(',')]
+  return clist
 
 def _blosc_set_nthreads(nthreads):
   """
