@@ -60,6 +60,9 @@ Resources
 Visit the main BLZ site repository at:
 http://github.com/ContinuumIO/blz
 
+Read the online docs at:
+http://blz.pydata.org/blz-manual/index.html
+
 Home of Blosc compressor:
 http://www.blosc.org
 

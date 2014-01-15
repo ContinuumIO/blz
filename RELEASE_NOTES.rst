@@ -9,11 +9,13 @@ Release notes for BLZ
 Changes from 0.5.1 to 0.6
 =========================
 
-- Project name changed from 'carray' to 'BLZ' (or 'blz', as you prefer).
+- Project name changed from 'carray' to 'BLZ' (or lowercase 'blz', as
+  you prefer).
 
 - Added support for storing objects.
 
-- Updated to Blosc 1.3.
+- Updated to Blosc 1.3, so support for multiple compressors ('blosclz',
+  'lz4', 'lz4hc', 'snappy' and 'zlib') is there.
 
 
 Changes from 0.5 to 0.5.1

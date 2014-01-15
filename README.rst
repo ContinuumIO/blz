@@ -38,7 +38,7 @@ Requisites
 - NumPy >= 1.7
 - Cython >= 0.19
 - numexpr >= 2.2 (optional, if not present, plain NumPy will be used)
-- Blosc >= 1.3.0 (optional, if not present, a minimal Blosc will be used)
+- Blosc >= 1.3.0 (optional, the internal Blosc will be used by default)
 
 Building
 --------
@@ -95,6 +95,9 @@ http://github.com/ContinuumIO/blz
 
 Home of Blosc compressor:
 http://www.blosc.org
+
+Read the online docs at:
+http://blz.pydata.org/blz-manual/index.html
 
 User's mail list:
 blaze-dev@continuum.io
