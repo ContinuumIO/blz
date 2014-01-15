@@ -423,7 +423,7 @@ Operating with barrays
 ----------------------
 
 Right now, you cannot operate with barrays directly (although that
-might be implemented in Blaze)::
+might be implemented in Blaze itself)::
 
   >>> x = blz.arange(1e7)
   >>> x + x

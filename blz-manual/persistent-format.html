@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Persistent format for BLZ &mdash; BLZ 0.6.dev documentation</title>
+    <title>Persistent format for BLZ &mdash; BLZ 0.6.0 documentation</title>
     
     <link rel="stylesheet" href="_static/default.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -14,7 +14,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '0.6.dev',
+        VERSION:     '0.6.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -24,7 +24,7 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    <link rel="top" title="BLZ 0.6.dev documentation" href="index.html" />
+    <link rel="top" title="BLZ 0.6.0 documentation" href="index.html" />
     <link rel="prev" title="Defaults for BLZ operation" href="blz-defaults.html" /> 
   </head>
   <body>
@@ -37,7 +37,7 @@
         <li class="right" >
           <a href="blz-defaults.html" title="Defaults for BLZ operation"
              accesskey="P">previous</a> |</li>
-        <li><a href="index.html">BLZ 0.6.dev documentation</a> &raquo;</li> 
+        <li><a href="index.html">BLZ 0.6.0 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -50,16 +50,16 @@
 <h1>Persistent format for BLZ<a class="headerlink" href="#persistent-format-for-blz" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="introduction">
 <h2>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
-<p>Blaze is designed to work with data that is both in memory and disk in
-a transparent way.  BLZ is the format that is implemented internally
-so as to persist data on-disk (although it supports in-memory starge
-too).  The goals of the BLZ format are:</p>
+<p>BLZ is designed to work with data that is both in memory and disk in a
+transparent way.  BLZ is also the format that is implemented
+internally so as to persist data on-disk (although it supports
+in-memory starge too).  The goals of the BLZ format are:</p>
 <ol class="arabic simple">
 <li>Allow to work with data directly on disk, exactly on the same way
 than data in memory.</li>
-<li>The persistence layer should support the same access capabilities
-than Blaze objects including: modifying, appending and removing
-data, as well as direct access to data (in the same way than RAM).</li>
+<li>The persistence layer should support the next access capabilities:
+modifying, appending and removing data, as well as direct access to
+data (in the same way than RAM).</li>
 <li>Transparent data compression must be possible.</li>
 <li>User metadata addition must be possible too.</li>
 <li>Data objects are allowed to be enlarged or shrunk.</li>
@@ -67,15 +67,15 @@ data, as well as direct access to data (in the same way than RAM).</li>
 <li>And last but not least, the data should be easily &#8216;shardable&#8217; for
 optimal behavior in distributed storage.  Providing a format that
 is already &#8216;sharded&#8217; by default represents a big advantage for
-allowing spreading a Blaze object among different nodes.</li>
+allowing spreading a BLZ object among different nodes.</li>
 </ol>
 <p>These points, in combination with a distributed filesystem, and with a
 system that would be aware of the physical topology of the underlying
 infrastructure allows to largely avoid the need for a Disco/Hadoop
 infrastructure, permitting much better flexibility and performance.</p>
 <p>The low level description for the BLZ format follows.  It must be
-noted that with Blaze 0.1 the implementation is almost complete,
-except for the fact that that superchunks are not yet there.</p>
+noted that with the implementation is almost complete, except for the
+fact that that superchunks are not yet there.</p>
 </div>
 <div class="section" id="the-blz-format">
 <h2>The BLZ format<a class="headerlink" href="#the-blz-format" title="Permalink to this headline">¶</a></h2>
@@ -426,7 +426,7 @@ is being stored.  Example:</p>
         <li class="right" >
           <a href="blz-defaults.html" title="Defaults for BLZ operation"
              >previous</a> |</li>
-        <li><a href="index.html">BLZ 0.6.dev documentation</a> &raquo;</li> 
+        <li><a href="index.html">BLZ 0.6.0 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">
