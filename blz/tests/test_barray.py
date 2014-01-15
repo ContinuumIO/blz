@@ -18,8 +18,9 @@ from blz.tests.common import MayBeDiskTest
 
 is_64bit = (struct.calcsize("P") == 8)
 
-if sys.version_info >= (3, 0):
+if sys.version > '3':
     xrange = range
+    long = int
 
 # Just memory tests for now
 
