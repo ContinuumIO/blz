@@ -1490,6 +1490,7 @@ class evalTest(MayBeDiskTest):
         #print "numpy   ->", nr
         assert_array_equal(cr[:], nr, "barray[expr] does not work correctly")
 
+    @skipUnless(sys.version_info.major < 3, "not working in Python 3")
     def test08(self):
         """Testing eval() via expression with lists (raise ValueError)"""
         a, b = range(int(self.N)), range(int(self.N))
