@@ -166,7 +166,14 @@ def blosc_version():
   Return the version of the Blosc library.
 
   """
-  return (<char *>BLOSC_VERSION_STRING, <char *>BLOSC_VERSION_DATE)
+  # All the 'decode' contorsions are for Python 3 returning actual strings
+  ver_str = <char *>BLOSC_VERSION_STRING
+  if hasattr(ver_str, "decode"):
+    ver_str = ver_str.decode()
+  ver_date = <char *>BLOSC_VERSION_DATE
+  if hasattr(ver_date, "decode"):
+    ver_date = ver_date.decode()
+  return (ver_str, ver_date)
 
 def list_bytes_to_str(lst):
     """The Python 3 JSON encoder doesn't accept 'bytes' objects,
