@@ -9,6 +9,7 @@
 from __future__ import absolute_import
 
 import sys, os
+import glob
 
 from distutils.core import Extension
 from distutils.core import setup
@@ -128,8 +129,8 @@ BLOSC_DIR = os.environ.get('BLOSC_DIR', '')
 inc_dirs = []
 lib_dirs = []
 libs = []
+def_macros = []
 sources = ["blz/blz_ext.pyx"]
-depends = []
 
 # Include NumPy header dirs
 from numpy.distutils.misc_util import get_numpy_include_dirs
@@ -150,20 +151,28 @@ for arg in args:
         sys.argv.remove(arg)
 
 if not BLOSC_DIR:
-    inc_dirs += [ "blosc" ]
-    sources += [ "blosc/blosc.c", "blosc/blosclz.c", "blosc/shuffle.c" ]
-    depends += [ "blosc/blosc.h" ]
+    # Compiling everything from sources
+    # Blosc + BloscLZ sources
+    sources += glob.glob('c-blosc/blosc/*.c')
+    # LZ4 sources
+    sources += glob.glob('c-blosc/internal-complibs/lz4*/*.c')
+    # Snappy sources
+    sources += glob.glob('c-blosc/internal-complibs/snappy*/*.cc')
+    # Zlib sources
+    sources += glob.glob('c-blosc/internal-complibs/zlib*/*.c')
+    # Finally, add all the include dirs...
+    inc_dirs += [os.path.join('c-blosc', 'blosc')]
+    inc_dirs += glob.glob('c-blosc/internal-complibs/*')
+    # ...and the macros for all the compressors supported
+    def_macros += [('HAVE_LZ4', 1), ('HAVE_SNAPPY', 1), ('HAVE_ZLIB', 1)]
 else:
-    inc_dirs += [os.path.join(BLOSC_DIR, "include")]
-    lib_dirs += [os.path.join(BLOSC_DIR, "lib")]
-    libs += [ "blosc" ]
+    inc_dirs += [os.path.join(BLOSC_DIR, 'include')]
+    lib_dirs += [os.path.join(BLOSC_DIR, 'lib')]
+    libs += ['blosc']
 
 # Add -msse2 flag for optimizing shuffle in include Blosc
 if os.name == 'posix':
     CFLAGS.append("-msse2")
-
-# Add some macros here for debugging purposes, if needed
-def_macros = []
 
 
 classifiers = """\
@@ -205,7 +214,6 @@ compressor that is optimized for binary data.
                    include_dirs=inc_dirs,
                    define_macros=def_macros,
                    sources=sources,
-                   depends=depends,
                    library_dirs=lib_dirs,
                    libraries=libs,
                    extra_link_args=LFLAGS,
