@@ -39,6 +39,20 @@ Packaging
 - Make the binary packages for supported Python versions (2.7 and 3.3
   currently).  Check that installer works correctly.
 
+Upload the new version of the manual
+------------------------------------
+
+- Produce the html version of the manual:
+
+  $ cd doc
+  $ vi source/config.py   # make sure that version and release are updated
+  $ make html
+  $ cp -r build/html/* ../../blz-gh-pages/blz-manual
+  $ cd ../../blz-gh-pages
+  $ git commit -m"Uploading a new version of the manual" -a
+  $ git push 
+  $ cd ../blz
+
 Uploading
 ---------
 
