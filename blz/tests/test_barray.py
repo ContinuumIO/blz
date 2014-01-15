@@ -1556,19 +1556,23 @@ class evalDiskBig(evalTest, TestCase):
     N = 1e4
     disk = True
 
+@skipUnless(blz.numexpr_here, "numexpr is not here")
 class evalSmallNE(evalTest, TestCase):
     N = 10
     vm = "numexpr"
 
+@skipUnless(blz.numexpr_here, "numexpr is not here")
 class evalDiskSmallNE(evalTest, TestCase):
     N = 10
     vm = "numexpr"
     disk = True
 
+@skipUnless(blz.numexpr_here, "numexpr is not here")
 class evalBigNE(evalTest, TestCase):
     N = 1e4
     vm = "numexpr"
 
+@skipUnless(blz.numexpr_here, "numexpr is not here")
 class evalDiskBigNE(evalTest, TestCase):
     N = 1e4
     vm = "numexpr"
