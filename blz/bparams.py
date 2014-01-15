@@ -45,7 +45,7 @@ class bparams(object):
         """The compressor name."""
         return self._cname
 
-    def __init__(self, clevel=5, shuffle=True, cname=b"blosclz"):
+    def __init__(self, clevel=5, shuffle=True, cname="blosclz"):
         if not isinstance(clevel, int):
             raise ValueError("`clevel` must an int.")
         if not isinstance(shuffle, (bool, int)):
@@ -56,6 +56,9 @@ class bparams(object):
         self._clevel = clevel
         self._shuffle = shuffle
         list_cnames = blosc_compressor_list()
+        # Store the cname as bytes object internally
+        if hasattr(cname, 'encode'):
+            cname = cname.encode()
         if cname not in list_cnames:
             raise ValueError(
                 "Compressor '%s' is not available in this build" % cname)
