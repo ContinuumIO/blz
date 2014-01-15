@@ -1959,7 +1959,7 @@ class bloscCompressorsTest(MayBeDiskTest, TestCase):
         a = np.arange(2e5)
         cnames = blz.blosc_compressor_list()
         if common.verbose:
-            print "Checking compressors:", cnames
+            print("Checking compressors:", cnames)
         #print "\nsize b uncompressed-->", a.size * a.dtype.itemsize
         for cname in cnames:
             b = blz.barray(a, bparams=blz.bparams(clevel=9, cname=cname))
@@ -1974,7 +1974,7 @@ class bloscCompressorsTest(MayBeDiskTest, TestCase):
         a = np.arange(2e5)
         cnames = blz.blosc_compressor_list()
         if common.verbose:
-            print "Checking compressors:", cnames
+            print("Checking compressors:", cnames)
         #print "\nsize b uncompressed-->", a.size * a.dtype.itemsize
         for cname in cnames:
             b = blz.barray(a, rootdir=self.rootdir,

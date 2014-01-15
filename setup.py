@@ -6,6 +6,8 @@
 #
 ########################################################################
 
+from __future__ import absolute_import
+
 import sys, os
 
 from distutils.core import Extension
@@ -20,9 +22,9 @@ def _print_admonition(kind, head, body):
     tw = textwrap.TextWrapper(
         initial_indent='   ', subsequent_indent='   ')
 
-    print ".. %s:: %s" % (kind.upper(), head)
+    print(".. %s:: %s" % (kind.upper(), head))
     for line in tw.wrap(body):
-        print line
+        print(line)
 
 def exit_with_error(head, body=''):
     _print_admonition('error', head, body)

@@ -54,18 +54,18 @@ def print_versions():
 
 def print_heavy(heavy):
     if heavy:
-        print """\
-Performing the complete test suite!"""
+        print("""\
+Performing the complete test suite!""")
     else:
-        print """\
+        print("""\
 Performing only a light (yet comprehensive) subset of the test suite.
 If you want a more complete test, try passing the --heavy flag to this
 script (or set the 'heavy' parameter in case you are using blz.test()
 call).  The whole suite will take more than 30 seconds to complete on a
 relatively modern CPU and around 300 MB of RAM and 500 MB of disk
 [32-bit platforms will always run significantly more lightly].
-"""
-    print '-=' * 38
+""")
+    print('-=' * 38)
 
 
 def test(verbose=False, heavy=False):
