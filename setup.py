@@ -65,6 +65,12 @@ min_numexpr_version = '2.2'
 if sys.version_info[0] == 2:
     if sys.version_info[1] < 6:
         exit_with_error("You need Python 2.6 or greater to run blz!")
+    if sys.version_info[1] < 7:
+        try:
+            import unittest2
+        except ImportError:
+            exit_with_error(
+                "You need unittest2 for running blz tests with Python 2.6!")
 elif sys.version_info[0] == 3:
     if sys.version_info[1] < 1:
         exit_with_error("You need Python 3.3 or greater to run blz!")

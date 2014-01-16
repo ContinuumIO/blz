@@ -11,7 +11,10 @@ Run all test cases.
 """
 
 import sys, os
-import unittest
+if sys.version < "2.7":
+    import unittest2 as unittest
+else:
+    import unittest
 
 import numpy
 import blz

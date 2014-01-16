@@ -5,8 +5,12 @@ from __future__ import absolute_import
 import sys
 import struct
 import os, os.path
-import unittest
-from unittest import TestCase, skipUnless
+if sys.version < "2.7":
+    import unittest2 as unittest
+    from unittest2 import TestCase, skipUnless
+else:
+    import unittest
+    from unittest import TestCase, skipUnless
 
 import numpy as np
 from numpy.testing import assert_array_equal, assert_allclose
@@ -1491,7 +1495,7 @@ class evalTest(MayBeDiskTest):
         #print "numpy   ->", nr
         assert_array_equal(cr[:], nr, "barray[expr] does not work correctly")
 
-    @skipUnless(sys.version_info.major < 3, "not working in Python 3")
+    @skipUnless(sys.version < "3", "not working in Python 3")
     def test08(self):
         """Testing eval() via expression with lists (raise ValueError)"""
         a, b = range(int(self.N)), range(int(self.N))
