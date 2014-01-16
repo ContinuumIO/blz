@@ -41,8 +41,6 @@ def print_versions():
     else:
         print("Numexpr version:   not available "
               "(version >= %s not detected)" %  blz.min_numexpr_version)
-    from Cython.Compiler.Main import Version as Cython_Version
-    print("Cython version:    %s" % Cython_Version.version)
     print("Python version:    %s" % sys.version)
     if os.name == "posix":
         (sysname, nodename, release, version, machine) = os.uname()
