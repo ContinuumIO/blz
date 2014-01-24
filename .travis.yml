@@ -13,6 +13,7 @@ before_install:
   - ulimit -a
   - pip install -q --use-mirrors numpy
   - pip install -q --use-mirrors cython
+  # numexpr is an optional dependency, but it does not hurt testing it
   - pip install -q --use-mirrors numexpr
   - pip install -q --use-mirrors unittest2
   - python -V
