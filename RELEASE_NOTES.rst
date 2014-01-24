@@ -6,8 +6,14 @@ Release notes for BLZ
 :Contact: francesc@continuum.io
 
 
-Changes from 0.5.1 to 0.6
-=========================
+Changes from 0.6.0 to 0.6.1
+===========================
+
+- Added the dependency of unittest2 in case Python 2.6 is used.
+
+
+Changes from 0.5.1 to 0.6.0
+===========================
 
 - Project name changed from 'carray' to 'BLZ' (or lowercase 'blz', as
   you prefer).

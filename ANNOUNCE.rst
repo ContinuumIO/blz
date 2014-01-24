@@ -1,17 +1,17 @@
-Announcing BLZ 0.6
-==================
+Announcing BLZ 0.6 series
+=========================
 
 What's new
 ----------
 
 BLZ has been branched off from the Blaze project
 (http://blaze.pydata.org).  BLZ was meant as a persistent format and
-library for I/O in Blaze.  BLZ in Blaze was based on previous carray
+library for I/O in Blaze.  BLZ in Blaze is based on previous carray
 0.5 and this is why this new version is labeled 0.6.
 
 BLZ supports completely transparent storage on-disk in addition to
 memory.  That means that *everything* that can be done with the
-in-memory container can be done using the disk instead.
+in-memory container can be done using the disk as well.
 
 The advantages of a disk-based container is that the addressable space
 is much larger than just your available memory.  Also, as BLZ is based
@@ -21,8 +21,11 @@ compression library, the data access speed is very good.
 The format chosen for the persistence layer is based on the
 'bloscpack' library (thanks to Valentin Haenel for his inspiration)
 and described in the "Persistent format for BLZ" chapter of the user
-manual ('docs/source/persistence-format.rst').  You may want to know
-more about BLZ in this blog entry: http://continuum.io/blog/blz-format
+manual ('docs/source/persistence-format.rst').  More about Bloscpack
+here: https://github.com/esc/bloscpack
+
+You may want to know more about BLZ in this blog entry:
+http://continuum.io/blog/blz-format
 
 In this version, support for Blosc 1.3 has been added, that meaning
 that a new `cname` parameter has been added to the `bparams` class, so
