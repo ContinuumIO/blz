@@ -15,7 +15,8 @@ before_install:
   - pip install -q --use-mirrors cython
   # numexpr is an optional dependency, but it does not hurt testing it
   - pip install -q --use-mirrors numexpr
-  - pip install -q --use-mirrors unittest2
+  # Hmm, need to install this only for python 2.6
+  #- pip install -q --use-mirrors unittest2
   - python -V
 
 install:
