@@ -50,7 +50,7 @@ Upload the new version of the manual
   $ cp -r build/html/* ../../blz-gh-pages/blz-manual
   $ cd ../../blz-gh-pages
   $ git commit -m"Uploading a new version of the manual" -a
-  $ git push 
+  $ git push
   $ cd ../blz
 
 Uploading
