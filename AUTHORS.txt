@@ -1,0 +1,3 @@
+Francesc Alted designed and implemented the core interface.  Stephen
+Diehl and Oscar Villellas helped a lot with the integration with
+Blaze.  Mark Wiebe contributed fixes and support for Python 3.x.

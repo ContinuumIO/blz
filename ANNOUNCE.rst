@@ -19,10 +19,9 @@ on a chunked and compressed data layout based on the super-fast Blosc
 compression library, the data access speed is very good.
 
 The format chosen for the persistence layer is based on the
-'bloscpack' library (thanks to Valentin Haenel for his inspiration)
-and described in the "Persistent format for BLZ" chapter of the user
-manual ('docs/source/persistence-format.rst').  More about Bloscpack
-here: https://github.com/esc/bloscpack
+'bloscpack' library and described in the "Persistent format for BLZ"
+chapter of the user manual ('docs/source/persistence-format.rst').
+More about Bloscpack here: https://github.com/esc/bloscpack
 
 You may want to know more about BLZ in this blog entry:
 http://continuum.io/blog/blz-format
@@ -56,6 +55,7 @@ Numba for blazing fast operation.
 BLZ comes with an exhaustive test suite and fully supports both 32-bit
 and 64-bit platforms.  Also, it is typically tested on both UNIX and
 Windows operating systems.
+
 
 Resources
 ---------

@@ -144,5 +144,7 @@ Let us know of any bugs, suggestions, gripes, kudos, etc. you may
 have.
 
 
-Francesc Alted
-Continuum Analytics Inc.
+Authors
+-------
+
+See the AUTHORS.txt file.
