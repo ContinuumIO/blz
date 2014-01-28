@@ -10,7 +10,7 @@
 #
 # You can modify other parameters from the command line if you want:
 #
-# python bench/concat.py style arraysize nchunks nrepeats clevel
+# python bench/concat.py style arraysize nchunks nrepeats clevel, cname
 #
 
 import sys, math
@@ -30,8 +30,8 @@ def concat(data):
 
     return alldata
 
-def append(data, clevel):
-    alldata = blz.barray(data[0], bparams=blz.bparams(clevel))
+def append(data, clevel, cname):
+    alldata = blz.barray(data[0], bparams=blz.bparams(clevel, cname=cname))
     for carr in data[1:]:
         alldata.append(carr)
 
@@ -43,13 +43,17 @@ if len(sys.argv) < 2:
 
 style = sys.argv[1]
 if len(sys.argv) == 2:
-    N, K, T, clevel = (1000000, 100, 3, 5)
+    N, K, T, clevel, cname = (1000000, 100, 3, 1, 'lz4')
 else:
     N,K,T = [int(arg) for arg in sys.argv[2:5]]
     if len(sys.argv) > 5:
         clevel = int(sys.argv[5])
     else:
         clevel = 0
+    if len(sys.argv) > 6:
+        cname = int(sys.argv[6])
+    else:
+        cname = 'lz4'
 
 # The next datasets allow for very high compression ratios
 a = [numpy.arange(N, dtype='f8') for _ in range(K)]
@@ -64,7 +68,7 @@ elif style == 'concat':
         r = concat(a)
 elif style == 'blz':
     for _ in xrange(T):
-        r = append(a, clevel)
+        r = append(a, clevel, cname)
 else:
     print "Unrecognized style: %s" % style
     sys.exit()

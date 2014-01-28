@@ -15,7 +15,7 @@ from time import time
 NR = 1e6      # the number of rows
 NC = 100      # the number of columns
 mv = 1e10     # the mean value for entries (sig digits = 17 - log10(mv))
-clevel = 3    # the compression level
+clevel = 9    # the compression level
 show = False  # show statistics
 # The query for a btable
 squery = "(f2>.9) & ((f8>.3) & (f8<.4))"  # the btable query
@@ -87,7 +87,7 @@ def test_btable(clevel):
     enter()
     tc = blz.fromiter((mv+np.random.rand(NC)-mv for i in xrange(int(NR))),
                       dtype=dt,
-                      bparams=blz.bparams(clevel),
+                      bparams=blz.bparams(clevel, cname='lz4'),
                       count=int(NR))
     after_create()
 
