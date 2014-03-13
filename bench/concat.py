@@ -43,7 +43,7 @@ if len(sys.argv) < 2:
 
 style = sys.argv[1]
 if len(sys.argv) == 2:
-    N, K, T, clevel, cname = (1000000, 100, 3, 1, 'lz4')
+    N, K, T, clevel, cname = (100000, 100, 3, 1, 'lz4')
 else:
     N,K,T = [int(arg) for arg in sys.argv[2:5]]
     if len(sys.argv) > 5:
