@@ -65,6 +65,10 @@ from definitions cimport import_array, ndarray, dtype, \
 #-----------------------------------------------------------------
 
 
+# Check blosc version
+cdef extern from "check_blosc_version.h":
+  pass
+
 # Blosc routines
 cdef extern from "blosc.h":
 
