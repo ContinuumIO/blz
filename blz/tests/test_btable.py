@@ -113,8 +113,8 @@ class persistentTest(MayBeDiskTest, TestCase):
         assert_array_equal(t[:], ra, "btable values are not correct")
 
         # Now check some accesses
-        self.assertRaises(RuntimeError, t.__setitem__, 1, (0, 0.0))
-        self.assertRaises(RuntimeError, t.append, (0, 0.0))
+        self.assertRaises(IOError, t.__setitem__, 1, (0, 0.0))
+        self.assertRaises(IOError, t.append, (0, 0.0))
 
     def test00b(self):
         """Testing btable opening in "w" mode"""
@@ -173,7 +173,7 @@ class persistentTest(MayBeDiskTest, TestCase):
         N = 1e1
         a = blz.barray(np.arange(N, dtype='i4'))
         b = blz.barray(np.arange(N, dtype='f8')+1)
-        self.assertRaises(RuntimeError, blz.btable, (a, b), ('f0', 'f1'),
+        self.assertRaises(IOError, blz.btable, (a, b), ('f0', 'f1'),
                           rootdir=self.rootdir, mode='r')
 
     def test01b(self):
@@ -209,7 +209,7 @@ class persistentTest(MayBeDiskTest, TestCase):
         b = blz.barray(np.arange(N, dtype='f8')+1)
         t = blz.btable((a, b), ('f0', 'f1'), rootdir=self.rootdir)
         # Overwrite the last btable
-        self.assertRaises(RuntimeError, blz.btable, (a, b), ('f0', 'f1'),
+        self.assertRaises(IOError, blz.btable, (a, b), ('f0', 'f1'),
                           rootdir=self.rootdir, mode='a')
 
 
@@ -638,7 +638,7 @@ class copyTest(MayBeDiskTest, TestCase):
         t = blz.btable(ra, rootdir=self.rootdir)
         if self.disk:
             # Copy over the same location should give an error
-            self.assertRaises(RuntimeError,
+            self.assertRaises(IOError,
                               t.copy,bparams=blz.bparams(clevel=9),
                               rootdir=self.rootdir, mode='w')
             return

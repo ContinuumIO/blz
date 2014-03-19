@@ -316,7 +316,7 @@ class btable(object):
         """Create the `self.rootdir` directory safely."""
         if os.path.exists(rootdir):
             if mode != "w":
-                raise RuntimeError(
+                raise IOError(
                     "specified rootdir path '%s' already exists "
                     "and creation mode is '%s'" % (rootdir, mode))
             if os.path.isdir(rootdir):
@@ -557,7 +557,7 @@ class btable(object):
         # Check that origin and destination do not overlap
         rootdir = kwargs.get('rootdir', None)
         if rootdir and self.rootdir and  rootdir == self.rootdir:
-                raise RuntimeError("rootdir cannot be the same during copies")
+                raise IOError("rootdir cannot be the same during copies")
 
         # Remove possible unsupported args for columns
         names = kwargs.pop('names', self.names)
