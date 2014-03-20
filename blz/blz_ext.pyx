@@ -400,7 +400,7 @@ cdef class chunk:
                      object bparams):
     """Compress data with `bparams` and return metadata."""
     cdef size_t nbytes_, cbytes, blocksize
-    cdef int clevel, shuffle
+    cdef int clevel, shuffle, ret
     cdef char *dest
 
     clevel = bparams.clevel
@@ -411,11 +411,12 @@ cdef class chunk:
         "Compressor '%s' is not available in this build" % cname)
     dest = <char *>malloc(nbytes+BLOSC_MAX_OVERHEAD)
     with nogil:
-      cbytes = blosc_compress(clevel, shuffle, itemsize, nbytes,
-                              data, dest, nbytes+BLOSC_MAX_OVERHEAD)
-    if cbytes <= 0:
-      raise RuntimeError, "fatal error during Blosc compression: %d" % cbytes
+      ret = blosc_compress(clevel, shuffle, itemsize, nbytes,
+                           data, dest, nbytes+BLOSC_MAX_OVERHEAD)
+    if ret <= 0:
+      raise RuntimeError, "fatal error during Blosc compression: %d" % ret
     # Free the unused data
+    cbytes = ret;
     self.data = <char *>realloc(dest, cbytes)
     # Set size info for the instance
     blosc_cbuffer_sizes(self.data, &nbytes_, &cbytes, &blocksize)
