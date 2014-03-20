@@ -65,6 +65,10 @@ from definitions cimport import_array, ndarray, dtype, \
 #-----------------------------------------------------------------
 
 
+# Check blosc version
+cdef extern from "check_blosc_version.h":
+  pass
+
 # Blosc routines
 cdef extern from "blosc.h":
 
@@ -396,7 +400,7 @@ cdef class chunk:
                      object bparams):
     """Compress data with `bparams` and return metadata."""
     cdef size_t nbytes_, cbytes, blocksize
-    cdef int clevel, shuffle
+    cdef int clevel, shuffle, ret
     cdef char *dest
 
     clevel = bparams.clevel
@@ -407,11 +411,12 @@ cdef class chunk:
         "Compressor '%s' is not available in this build" % cname)
     dest = <char *>malloc(nbytes+BLOSC_MAX_OVERHEAD)
     with nogil:
-      cbytes = blosc_compress(clevel, shuffle, itemsize, nbytes,
-                              data, dest, nbytes+BLOSC_MAX_OVERHEAD)
-    if cbytes <= 0:
-      raise RuntimeError, "fatal error during Blosc compression: %d" % cbytes
+      ret = blosc_compress(clevel, shuffle, itemsize, nbytes,
+                           data, dest, nbytes+BLOSC_MAX_OVERHEAD)
+    if ret <= 0:
+      raise RuntimeError, "fatal error during Blosc compression: %d" % ret
     # Free the unused data
+    cbytes = ret;
     self.data = <char *>realloc(dest, cbytes)
     # Set size info for the instance
     blosc_cbuffer_sizes(self.data, &nbytes_, &cbytes, &blocksize)
@@ -754,7 +759,7 @@ cdef class chunks(object):
     """Save the `chunk_` as chunk #`nchunk`. """
 
     if self.mode == "r":
-      raise RuntimeError(
+      raise IOError(
         "cannot modify data because mode is '%s'" % self.mode)
 
     dname = "__%d%s" % (nchunk, EXTENSION)
@@ -779,7 +784,7 @@ cdef class chunks(object):
     dname = "__%d%s" % (nchunk, EXTENSION)
     schunkfile = os.path.join(self.datadir, dname)
     if not os.path.exists(schunkfile):
-      raise RuntimeError("chunk filename %s does exist" % schunkfile)
+      raise IOError("chunk filename %s does exist" % schunkfile)
     os.remove(schunkfile)
 
     # When poping a chunk, we must be sure that we don't leave anything
@@ -1161,13 +1166,13 @@ cdef class barray:
 
     # Check rootdir hierarchy
     if not os.path.isdir(self._rootdir):
-      raise RuntimeError("root directory does not exist")
+      raise IOError("root directory does not exist")
     self.datadir = os.path.join(self._rootdir, DATA_DIR)
     if not os.path.isdir(self.datadir):
-      raise RuntimeError("data directory does not exist")
+      raise IOError("data directory does not exist")
     self.metadir = os.path.join(self._rootdir, META_DIR)
     if not os.path.isdir(self.metadir):
-      raise RuntimeError("meta directory does not exist")
+      raise IOError("meta directory does not exist")
 
     calen = shape[0]    # the length ot the barray
     # Finally, open data directory
@@ -1217,7 +1222,7 @@ cdef class barray:
     """Create the basic directory layout for persistent storage."""
     if os.path.exists(rootdir):
       if self._mode != "w":
-        raise RuntimeError(
+        raise IOError(
           "specified rootdir path '%s' already exists "
           "and creation mode is '%s'" % (rootdir, mode))
       if os.path.isdir(rootdir):
@@ -1317,7 +1322,7 @@ cdef class barray:
     cdef chunk chunk_
 
     if self.mode == "r":
-      raise RuntimeError(
+      raise IOError(
         "cannot modify data because mode is '%s'" % self.mode)
 
     arrcpy = utils.to_ndarray(array, self._dtype)
@@ -1940,7 +1945,7 @@ cdef class barray:
     cdef object cdata, arr
 
     if self.mode == "r":
-      raise RuntimeError(
+      raise IOError(
         "cannot modify data because mode is '%s'" % self.mode)
 
     # We are going to modify data.  Mark block cache as dirty.
