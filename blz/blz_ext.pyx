@@ -935,7 +935,8 @@ cdef class barray:
       return self._mode
     def __set__(self, value):
       self._mode = value
-      self.chunks.mode = value
+      if hasattr(self.chunks, 'mode'):
+        self.chunks.mode = value
 
   property nbytes:
     "The original (uncompressed) size of this object (in bytes)."
