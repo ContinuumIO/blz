@@ -360,6 +360,20 @@ class add_del_colTest(MayBeDiskTest, TestCase):
         #print "ra[:]", ra[:]
         assert_array_equal(t[:], ra, "btable values are not correct")
 
+    def test09(self):
+        """Testing removing and re-adding a column (by name)"""
+        N = 10
+        ra = np.fromiter(((i, i*3, i*2.) for i in xrange(N)), dtype='i4,i8,f8')
+        t = blz.btable(ra, rootdir=self.rootdir)
+        t.delcol('f1')
+        ra = np.fromiter(((i, i*2.) for i in xrange(N)), dtype='i4,f8')
+        ra.dtype.names = ('f0', 'f2')
+        #print "t->", `t`
+        #print "ra[:]", ra[:]
+        assert_array_equal(t[:], ra, "btable values are not correct")
+        a = np.fromiter((i*3 for i in xrange(N)), dtype='i8')
+        t.addcol(a, 'f1')
+
 class add_del_colDiskTest(add_del_colTest, TestCase):
     disk = True
 

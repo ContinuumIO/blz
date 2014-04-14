@@ -97,6 +97,9 @@ class cols(object):
         pos = self.names.index(name)
         name = self.names.pop(pos)
         col = self._cols[name]
+        if self.rootdir:
+            coldir = os.path.join(self.rootdir, name)
+            shutil.rmtree(coldir)
         self.update_meta()
         return col
 
