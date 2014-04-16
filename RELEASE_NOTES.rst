@@ -6,6 +6,15 @@ Release notes for BLZ
 :Contact: francesc@continuum.io
 
 
+Changes from 0.6.1 to 0.6.2
+===========================
+
+- Protect against updating the mode in chunks for in-memory container.
+
+- Actually remove the on-disk column directory during delcol.  Fixes #8
+
+- Blosc updated to 1.3.5.
+
 Changes from 0.6.0 to 0.6.1
 ===========================
 

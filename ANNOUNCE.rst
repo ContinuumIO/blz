@@ -1,5 +1,5 @@
-Announcing BLZ 0.6 series
-=========================
+Announcing BLZ 0.6.2
+====================
 
 What's new
 ----------
@@ -26,12 +26,8 @@ More about Bloscpack here: https://github.com/esc/bloscpack
 You may want to know more about BLZ in this blog entry:
 http://continuum.io/blog/blz-format
 
-In this version, support for Blosc 1.3 has been added, that meaning
-that a new `cname` parameter has been added to the `bparams` class, so
-that you can select you preferred compressor from 'blosclz', 'lz4',
-'lz4hc', 'snappy' and 'zlib'.
-
-Also, many bugs have been fixed, providing a much smoother experience.
+In this version, Blosc has been updated to 1.3.5, and some bugs has
+been fixed too.
 
 CAVEAT: The BLZ/bloscpack format is still evolving, so don't trust on
 forward compatibility of the format, at least until 1.0, where the
