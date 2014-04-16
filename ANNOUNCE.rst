@@ -4,11 +4,6 @@ Announcing BLZ 0.6.2
 What's new
 ----------
 
-BLZ has been branched off from the Blaze project
-(http://blaze.pydata.org).  BLZ was meant as a persistent format and
-library for I/O in Blaze.  BLZ in Blaze is based on previous carray
-0.5 and this is why this new version is labeled 0.6.
-
 BLZ supports completely transparent storage on-disk in addition to
 memory.  That means that *everything* that can be done with the
 in-memory container can be done using the disk as well.
@@ -26,8 +21,7 @@ More about Bloscpack here: https://github.com/esc/bloscpack
 You may want to know more about BLZ in this blog entry:
 http://continuum.io/blog/blz-format
 
-In this version, Blosc has been updated to 1.3.5, and some bugs has
-been fixed too.
+#XXX version-specific blurb XXX#
 
 CAVEAT: The BLZ/bloscpack format is still evolving, so don't trust on
 forward compatibility of the format, at least until 1.0, where the
