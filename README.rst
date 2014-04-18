@@ -89,11 +89,11 @@ Testing
 -------
 
 After compiling, you can quickly check that the package is sane by
-running:
+running::
 
-$ PYTHONPATH=.   (or "set PYTHONPATH=." on Windows)
-$ export PYTHONPATH    (not needed on Windows)
-$ python -c"import blz; blz.test()"  # add `heavy=True` if desired
+    $ PYTHONPATH=.   (or "set PYTHONPATH=." on Windows)
+    $ export PYTHONPATH    (not needed on Windows)
+    $ python -c"import blz; blz.test()"  # add `heavy=True` if desired
 
 
 Installing
