@@ -162,7 +162,7 @@ Also, you can trim barrays::
     bparams := bparams(clevel=5, shuffle=True)
   [0 1 2 3 4]
 
-You can even set the size to 0:
+You can even set the size to 0::
 
   >>> b.resize(0)
   >>> len(b)
