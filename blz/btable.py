@@ -95,7 +95,7 @@ class cols(object):
     def pop(self, name):
         """Return the named column and remove it."""
         pos = self.names.index(name)
-        name = self.names.pop(pos)
+        name = self.names.pop(pos) 
         col = self._cols.pop(name) #actually delete cols for metadata
         if self.rootdir:
             coldir = os.path.join(self.rootdir, name)
