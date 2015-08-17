@@ -1,6 +1,14 @@
 BLZ: A chunked, compressed, data container (for memory and disk)
 ================================================================
 
+Note on this repo
+-----------------
+
+This version of the blz code has been deprecated. The project has changed names to bcolz and can be followed at: https://github.com/Blosc/bcolz
+
+Introduction
+------------
+
 BLZ is a chunked container for numerical data.  Chunking allows for
 efficient enlarging/shrinking of data container.  In addition, it can
 also be compressed for reducing memory/disk needs.  The compression
