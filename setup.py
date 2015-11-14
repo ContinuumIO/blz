@@ -13,6 +13,7 @@ import glob
 
 from distutils.core import Extension
 from distutils.core import setup
+from distutils.version import LooseVersion
 import textwrap
 
 
@@ -42,7 +43,7 @@ def check_import(pkgname, pkgver):
                 "You need %(pkgname)s %(pkgver)s or greater to run blz!"
                 % {'pkgname': pkgname, 'pkgver': pkgver} )
     else:
-        if mod.__version__ < pkgver:
+        if LooseVersion(mod.__version__) < LooseVersion(pkgver):
             exit_with_error(
                 "You need %(pkgname)s %(pkgver)s or greater to run blz!"
                 % {'pkgname': pkgname, 'pkgver': pkgver} )
