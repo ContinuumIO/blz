@@ -107,9 +107,9 @@ running::
 Installing
 ----------
 
-Install it as a typical Python package:
+Install it as a typical Python package::
 
-$ python setup.py install
+    $ python setup.py install
 
 
 Documentation
