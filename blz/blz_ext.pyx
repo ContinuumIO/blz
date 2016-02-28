@@ -542,7 +542,7 @@ cdef class chunk:
     if self.dobject:
       self.dobject = None  # DECREF pointer to data object
     else:
-      free(self.data)   # explictly free the data area
+      free(self.data)   # explicitly free the data area
 
 
 cdef create_bloscpack_header(nchunks=None, format_version=FORMAT_VERSION):
@@ -826,7 +826,7 @@ cdef class barray:
       purposes.
   chunklen : int, optional
       The number of items that fits into a chunk.  By specifying it you can
-      explicitely set the chunk size used for compression and memory I/O.
+      explicitly set the chunk size used for compression and memory I/O.
       Only use it if you know what are you doing.
   rootdir : str, optional
       The directory where all the data and metadata will be stored.  If
